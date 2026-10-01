@@ -1,0 +1,21 @@
+{
+  "ui": {
+    "close": "إغلاق",
+    "loading": "جارٍ التحميل",
+    "status": { "pass": "مطابق", "warn": "تحذير", "fail": "غير مطابق" },
+    "code": { "ACI": "ACI", "JS": "JS", "PROJECT": "المشروع" },
+    "evidence": {
+      "CODE_VERIFIED": "موثّق وفق الكود",
+      "PROJECT_VERIFIED": "موثّق وفق المشروع",
+      "RULE_UNVERIFIED": "قاعدة غير موثّقة",
+      "MODEL_IN_DOMAIN": "نموذج ضمن النطاق",
+      "MODEL_BASELINE": "نموذج مرجعي",
+      "MODEL_EXTRAPOLATED": "نموذج خارج النطاق",
+      "INPUT_STALE": "مدخلات قديمة",
+      "INPUT_MISSING": "مدخلات ناقصة",
+      "TRIAL_REQUIRED": "تتطلب خلطة تجريبية"
+    },
+    "saving": { "theoretical": "وفر نظري", "approved": "وفر معتمد", "realized": "وفر محقق" },
+    "palette": { "placeholder": "اكتب أمراً أو ابحث…", "empty": "لا توجد نتائج" }
+  }
+}

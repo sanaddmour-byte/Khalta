@@ -1,0 +1,176 @@
+/* Design tokens (03-ui.md §5). Components reference semantic tokens only; hex values live here. */
+:root {
+  --grey-50: #f5f5f4;
+  --grey-100: #ffffff;
+  --grey-200: #d9d9d6;
+  --grey-500: #6b6b67;
+  --grey-800: #2b2b29;
+  --grey-900: #1a1a19;
+  --green-dark-700: #1e4d35;
+  --green-dark-800: #163d2a;
+  --green-dark-50: #eaf3ee;
+  --olive-600: #6b7a2a;
+  --olive-100: #eef0dc;
+  --pass: #1f8a43;
+  --pass-bg: #e4f5e9;
+  --fail: #c62828;
+  --fail-bg: #fde8e8;
+  --warn: #b7791f;
+  --warn-bg: #fff4db;
+  /* Text on filled primary/olive surfaces (not in the spec table; derived for contrast). */
+  --on-primary: #ffffff;
+  --on-olive: #ffffff;
+  --focus-ring: #1e4d35;
+  /* Text-safe variants of the status/olive colours (>= 4.5:1 on their tints and on surfaces).
+     The spec colours stay as fills, icons and borders. Deviation recorded in docs/progress.md. */
+  --pass-text: #1c7c3c;
+  --warn-text: #98641a;
+  --fail-text: #c62828;
+  --olive-text: #647127;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --motion: 120ms;
+  --row-h: 2.5rem;
+  --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-sans-ar: 'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --grey-50: #161615;
+  --grey-100: #1f1f1e;
+  --grey-200: #33332f;
+  --grey-500: #a3a39e;
+  --grey-800: #e8e8e5;
+  --grey-900: #f2f2f0;
+  --green-dark-700: #5fa67e;
+  --green-dark-800: #7bbf97;
+  --green-dark-50: #1b2e24;
+  --olive-600: #a3b05a;
+  --olive-100: #2a2e18;
+  --pass: #4cc273;
+  --pass-bg: #163322;
+  --fail: #ef5350;
+  --fail-bg: #3a1b1b;
+  --warn: #e0a43a;
+  --warn-bg: #33280f;
+  --on-primary: #0d1f15;
+  --on-olive: #1a1d0c;
+  --focus-ring: #7bbf97;
+  --pass-text: #4cc273;
+  --warn-text: #e0a43a;
+  --fail-text: #f05a57;
+  --olive-text: #a3b05a;
+  color-scheme: dark;
+}
+
+:root[data-density='comfortable'] {
+  --row-h: 3rem;
+}
+
+/* Tailwind v4: expose tokens as utilities (bg-surface, text-muted, border-line, ...). */
+@theme inline {
+  --color-app: var(--grey-50);
+  --color-surface: var(--grey-100);
+  --color-line: var(--grey-200);
+  --color-muted: var(--grey-500);
+  --color-heading: var(--grey-800);
+  --color-body: var(--grey-900);
+  --color-primary: var(--green-dark-700);
+  --color-primary-hover: var(--green-dark-800);
+  --color-primary-tint: var(--green-dark-50);
+  --color-on-primary: var(--on-primary);
+  --color-olive: var(--olive-600);
+  --color-olive-tint: var(--olive-100);
+  --color-on-olive: var(--on-olive);
+  --color-pass-text: var(--pass-text);
+  --color-warn-text: var(--warn-text);
+  --color-fail-text: var(--fail-text);
+  --color-olive-text: var(--olive-text);
+  --color-pass: var(--pass);
+  --color-pass-bg: var(--pass-bg);
+  --color-fail: var(--fail);
+  --color-fail-bg: var(--fail-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-ring: var(--focus-ring);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+}
+
+html {
+  background: var(--grey-50);
+  color: var(--grey-900);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+html[lang='ar'] {
+  font-family: var(--font-sans-ar);
+  line-height: 1.7;
+}
+/* Arabic: no letter-spacing, no uppercase transforms. */
+html[lang='ar'] * {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+/* In the base layer so component utilities (e.g. an explicit inset ring) can refine it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+
+/* Direction-aware motion: slide from the start edge (left in LTR, right in RTL). */
+:root {
+  --dir-sign: 1;
+}
+:root[dir='rtl'] {
+  --dir-sign: -1;
+}
+@keyframes k-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes k-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes k-slide-start-in {
+  from {
+    transform: translateX(calc(-100% * var(--dir-sign)));
+  }
+}
+@keyframes k-slide-start-out {
+  to {
+    transform: translateX(calc(-100% * var(--dir-sign)));
+  }
+}
+@keyframes k-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes k-skeleton {
+  50% {
+    opacity: 0.5;
+  }
+}

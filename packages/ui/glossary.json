@@ -1,0 +1,44 @@
+{
+  "terms": [
+    { "id": "slump", "en": "Slump", "ar": "الهبوط" },
+    {
+      "id": "wcm",
+      "en": "Water/cementitious ratio (w/cm)",
+      "ar": "نسبة الماء إلى المواد الإسمنتية"
+    },
+    {
+      "id": "nmas",
+      "en": "Nominal maximum aggregate size (NMAS)",
+      "ar": "المقاس الاعتباري الأكبر للركام"
+    },
+    { "id": "fc", "en": "Specified compressive strength (f'c)", "ar": "مقاومة الضغط المحددة" },
+    { "id": "fcr", "en": "Required average strength (f'cr)", "ar": "المقاومة المتوسطة المطلوبة" },
+    { "id": "admixture", "en": "Admixture", "ar": "إضافات كيميائية" },
+    {
+      "id": "scm",
+      "en": "Supplementary cementitious materials (SCM)",
+      "ar": "مواد إسمنتية تكميلية"
+    },
+    { "id": "gradation", "en": "Gradation", "ar": "التدرج الحبيبي" },
+    { "id": "fineness_modulus", "en": "Fineness modulus", "ar": "معامل النعومة" },
+    {
+      "id": "specific_gravity_ssd",
+      "en": "Specific gravity (SSD)",
+      "ar": "الوزن النوعي (مشبع جاف السطح)"
+    },
+    { "id": "absorption", "en": "Absorption", "ar": "الامتصاص" },
+    { "id": "absolute_volume", "en": "Absolute volume", "ar": "الحجم المطلق" },
+    { "id": "fresh_density", "en": "Fresh density", "ar": "الكثافة الطازجة" },
+    { "id": "air_content", "en": "Air content", "ar": "المحتوى الهوائي" },
+    { "id": "exposure_class", "en": "Exposure class", "ar": "فئة التعرض" },
+    { "id": "trial_batch", "en": "Trial batch", "ar": "خلطة تجريبية" },
+    { "id": "mix_design", "en": "Mix design", "ar": "تصميم خلطة خرسانية" },
+    { "id": "trial_candidate", "en": "Trial candidate", "ar": "خلطة مرشحة للتجربة" },
+    { "id": "suspended", "en": "Suspended", "ar": "موقوفة" },
+    {
+      "id": "saving_states",
+      "en": "Theoretical / approved / realized saving",
+      "ar": "وفر نظري / معتمد / محقق"
+    }
+  ]
+}

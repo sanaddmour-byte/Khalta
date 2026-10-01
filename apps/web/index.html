@@ -1,9 +1,28 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-theme="light" data-density="compact">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Khalta</title>
+    <script>
+      // Apply saved preferences before first paint (no flash of wrong theme or direction).
+      (function () {
+        try {
+          var d = document.documentElement;
+          var ls = window.localStorage;
+          var lang =
+            ls.getItem('khalta.lang') ||
+            ((navigator.language || '').indexOf('ar') === 0 ? 'ar' : 'en');
+          var theme = ls.getItem('khalta.theme') || 'system';
+          if (theme === 'system')
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          d.lang = lang;
+          d.dir = lang === 'ar' ? 'rtl' : 'ltr';
+          d.dataset.theme = theme;
+          d.dataset.density = ls.getItem('khalta.density') || 'compact';
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

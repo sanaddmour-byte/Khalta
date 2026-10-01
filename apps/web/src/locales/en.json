@@ -1,0 +1,168 @@
+{
+  "app": {
+    "nameAr": "خلطة",
+    "nameEn": "Khalta",
+    "skip": "Skip to content",
+    "tagline": "Ready-mix mix design"
+  },
+  "nav": {
+    "label": "Main navigation",
+    "open": "Open navigation",
+    "dashboard": "Dashboard",
+    "studio": "Design Studio",
+    "library": "Mix Library",
+    "insights": "Insights",
+    "savings": "Savings",
+    "materials": "Materials",
+    "prices": "Prices",
+    "plants": "Plants",
+    "rules": "Rules",
+    "imports": "Imports",
+    "settings": "Settings"
+  },
+  "sections": {
+    "dashboard": {
+      "description": "Cost per m³ by plant, designs by lifecycle state, stale prices and expired tests will appear here once designs are evaluated.",
+      "milestone": "Arrives with M2.2"
+    },
+    "studio": {
+      "description": "Evaluate an existing mix or generate a trial recommendation, step by step, with every number explained.",
+      "milestone": "Arrives with M3.2"
+    },
+    "library": {
+      "description": "Approved, in-production and trial designs, with versions, trial results and lifecycle history.",
+      "milestone": "Arrives with M4.1"
+    },
+    "insights": {
+      "description": "Price, test and strength changes that deserve a second look will be triaged here, never as interruptions.",
+      "milestone": "Arrives with M5.1"
+    },
+    "savings": {
+      "description": "Theoretical, approved and realized savings are shown side by side and never added together.",
+      "milestone": "Arrives with M5.1"
+    },
+    "materials": {
+      "description": "Add a sieve test for each aggregate to unlock blend optimization. Test freshness and drift appear here.",
+      "milestone": "Arrives with M1.1"
+    },
+    "prices": {
+      "description": "One matrix of materials by plant, with history, stale-price flags and Excel paste.",
+      "milestone": "Arrives with M1.2"
+    },
+    "plants": {
+      "description": "Plants, their location and ambient profile, and the materials priced at each.",
+      "milestone": "Arrives with M1.1"
+    },
+    "rules": {
+      "description": "ACI and Jordanian code values with clause references. Every value stays unverified until a QC manager checks it.",
+      "milestone": "Arrives with M0.4"
+    },
+    "imports": {
+      "description": "Bring existing approved mix designs in from a spreadsheet, then attest each one to make it a baseline.",
+      "milestone": "Arrives with M1.3"
+    },
+    "settings": {
+      "description": "Tenant settings such as plant limit, stale-price threshold and number format.",
+      "milestone": "Arrives with M1.1"
+    }
+  },
+  "shell": {
+    "plant": "Plant",
+    "allPlants": "All plants",
+    "noPlants": "No plants assigned",
+    "search": "Search or run a command",
+    "searchShort": "Search",
+    "commands": "Commands",
+    "navigate": "Go to",
+    "plantsGroup": "Switch plant",
+    "language": "Language",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "density": "Table density",
+    "densityCompact": "Compact",
+    "densityComfortable": "Comfortable",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "noNotificationsHint": "Critical alerts about strength results and expired tests will appear here.",
+    "account": "Account",
+    "signOut": "Sign out",
+    "toggleLanguage": "العربية"
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Use the account your administrator created for you.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "invalid": "Email or password is incorrect.",
+    "failed": "Could not sign in. Try again."
+  },
+  "errors": {
+    "forbidden": "Not available for your role",
+    "forbiddenHint": "This section is hidden for your role. Ask an administrator if you need access.",
+    "loadFailed": "Could not load this page",
+    "retry": "Try again"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "qc_manager": "QC manager",
+    "qc_engineer": "QC engineer",
+    "procurement": "Procurement",
+    "plant_manager": "Plant manager",
+    "sales": "Sales engineer",
+    "viewer": "Viewer"
+  },
+  "dev": {
+    "title": "Components",
+    "intro": "Every shared component in LTR and RTL. Theme and density follow the toolbar.",
+    "ltr": "Left to right",
+    "rtl": "Right to left",
+    "buttons": "Buttons",
+    "forms": "Form controls",
+    "overlays": "Overlays",
+    "chips": "Status, source, evidence and saving chips",
+    "data": "Data and states",
+    "bidi": "Mixed-direction tokens",
+    "palette": "Colour tokens",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "ghost": "Ghost",
+    "danger": "Danger",
+    "disabled": "Disabled",
+    "inputLabel": "Slump target",
+    "inputPlaceholder": "Enter a value",
+    "inputUnit": "mm",
+    "checkbox": "Pumpable",
+    "switch": "Include admixture",
+    "select": "Cement",
+    "selectPlaceholder": "Choose a cement",
+    "tabOne": "Proportions",
+    "tabTwo": "Compliance",
+    "tabOneBody": "Material quantities per cubic metre appear here.",
+    "tabTwoBody": "Requirement, governing value and margin appear here.",
+    "openDialog": "Open dialog",
+    "dialogTitle": "Request a trial batch",
+    "dialogBody": "Designs are proposals that require trial batching and QC approval.",
+    "openPopover": "Open popover",
+    "popoverBody": "Formula, inputs, rule and clause appear here.",
+    "hover": "Hover for tooltip",
+    "tooltip": "Explains where a number comes from",
+    "menu": "Open menu",
+    "menuItem": "Duplicate design",
+    "emptyTitle": "No sieve test yet",
+    "emptyBody": "Add a sieve test for this aggregate to unlock blend optimization.",
+    "emptyAction": "Add test",
+    "material": "Material",
+    "quantity": "kg/m³ (SSD)",
+    "cost": "JOD/m³",
+    "toast": "Show toast",
+    "toastBody": "Saved as draft",
+    "loading": "Loading",
+    "sample": "Concrete grade",
+    "sampleLine": "Required strength for the mix"
+  },
+  "dev_materials": { "cement": "CEM I 42.5N", "sand": "Na'meh", "coarse": "Fooliyyeh" }
+}

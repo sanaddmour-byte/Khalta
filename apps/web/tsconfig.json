@@ -3,7 +3,8 @@
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    "types": ["node", "vite/client"]
+    "resolveJsonModule": true,
+    "types": ["node", "vite/client", "vitest/globals"]
   },
-  "include": ["src", "*.ts"]
+  "include": ["src", "test", "*.ts"]
 }

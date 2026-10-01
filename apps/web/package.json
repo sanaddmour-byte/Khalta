@@ -11,7 +11,22 @@
   },
   "dependencies": {
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "i18next": "catalog:",
+    "react-i18next": "catalog:",
+    "i18next-icu": "catalog:",
+    "intl-messageformat": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "@fontsource/ibm-plex-sans-arabic": "catalog:",
+    "@fontsource/ibm-plex-sans": "catalog:",
+    "@fontsource/ibm-plex-mono": "catalog:",
+    "lucide-react": "catalog:",
+    "radix-ui": "catalog:",
+    "sonner": "catalog:",
+    "clsx": "catalog:",
+    "@khalta/ui": "workspace:*",
+    "@khalta/rbac": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",
@@ -19,6 +34,13 @@
     "@vitejs/plugin-react": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "tailwindcss": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "jsdom": "catalog:",
+    "@types/node": "catalog:"
   }
 }

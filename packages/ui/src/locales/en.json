@@ -1,0 +1,21 @@
+{
+  "ui": {
+    "close": "Close",
+    "loading": "Loading",
+    "status": { "pass": "Pass", "warn": "Warning", "fail": "Fail" },
+    "code": { "ACI": "ACI", "JS": "JS", "PROJECT": "Project" },
+    "evidence": {
+      "CODE_VERIFIED": "Code verified",
+      "PROJECT_VERIFIED": "Project verified",
+      "RULE_UNVERIFIED": "Rule unverified",
+      "MODEL_IN_DOMAIN": "Model in domain",
+      "MODEL_BASELINE": "Model baseline",
+      "MODEL_EXTRAPOLATED": "Model extrapolated",
+      "INPUT_STALE": "Input stale",
+      "INPUT_MISSING": "Input missing",
+      "TRIAL_REQUIRED": "Trial required"
+    },
+    "saving": { "theoretical": "Theoretical", "approved": "Approved", "realized": "Realized" },
+    "palette": { "placeholder": "Type a command or search…", "empty": "No results" }
+  }
+}

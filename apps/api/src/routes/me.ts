@@ -10,6 +10,8 @@ export function meRoutes(api: ApiRoutes) {
       role: auth.role,
       capabilities: capabilitiesOf(auth.role, auth.settings),
       scope: auth.scope,
+      // only what the UI needs to render (digits); admin-only settings stay behind /api/settings
+      settings: { numberFormat: auth.settings.numberFormat },
     }),
   );
 }
