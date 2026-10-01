@@ -6,6 +6,8 @@ You are the lead engineer on a bilingual (AR/EN, full RTL) web app that evaluate
 
 | File | Read when |
 |---|---|
+| `docs/spec/06-features.md` | **Always first.** Sanad's feature manifest — the build list |
+| `docs/spec/07-characteristics.md` | Mix characteristics, material characteristic entry, profiles, objective modes |
 | `docs/spec/04-phases.md` | **Always first.** Current milestone, scope, inputs, Definition of Done |
 | `docs/progress.md` | Always second. Handoff log from previous sessions |
 | `docs/spec/01-domain.md` | Data model, engine, validator, optimizer, jobs, RBAC, lifecycle, savings, libraries (§9), deployment |
@@ -14,9 +16,16 @@ You are the lead engineer on a bilingual (AR/EN, full RTL) web app that evaluate
 | `docs/spec/05-appendices.md` | Seed YAML, fixtures, demo data, CSV templates |
 | `packages/rules/seeds/**` | Code values and engineering parameters — **single source of truth**, never duplicated in TypeScript |
 
+## What to build — precedence
+
+1. The Engineering Safety Contract and non-negotiable rules (this file) always win.
+2. The feature manifest (`06-features.md`) decides **what** is built. Build only features with status `approved` that belong to the active milestone. If something seems missing, add it to the manifest as `proposed` with a one-line rationale — never build it.
+3. The specs (`01`–`05`, `07`) decide **how** it is built. Where `07` and an earlier spec conflict, `07` wins. If an approved feature has no spec coverage, write a short spec addendum inside the milestone plan for approval before building.
+4. If a manifest feature conflicts with the safety contract or a spec, stop and ask, quoting both texts.
+
 ## Session protocol
 
-1. **Start:** read `04-phases.md` and `docs/progress.md`; state the active milestone, what is done, and what you will do this session.
+1. **Start:** read `06-features.md`, `04-phases.md` and `docs/progress.md`; state the active milestone, the feature IDs in scope, what is done, and the plan for this session.
 2. **Work** only inside the approved milestone plan. If a needed input from Sanad is missing, keep it as a typed `null` blocker, surface it, and continue with the rest of the scope.
 3. **End:** append to `docs/progress.md` — date, what changed, commands run and their results, open blockers, next step. Never end a session with failing commands unreported.
 
@@ -26,12 +35,13 @@ You are the lead engineer on a bilingual (AR/EN, full RTL) web app that evaluate
 2. **Classify every requirement and every piece of evidence** using the two taxonomies below. Only `CODE_HARD` and `PROJECT_HARD` may be presented as code or project compliance.
 3. **Applicability is explicit.** Every rule and model carries scope, prerequisites, units, source, edition/version, validity window and verification status. Inapplicable or unresolved rules are never silently merged or dropped.
 4. **Independent validation is mandatory.** The optimizer proposes proportions; a separate validator with no solver state or objective function recomputes quantities and checks every hard constraint after optimization, after rounding, and after moisture conversion.
-5. **No silent assumptions.** Missing material properties, rule values, calibration coefficients, prices or mappings produce a named blocker or a clearly labelled estimate; never invent values from memory.
+5. **No silent assumptions.** Missing material properties, rule values, calibration coefficients, prices or mappings produce a named blocker or a clearly labelled estimate; never invent values from memory. Values the user types are allowed and used, but always carry their source (`lab_report`, `supplier_datasheet`, `user_declared`).
 6. **Models are conditional.** Strength, water-demand, workability, pumpability, seasonal and admixture models state their calibration domain and refuse extrapolation unless QC explicitly authorizes a trial-only recommendation.
 7. **Trace every number** to rule keys/clauses, material-test IDs, price IDs, model versions, calibration dataset IDs and transformations.
 8. **Rounding creates a new design state.** After rounding and rebalancing, recompute from scratch and reject any candidate that no longer satisfies hard constraints or guardrails.
 9. **Humans approve.** Designs progress only through the controlled trial and approval workflow; software never self-certifies a design.
 10. **Tests do not certify the specification.** Tests prove implementation consistency against approved fixtures and invariants, not that the engineering assumptions are correct. Green tests never change a rule's verified status.
+11. **User characteristics tighten, never loosen.** A characteristic the user provides may narrow any limit, and may override engineering guardrails or model estimates (QC role, recorded, flagged). It may never relax a `CODE_HARD` or `PROJECT_HARD` limit; such input is rejected at entry — UI and API — with the governing rule and clause.
 
 **Requirement classes (what kind of constraint a row is)**
 
@@ -43,9 +53,10 @@ You are the lead engineer on a bilingual (AR/EN, full RTL) web app that evaluate
 | `ENGINEERING_GUARDRAIL` | QC-set safety margin or workability bound | No | Yes, labelled hypothetical, QC role only |
 | `OPTIMIZATION_PREFERENCE` | Soft preference (e.g. max share of one aggregate) | No | Yes, labelled hypothetical |
 | `DESIGN_AID` | Published proportioning table or heuristic (e.g. ACI 211.1) | No — yields `MODEL_BASELINE` evidence | No |
+| `USER_SPECIFIED` | A characteristic the user fixed, bounded or targeted (request or profile) | No — shown as the user's choice | Yes — the user may release it; conflict diagnostics name it |
 
 **Evidence statuses (how well supported a result is)** — shown on every candidate and design instead of any numeric "confidence" or "safety score":
-`CODE_VERIFIED`, `PROJECT_VERIFIED`, `RULE_UNVERIFIED`, `MODEL_IN_DOMAIN`, `MODEL_BASELINE` (published heuristic, not plant-calibrated), `MODEL_EXTRAPOLATED`, `INPUT_STALE`, `INPUT_MISSING`, `TRIAL_REQUIRED`.
+`CODE_VERIFIED`, `PROJECT_VERIFIED`, `RULE_UNVERIFIED`, `MODEL_IN_DOMAIN`, `MODEL_BASELINE` (published heuristic, not plant-calibrated), `MODEL_EXTRAPOLATED`, `INPUT_STALE`, `INPUT_MISSING`, `TRIAL_REQUIRED`, plus `USER_OVERRIDE` (a user characteristic replaced a model estimate or guardrail), `INPUT_USER_DECLARED` (material value typed by the user, not from a lab report or datasheet) and `MODEL_PREDICTS_SHORTFALL` (the user's characteristics leave the strength model below f'cr).
 
 ## Non-negotiable implementation rules
 
@@ -101,6 +112,7 @@ If a simpler implementation preserves the documented interface and migration pat
 | `pnpm screens` | Screenshots AR/EN × 1440/1024/390 px → `docs/screens/<milestone>/` |
 | `pnpm db:migrate` / `pnpm db:seed:demo` | Migrations; synthetic demo dataset |
 | `pnpm fixtures:export <design_code>` | Export a design as a fixture (from M2.2) |
+| `pnpm features:check` | Validate `06-features.md` format and list the approved features for the active milestone |
 
 ## Definition of Done (every milestone)
 

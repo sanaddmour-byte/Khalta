@@ -1,5 +1,7 @@
 # Domain, engine and governance
 
+> `07-characteristics.md` extends §2 (data model), §3 (pipeline), §4 (optimizer), §10 (RBAC) and §14.1 (gates). Where they conflict, `07` wins.
+
 ## 1. Product summary
 
 A bilingual (Arabic/English, full RTL) web app that:
@@ -94,7 +96,7 @@ Every design displays kg/m³ (SSD), L/m³ (water, admixtures), absolute volume, 
 
 ### 2.8 Settings (tenant level)
 
-Max plants, stale-price and test-age thresholds, robustness margins, insight thresholds, rounding steps, season dates, number format, `sales_can_view_cost` (default false), **minor-adjustment policy** (default: none — every proportion change needs a trial), moisture-input QC limits.
+Max plants, stale-price and test-age thresholds, robustness margins, insight thresholds, rounding steps, season dates, number format, `sales_can_view_cost` (default false), **minor-adjustment policy** (default: none — every proportion change needs a trial), moisture-input QC limits, target-penalty default weight, rounding tolerance per characteristic, water-override warning threshold (%), material sanity ranges (warn only), `approval_requires_lab_source` (default on).
 
 ## 3. Engine pipeline (deterministic kernel)
 
@@ -304,7 +306,7 @@ Self-compacting, fiber-reinforced, integral-waterproofing/crystalline, mass-conc
 | `trial_candidate` | Recommendation passed independent validation; trial required | Validator pass after rounding |
 | `trial_in_progress` | Trial batch recorded, acceptance incomplete | ≥ 1 trial batch logged |
 | `trial_passed` | Trial criteria met and QC reviewed | All criteria in §14.4 pass; QC manager sign-off |
-| `approved` | Approved for production use | Four-eyes approval; all governing rules verified; evidence current; or legacy attestation |
+| `approved` | Approved for production use | Four-eyes approval; all governing rules verified; evidence current; and every key material property is from `lab_report` or `supplier_datasheet`, or QC has accepted the user-declared values with an e-signature (07 §2.5); or legacy attestation |
 | `in_production` | Released to a named plant | QC manager or plant manager (own plant) release |
 | `suspended` | Production use blocked pending review | Triggered per §14.3; QC decision |
 | `superseded` / `retired` | Immutable history | New version approved / QC decision |

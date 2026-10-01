@@ -200,3 +200,7 @@ Stored in `packages/rules/seeds/engineering/*.yaml` as kind `parameter`, class `
 ## 8. Compliance report (every design and every PDF)
 
 Columns: requirement | class | ACI value | JS value | PROJECT value | governing value | design value | margin | pass / warn / fail | evidence status | clause refs. Failures sort first. `info` rows (e.g. C2 cover) appear in a separate "structural requirements — not checked by mix design" block. Strength adequacy appears in its own block with its model evidence status, never mixed into code compliance. This table is the consultant's main deliverable, so it must be complete and bilingual.
+
+## 9. Precedence of user characteristics
+
+Layers resolve in this order: **CODE** (ACI / JS / Both) → **PROJECT** → **request characteristics** → **profile characteristics** (product family → plant → tenant) → **engine defaults** (guardrails and models). CODE and PROJECT limits always apply. A user characteristic may only make them stricter; a value that would loosen one is rejected with the governing rule and clause. Between user layers, the more specific layer replaces the same characteristic.
