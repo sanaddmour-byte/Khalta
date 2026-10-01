@@ -510,7 +510,8 @@
         "F": "Type F",
         "G": "Type G"
       }
-    }
+    },
+    "pricedAt": "Priced at {n} of {m} plants"
   },
   "plants": {
     "intro": "Your batching plants. Prices, materials and designs are scoped to a plant.",
@@ -590,6 +591,152 @@
       "name": "Name",
       "email": "Email",
       "role": "Role"
+    }
+  },
+  "prices": {
+    "intro": "What each material costs delivered to each plant. Every change is kept: a new price closes the old one, nothing is overwritten. A missing price means “not available here”, never zero.",
+    "tools": "Tools",
+    "export": "Export",
+    "asOf": "Prices as of",
+    "asOfNote": "Showing the prices that were in force on {date}. This view is read-only.",
+    "heatmap": "Compare with the plants’ median",
+    "rowUnit": "Unit for {name}",
+    "rowUnitShort": "Price unit for the selected row",
+    "effectiveFrom": "Effective from",
+    "reason": "Reason (optional)",
+    "reasonRequired": "Reason (required for a back-dated price)",
+    "reasonPlaceholder": "For example: new supplier tariff",
+    "undo": "Undo",
+    "redo": "Redo",
+    "discard": "Discard changes",
+    "save": "Save {count, plural, one {# change} other {# changes}}",
+    "saved": "Saved {applied} prices ({unchanged} unchanged)",
+    "summary": "{priced} of {pairs} material–plant prices on file",
+    "staleNotSet": "stale-price limit not set",
+    "staleCount": "{count, plural, one {# stale price} other {# stale prices}}",
+    "ambiguousCount": "{count} need a preferred supplier",
+    "notConvertibleCount": "{count} cannot be converted to JOD/kg yet",
+    "perKg": "JOD/kg",
+    "keys": "Keys: arrows move, Shift+arrows select a range, Enter or typing edits, Ctrl+V pastes from Excel, Ctrl+Z undoes, Delete drops a pending change.",
+    "empty": {
+      "title": "Nothing to price yet",
+      "description": "Add plants and materials first, then enter prices here."
+    },
+    "col": {
+      "material": "Material",
+      "plant": "Plant"
+    },
+    "grid": {
+      "label": "Price matrix: materials by plant"
+    },
+    "edit": {
+      "label": "Price of {material} at {plant}"
+    },
+    "unitShort": {
+      "ton": "ton",
+      "kg": "kg",
+      "L": "L",
+      "m3": "m³"
+    },
+    "cell": {
+      "none": "No price",
+      "pending": "pending",
+      "age": "{days} days old",
+      "exDelivery": "excl. delivery",
+      "alternatives": "{count, plural, one {+# supplier} other {+# suppliers}}",
+      "ambiguous": "Choose a supplier",
+      "needs_density": "needs density",
+      "needs_sg": "needs SG",
+      "invalid_price": "invalid"
+    },
+    "err": {
+      "not_a_number": "Enter a number",
+      "too_many_decimals": "At most 3 decimals",
+      "out_of_range": "Value out of range"
+    },
+    "paste": {
+      "done": "Pasted {count} prices (not saved yet)",
+      "problems": "Pasted {ok}; {errors} invalid and {clipped} outside the table were skipped"
+    },
+    "history": {
+      "title": "Price history",
+      "open": "open",
+      "open2": "History",
+      "corrected": "corrected the same day",
+      "trend": "Price trend over {count} entries",
+      "supplier": "Supplier used",
+      "supplierHint": "Several suppliers are priced here. The preferred one is used for costing.",
+      "usedNow": "in use",
+      "prefer": "Use this supplier",
+      "preferred": "Preferred supplier updated"
+    },
+    "bulk": {
+      "title": "Change prices by a percentage",
+      "hint": "Applies to the prices in force today. See what will change before you apply.",
+      "percent": "Change",
+      "zero": "0 % re-confirms current prices as of today (resets their age).",
+      "allPlants": "All my plants",
+      "preview": "{count, plural, one {# price will change} other {# prices will change}}",
+      "apply": "Apply change",
+      "done": "Changed {count} prices"
+    },
+    "copy": {
+      "title": "Copy prices to another plant",
+      "hint": "Copies the supplier, price and unit. Plants that already have a price are skipped unless you overwrite.",
+      "from": "Copy from",
+      "to": "Copy to",
+      "overwrite": "Also replace prices the target plant already has",
+      "apply": "Copy prices",
+      "done": "Copied {count} prices"
+    },
+    "import": {
+      "title": "Import from Excel or CSV",
+      "hint": "The file is checked row by row first. Nothing is saved until you confirm, and a file with any error is never half-applied.",
+      "file": "Price list (.xlsx or .csv)",
+      "columns": "Columns: material, plant, supplier (optional), price, unit, includes delivery (optional), effective from (optional), reason.",
+      "summary": "{total} rows: {ok} to apply, {unchanged} unchanged, {errors} with errors",
+      "line": "Line",
+      "result": "Result",
+      "status": {
+        "ok": "Will be applied",
+        "unchanged": "No change"
+      },
+      "commit": "Apply import",
+      "done": "Imported {count} prices"
+    },
+    "importErr": {
+      "unknown_material": "Unknown material",
+      "ambiguous_material": "Several materials match",
+      "unknown_plant": "Unknown plant",
+      "ambiguous_plant": "Several plants match",
+      "unknown_supplier": "Unknown supplier",
+      "ambiguous_supplier": "Several suppliers match",
+      "not_a_number": "Price is not a number",
+      "too_many_decimals": "At most 3 decimals",
+      "out_of_range": "Price out of range",
+      "price_required": "Price is missing",
+      "unknown_unit": "Unknown unit",
+      "bad_delivery_flag": "Use yes or no for delivery",
+      "bad_date": "Date not understood",
+      "reason_required": "A back-dated price needs a reason",
+      "earlier_than_latest": "A later price already exists"
+    },
+    "snapshot": {
+      "title": "Price snapshots",
+      "hint": "A snapshot freezes the prices in force today under a name. It can never be changed, so a later saving cannot be confused with a price movement.",
+      "name": "Snapshot name",
+      "create": "Create snapshot",
+      "done": "Snapshot created",
+      "lines": "{count} lines"
+    },
+    "supplier": {
+      "title": "Which supplier?",
+      "hint": "{count} cells have no supplier yet. Choose the supplier these prices come from.",
+      "use": "Use this supplier"
+    },
+    "format": {
+      "xlsx": "Excel (.xlsx)",
+      "csv": "CSV file"
     }
   }
 }

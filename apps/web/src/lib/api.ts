@@ -5,6 +5,8 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly code?: string,
+    readonly details?: unknown,
   ) {
     super(message);
   }
@@ -18,12 +20,17 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   });
   if (!res.ok) {
     let message = res.statusText;
+    let code: string | undefined;
+    let details: unknown;
     try {
-      message = (await res.json())?.error?.message ?? message;
+      const body = (await res.json())?.error;
+      message = body?.message ?? message;
+      code = body?.code;
+      details = body?.details;
     } catch {
       /* non-JSON error body */
     }
-    throw new ApiError(res.status, message);
+    throw new ApiError(res.status, message, code, details);
   }
   return (res.status === 204 ? undefined : await res.json()) as T;
 }

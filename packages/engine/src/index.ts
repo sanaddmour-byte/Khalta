@@ -9,3 +9,4 @@ export interface TraceEntry {
 export type Trace = readonly TraceEntry[];
 
 export * from './materials';
+export * from './prices';

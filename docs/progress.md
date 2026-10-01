@@ -143,3 +143,25 @@ Also verified by temporarily adding violating files: lint reported all three cus
 - `06-features.md` statuses left for you to flip.
 
 **Next:** M1.2 (price matrix) — write `docs/plans/M1.2.md` and list questions.
+
+## 2026-10-01 — M1.2 Price matrix (F-008)
+
+**Changed**
+
+- `docs/adr/0005-spreadsheet-grid.md`: hand-built ARIA grid with TanStack Virtual (TanStack Table adds nothing for a fixed matrix); AG Grid and Glide rejected (Enterprise-only range/clipboard; canvas vs Arabic/axe).
+- `packages/engine` (pure): exact decimal arithmetic, `toJodPerKg` (per kg, per ton, per litre via SG; `JOD/m3` and missing SG return a named "not convertible", never a guess), `priceAt` (period in force, preferred supplier, "ambiguous" and "unavailable", never zero), price staleness (unset limit is "not configured", never fresh), Asia/Amman dates, Excel paste parser (Arabic digits, decimal commas), staging model with undo/redo.
+- `packages/db`: migrations 0006–0007. `material_prices` is append-only (only closing a period and superseding a same-day correction may change), live periods cannot overlap (btree_gist exclusion constraint), snapshots and their lines are append-only.
+- `apps/api`: `/api/prices` (matrix with conversion, staleness, ambiguity), `/history`, set (single/block), preferred supplier, bulk % change (preview equals apply; 0 % reconfirms), copy plant, import preview/commit (all-or-nothing, stale-preview check, `.xlsx`/`.csv`, EN/AR headers), logged export, coverage, `/api/price-snapshots` (hash re-verified on read). New `ApiRoutes.mutateFile`. Dev seed adds SYNTHETIC prices.
+- `apps/web`: Prices screen (sticky first column, windowed rows, inline edit, range paste, copy, undo/redo, keyboard map that reverses left/right in RTL, pending changes shown dashed, stale hatch + age text, ex-delivery/ambiguous/needs-density markers, optional median heatmap with the delta as text, history sheet with trend and supplier preference, bulk, copy, import, snapshot, export, as-of date), Materials list shows "priced at N of M plants".
+
+**Commands run (all green):** `typecheck`, `lint`, `test` (engine 52, api 125, web 25, rbac 161, ui 120, rules 159, …), `test:rules` (143), `features:check`, `e2e` (68, incl. 8 new with axe on matrix, history, import, snapshot and bulk dialogs, EN/AR), `screens` (`docs/screens/M1.2/`), `db:drift`.
+
+**Gate:** pasting 20 plants × 200 materials (4,000 prices) commits in **≈ 0.83 s** (budget 2 s) and loads the matrix in ≈ 0.1 s on the test database; history is never overwritten (tested at the database level).
+
+**Defects found by tests/review and fixed:** Drizzle expands array parameters, so the bulk close/supersede used a JSON recordset; an audit entry was missing for a no-op request (every request now leaves one); a `jod_` column had to be `numeric` (platform test); the edit input committed twice (Enter then blur) so one undo left the cell pending; stale-hatch text failed contrast (lighter hatch, heading-coloured age text); a bulk or import row dated before a later scheduled price is now an error in the preview, not a surprise at commit; bidi garbling of names/dates in the Arabic history sheet; two earlier e2e specs assumed fixed plant counts or lazy chunks.
+
+**Verification note:** tests prove storage, history, conversion and workflow as implemented. They do **not** prove the prices are right, that your suppliers' prices are delivered or ex-works as flagged, or that the stale-price limit (unset) is the right policy. Scoped roles (Procurement, Plant Manager) see one plant at a time through the plant switcher.
+
+**Open items:** `JOD/m3` prices stay "not convertible" until you provide bulk densities; the haul cost is not added to ex-works prices; the 15-minute "affects N approved designs" banner arrives with M5.1; Arabic strings are drafts in `docs/i18n-review.md`; the grid supports click/shift-click selection (no drag-select yet).
+
+**Next:** M1.3 (demo data, legacy import, staging) — write `docs/plans/M1.3.md` and list questions.

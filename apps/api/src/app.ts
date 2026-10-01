@@ -15,6 +15,7 @@ import { attachmentRoutes } from './routes/attachments';
 import { materialRoutes } from './routes/materials';
 import { meRoutes } from './routes/me';
 import { plantRoutes } from './routes/plants';
+import { priceRoutes } from './routes/prices';
 import { ruleRoutes } from './routes/rules';
 import { settingsRoutes } from './routes/settings';
 import { supplierRoutes } from './routes/suppliers';
@@ -66,6 +67,7 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   supplierRoutes(api);
   attachmentRoutes(api);
   materialRoutes(api);
+  priceRoutes(api);
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {
     res.json(api.openApiDocument());
   });

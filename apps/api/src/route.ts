@@ -148,6 +148,35 @@ export class ApiRoutes {
     );
   }
 
+  /** Audited operation that answers with a file (e.g. a logged export). */
+  mutateFile<B = undefined>(
+    path: string,
+    o: Opts<B, unknown, never>,
+    handler: (
+      a: MutateArgs<B, unknown>,
+    ) => Promise<{ filename: string; contentType: string; data: Buffer }>,
+  ) {
+    this.document('post', path, o);
+    this.mutationRoutes.add(`POST ${path}`);
+    this.router.post(path, async (req: Request, res: Response) => {
+      const auth = res.locals['auth'] as AuthContext;
+      this.authorize(auth, o.capability);
+      const body = (o.body ? o.body.parse(req.body) : undefined) as B;
+      const f = await withAudit(this.db, auth.ctx, (tx, audit) =>
+        handler({ auth, body, params: req.params, tx, audit }),
+      );
+      res
+        .status(200)
+        .set({
+          'Content-Type': f.contentType,
+          'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(f.filename)}`,
+          'X-Content-Type-Options': 'nosniff',
+          'Cache-Control': 'private, no-store',
+        })
+        .send(f.data);
+    });
+  }
+
   /** Authorized file download. Always `attachment`, never sniffed, never cached by shared caches. */
   file<P = unknown>(
     path: string,

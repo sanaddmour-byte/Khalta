@@ -13,6 +13,7 @@ import { NAV } from './lib/nav';
 import { PlantsPage } from './admin/PlantsPage';
 import { SettingsPage } from './admin/SettingsPage';
 import { MaterialsPage } from './materials/MaterialsPage';
+import { PricesPage } from './prices/PricesPage';
 import { LoginPage } from './pages/Login';
 import { SectionPage } from './pages/Section';
 import { RulesPage } from './rules/RulesPage';
@@ -56,6 +57,7 @@ const appRoute = createRoute({
 const SCREENS: Record<string, () => React.JSX.Element> = {
   rules: RulesPage,
   materials: MaterialsPage,
+  prices: PricesPage,
   plants: PlantsPage,
   settings: SettingsPage,
 };

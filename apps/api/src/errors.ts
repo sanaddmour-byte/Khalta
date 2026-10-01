@@ -55,5 +55,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     body = { code: 'invalid_json', message: 'Malformed JSON body' };
   }
   if (status >= 500) req.log?.error({ err }, 'unhandled error');
+  if (status >= 500 && process.env['DEBUG_ERR'])
+    console.error(err, (err as { cause?: unknown }).cause);
   res.status(status).json({ error: body });
 };

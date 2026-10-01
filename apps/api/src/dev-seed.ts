@@ -172,6 +172,64 @@ await withAudit(handle.db, ctx, async (tx, audit) => {
       after: { en: d.en, synthetic: true },
     });
   }
+  // Synthetic prices (clearly labelled; NOT real market prices). Aggregates and cement at both plants.
+  const [anySup] = await tx
+    .select()
+    .from(schema.suppliers)
+    .where(eq(schema.suppliers.nameEn, 'Demo supplier (SYNTHETIC)'));
+  const supplier =
+    anySup ??
+    (
+      await tx
+        .insert(schema.suppliers)
+        .values({ tenantId, nameEn: 'Demo supplier (SYNTHETIC)', nameAr: 'مورد تجريبي (تجريبي)' })
+        .returning()
+    )[0]!;
+  const synthetic: Record<string, [string, string]> = {
+    'Demo cement': ['78.000', 'JOD/ton'],
+    'Demo washed sand': ['9.500', 'JOD/ton'],
+    'Demo crushed sand': ['8.200', 'JOD/ton'],
+    'Demo coarse 20 mm': ['7.800', 'JOD/ton'],
+  };
+  const [hasPrice] = await tx
+    .select({ id: schema.materialPrices.id })
+    .from(schema.materialPrices)
+    .limit(1);
+  if (!hasPrice) {
+    const mats = await tx.select().from(schema.materials);
+    const rows = mats.flatMap((m) =>
+      synthetic[m.marketNameEn]
+        ? plantIds.map((plantId, i) => ({
+            tenantId,
+            materialId: m.id,
+            plantId,
+            supplierId: supplier.id,
+            price: (Number(synthetic[m.marketNameEn]![0]) + i * 0.5).toFixed(3),
+            unit: synthetic[m.marketNameEn]![1] as 'JOD/ton',
+            effectiveFrom: new Date(Date.now() - 20 * 86_400_000).toISOString().slice(0, 10),
+            reason: 'SYNTHETIC dev data',
+            enteredBy: qc?.id ?? null,
+          }))
+        : [],
+    );
+    if (rows.length) {
+      await tx.insert(schema.materialPrices).values(rows);
+      await tx.insert(schema.pricePreferences).values(
+        rows.map((r) => ({
+          tenantId,
+          materialId: r.materialId,
+          plantId: r.plantId,
+          supplierId: supplier.id,
+        })),
+      );
+      await audit.record({
+        action: 'price.set',
+        entityType: 'price_batch',
+        entityId: crypto.randomUUID(),
+        after: { synthetic: true, rows: rows.length },
+      });
+    }
+  }
   await audit.record({ action: 'dev_seed.run', entityType: 'tenant', entityId: tenantId });
 });
 console.log(

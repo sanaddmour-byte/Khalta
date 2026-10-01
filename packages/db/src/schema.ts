@@ -408,3 +408,120 @@ export const materialTests = pgTable(
     index('material_tests_tenant_idx').on(t.tenantId, t.materialId),
   ],
 );
+
+// ---- Prices (M1.2) -----------------------------------------------------------------------------
+/**
+ * One row per price PERIOD for (material, plant, supplier). Rows are never edited or deleted: a new price
+ * closes the previous period (`effective_to`) and a same-day correction supersedes it (`superseded_at`).
+ * Only those two columns may change (trigger, migration 0007); live periods never overlap (exclusion constraint).
+ */
+export const materialPrices = pgTable(
+  'material_prices',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    materialId: uuid('material_id')
+      .notNull()
+      .references(() => materials.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    supplierId: uuid('supplier_id')
+      .notNull()
+      .references(() => suppliers.id),
+    price: numeric('price', { precision: 12, scale: 3 }).notNull(),
+    unit: text('unit', { enum: ['JOD/ton', 'JOD/m3', 'JOD/kg', 'JOD/L'] }).notNull(),
+    includesDelivery: boolean('includes_delivery').notNull().default(true),
+    effectiveFrom: date('effective_from', { mode: 'string' }).notNull(),
+    effectiveTo: date('effective_to', { mode: 'string' }),
+    supersededAt: ts('superseded_at'),
+    reason: text('reason'),
+    importBatchId: uuid('import_batch_id'),
+    enteredBy: text('entered_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('material_prices_cell_idx').on(t.tenantId, t.materialId, t.plantId),
+    index('material_prices_plant_idx').on(t.tenantId, t.plantId),
+  ],
+);
+
+/** Which supplier's price a (material, plant) lookup uses when several are priced. */
+export const pricePreferences = pgTable(
+  'price_preferences',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    materialId: uuid('material_id')
+      .notNull()
+      .references(() => materials.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    supplierId: uuid('supplier_id')
+      .notNull()
+      .references(() => suppliers.id),
+    updatedAt: updatedAt(),
+    updatedBy: text('updated_by').references(() => users.id),
+  },
+  (t) => [uniqueIndex('price_preferences_cell_uq').on(t.materialId, t.plantId)],
+);
+
+/** Immutable, named copy of the prices in force on a date (append-only; migration 0007). */
+export const priceSnapshots = pgTable('price_snapshots', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  name: text('name').notNull(),
+  asOf: date('as_of', { mode: 'string' }).notNull(),
+  plantIds: jsonb('plant_ids').notNull(),
+  lineCount: integer('line_count').notNull(),
+  contentHash: text('content_hash').notNull(),
+  createdBy: text('created_by').references(() => users.id),
+  createdAt: createdAt(),
+});
+
+export const priceSnapshotLines = pgTable(
+  'price_snapshot_lines',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    snapshotId: uuid('snapshot_id')
+      .notNull()
+      .references(() => priceSnapshots.id),
+    materialId: uuid('material_id').notNull(),
+    plantId: uuid('plant_id').notNull(),
+    supplierId: uuid('supplier_id'),
+    priceId: uuid('price_id'),
+    status: text('status', {
+      enum: ['ok', 'unavailable', 'ambiguous', 'not_convertible'],
+    }).notNull(),
+    price: numeric('price', { precision: 12, scale: 3 }),
+    unit: text('unit'),
+    includesDelivery: boolean('includes_delivery'),
+    effectiveFrom: date('effective_from', { mode: 'string' }),
+    jodPerKg: numeric('jod_per_kg', { precision: 18, scale: 9 }),
+    note: text('note'),
+  },
+  (t) => [index('price_snapshot_lines_snapshot_idx').on(t.snapshotId)],
+);
+
+export const priceImportBatches = pgTable('price_import_batches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  filename: text('filename'),
+  rows: jsonb('rows').notNull(),
+  summary: jsonb('summary').notNull(),
+  status: text('status', { enum: ['previewed', 'committed'] }).notNull(),
+  createdBy: text('created_by')
+    .notNull()
+    .references(() => users.id),
+  createdAt: createdAt(),
+  committedAt: ts('committed_at'),
+});

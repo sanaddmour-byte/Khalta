@@ -23,6 +23,7 @@ import { useFormat } from '../lib/format';
 import { usePlant } from '../lib/plant';
 import { usePrefs } from '../lib/prefs';
 import { SectionPage } from '../pages/Section';
+import { coverageQuery } from '../prices/api';
 import { materialsQuery, type MaterialRow } from './api';
 import { FreshnessChip, ReadyChip, SourceChip } from './chips';
 import { EntryDialog } from './EntryDialog';
@@ -50,6 +51,9 @@ export function MaterialsPage() {
     }),
     enabled: canRead,
   });
+
+  const canPrice = caps.includes('price.view');
+  const coverage = useQuery({ ...coverageQuery, enabled: canPrice });
 
   if (me && !canRead) return <SectionPage id="materials" />;
 
@@ -153,6 +157,14 @@ export function MaterialsPage() {
                     <span className="block text-xs text-muted lg:hidden">
                       {t(`materials.category.${m.category}`)}
                     </span>
+                    {coverage.data && (
+                      <span className="block text-xs text-muted" data-testid="priced-at">
+                        {t('materials.pricedAt', {
+                          n: coverage.data.priced[m.id] ?? 0,
+                          m: coverage.data.plants,
+                        })}
+                      </span>
+                    )}
                   </Td>
                   <Td className="hidden lg:table-cell">{t(`materials.category.${m.category}`)}</Td>
                   <Td className="hidden xl:table-cell">{plantName(m.plantId)}</Td>

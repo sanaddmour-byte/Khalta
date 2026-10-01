@@ -8,11 +8,11 @@ The price matrix (materials × up to 20 plants, ~200 rows) must feel like a spre
 
 ## Options
 
-| Option | For | Against |
-| --- | --- | --- |
-| A. Hand-built ARIA grid with TanStack Virtual for row windowing | Approved library family; full control of RTL, logical CSS, keyboard model, paste and a11y; money cells are decimal strings, not grid-library values; no new licence | We write selection, paste, staging/undo and key handling (kept in a pure, tested model) |
-| B. AG Grid Community (MIT) | Mature editing | Range selection and Excel clipboard are Enterprise features; heavy bundle; RTL/ARIA customization is costly |
-| C. Glide Data Grid (MIT) | Canvas speed for huge grids | Canvas text defeats Arabic shaping review, axe and screen readers; weak RTL |
+| Option                                                          | For                                                                                                                                                                 | Against                                                                                                     |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| A. Hand-built ARIA grid with TanStack Virtual for row windowing | Approved library family; full control of RTL, logical CSS, keyboard model, paste and a11y; money cells are decimal strings, not grid-library values; no new licence | We write selection, paste, staging/undo and key handling (kept in a pure, tested model)                     |
+| B. AG Grid Community (MIT)                                      | Mature editing                                                                                                                                                      | Range selection and Excel clipboard are Enterprise features; heavy bundle; RTL/ARIA customization is costly |
+| C. Glide Data Grid (MIT)                                        | Canvas speed for huge grids                                                                                                                                         | Canvas text defeats Arabic shaping review, axe and screen readers; weak RTL                                 |
 
 ## Decision
 
