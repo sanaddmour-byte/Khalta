@@ -17,7 +17,8 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '../cn';
 import { Ltr } from './bidi';
 
-const chip = 'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium';
+const chip =
+  'inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium';
 
 /* ---- Pass / warn / fail: always icon + text + colour ---- */
 export const STATUSES = ['pass', 'warn', 'fail'] as const;
@@ -121,6 +122,33 @@ export function SavingStateLabel({ state, className }: { state: SavingState; cla
     <span data-saving-state={state} className={cn(chip, SAVING_CLS[state], className)}>
       <Icon className="size-3.5" aria-hidden />
       {t(`ui.saving.${state}`)}
+    </span>
+  );
+}
+
+/* ---- Rule verification state: icon + text + colour ---- */
+export const VERIFICATION_STATES = ['verified', 'unverified', 'missing', 'info'] as const;
+export type VerificationState = (typeof VERIFICATION_STATES)[number];
+const VERIFICATION_STYLE: Record<VerificationState, { icon: LucideIcon; cls: string }> = {
+  verified: { icon: ShieldCheck, cls: STATUS_STYLE.pass.cls },
+  unverified: { icon: ShieldAlert, cls: STATUS_STYLE.warn.cls },
+  missing: { icon: CircleHelp, cls: STATUS_STYLE.fail.cls },
+  info: { icon: Info, cls: 'border-line bg-transparent text-muted' },
+};
+
+export function VerificationChip({
+  state,
+  className,
+}: {
+  state: VerificationState;
+  className?: string;
+}) {
+  const { t } = useTranslation();
+  const { icon: Icon, cls } = VERIFICATION_STYLE[state];
+  return (
+    <span data-verification={state} className={cn(chip, cls, className)}>
+      <Icon className="size-3.5" aria-hidden />
+      {t(`ui.verification.${state}`)}
     </span>
   );
 }

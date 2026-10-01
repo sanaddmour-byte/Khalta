@@ -40,6 +40,7 @@ for (const lang of ['en', 'ar'] as const) {
     await trigger.click();
     const menu = page.getByRole('menu');
     await expect(menu).toBeVisible();
+    await page.waitForTimeout(250); // let the open animation settle (flaky under load otherwise)
     const m = (await menu.boundingBox())!;
     // end-aligned: the menu's end edge lines up with the trigger's end edge
     if (lang === 'en') expect(Math.abs(m.x + m.width - (t.x + t.width))).toBeLessThan(3);

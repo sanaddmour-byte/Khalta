@@ -1,5 +1,5 @@
 import fc from 'fast-check';
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 import { isTighterOrEqual, mergeValues } from '../src/merge';
 import { resolve, type Mode } from '../src/resolver';
 import type { RuleKind, RuleRecord } from '../src/schema';

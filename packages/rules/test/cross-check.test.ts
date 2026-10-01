@@ -23,7 +23,7 @@ const num = (s: string) =>
     s
       .replace(/,/g, '')
       .replace('−', '-')
-      .replace(/[^\d.\-]/g, ''),
+      .replace(/[^\d.-]/g, ''),
   );
 const nums = (s: string) =>
   [

@@ -54,15 +54,23 @@ export function DialogContent({
 export function SheetContent({
   className,
   children,
+  side = 'start',
   ...p
-}: ComponentProps<typeof RDialog.Content>) {
+}: ComponentProps<typeof RDialog.Content> & { side?: 'start' | 'end' }) {
+  // Logical edges: "start" is the left in LTR and the right in RTL (slide direction follows --dir-sign).
+  const edge = side === 'start' ? 'start-0 border-e' : 'end-0 border-s';
+  const anim =
+    side === 'start'
+      ? 'data-[state=open]:animate-[k-slide-start-in_var(--motion)_ease-out] data-[state=closed]:animate-[k-slide-start-out_var(--motion)_ease-in]'
+      : 'data-[state=open]:animate-[k-slide-end-in_var(--motion)_ease-out] data-[state=closed]:animate-[k-slide-end-out_var(--motion)_ease-in]';
   return (
     <RDialog.Portal>
       <RDialog.Overlay className={overlay} />
       <RDialog.Content
         className={cn(
-          'fixed inset-y-0 start-0 z-50 w-72 max-w-[85vw] border-e border-line bg-surface p-4 text-body',
-          'data-[state=open]:animate-[k-slide-start-in_var(--motion)_ease-out] data-[state=closed]:animate-[k-slide-start-out_var(--motion)_ease-in]',
+          'fixed inset-y-0 z-50 w-72 max-w-[85vw] border-line bg-surface p-4 text-body',
+          edge,
+          anim,
           className,
         )}
         {...p}

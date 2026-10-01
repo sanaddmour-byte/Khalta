@@ -12,6 +12,7 @@ import { meQuery } from './lib/api';
 import { NAV } from './lib/nav';
 import { LoginPage } from './pages/Login';
 import { SectionPage } from './pages/Section';
+import { RulesPage } from './rules/RulesPage';
 import { Shell } from './shell/Shell';
 
 interface RouterContext {
@@ -52,7 +53,7 @@ const sectionRoutes = NAV.map((n) =>
   createRoute({
     getParentRoute: () => appRoute,
     path: n.path,
-    component: () => <SectionPage id={n.id} />,
+    component: n.id === 'rules' ? RulesPage : () => <SectionPage id={n.id} />,
   }),
 );
 

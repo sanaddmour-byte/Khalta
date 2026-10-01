@@ -31,8 +31,13 @@ const list = z.object({
 const verifyBody = z.strictObject({ note: z.string().trim().min(5).max(500) });
 const editBody = z
   .strictObject({
-    value: z.unknown().optional(),
-    definition: tableDefinitionSchema.nullable().optional(),
+    value: z
+      .unknown()
+      .refine((v) => v !== null, {
+        message: 'a value cannot be cleared; correct it to another value',
+      })
+      .optional(),
+    definition: tableDefinitionSchema.optional(),
     clause_ref: z.string().trim().min(1).max(300).optional(),
     reason: z.string().trim().min(5).max(500),
   })

@@ -164,5 +164,138 @@
     "sample": "Concrete grade",
     "sampleLine": "Required strength for the mix"
   },
-  "dev_materials": { "cement": "CEM I 42.5N", "sand": "Na'meh", "coarse": "Fooliyyeh" }
+  "dev_materials": {
+    "cement": "CEM I 42.5N",
+    "sand": "Na'meh",
+    "coarse": "Fooliyyeh"
+  },
+  "rules": {
+    "intro": "Code values and engineering parameters with their clause references. Every value starts as an unverified transcription candidate until a QC manager checks it against the licensed document.",
+    "engineeringIntro": "Engineering parameters are plant and workability guardrails set by QC, not code values. Empty values stay empty until QC sets them.",
+    "notOnFile": "Not on file",
+    "structural": "Structural, not checked here",
+    "tableShape": "Table {rows}×{cols}",
+    "prohibited": "Not permitted",
+    "permitted": "Permitted",
+    "noMatches": "No rules match these filters.",
+    "always": "Always",
+    "cancel": "Cancel",
+    "version": "Version {n}",
+    "usedByNone": "0 (no designs yet)",
+    "filters": "Filter rules",
+    "search": "Search key, clause or note",
+    "rulesets": {
+      "ACI": "ACI (American)",
+      "JS": "JS (Jordanian)",
+      "SHARED": "Shared mappings",
+      "ENGINEERING": "Engineering parameters"
+    },
+    "col": {
+      "rule": "Rule",
+      "value": "Value",
+      "class": "Requirement class",
+      "clause": "Clause",
+      "status": "Status",
+      "usedBy": "Used by designs"
+    },
+    "class": {
+      "CODE_HARD": "Code limit",
+      "PROJECT_HARD": "Project limit",
+      "EMPIRICAL_CALIBRATED": "Calibrated model",
+      "ENGINEERING_GUARDRAIL": "Engineering guardrail",
+      "OPTIMIZATION_PREFERENCE": "Optimization preference",
+      "DESIGN_AID": "Design aid",
+      "USER_SPECIFIED": "User specified"
+    },
+    "field": {
+      "units": "Units",
+      "kind": "Kind",
+      "requirement": "Requirement",
+      "appliesTo": "Applies when",
+      "noteEn": "Note (English)",
+      "noteAr": "Note (Arabic)",
+      "table": "Table"
+    },
+    "origin": {
+      "seed": "Seed file",
+      "ui": "Corrected in the app",
+      "csv": "CSV import"
+    },
+    "history": {
+      "title": "History"
+    },
+    "tabs": {
+      "rules": "Code rules",
+      "engineering": "Engineering parameters",
+      "import": "Import Jordanian values"
+    },
+    "filter": {
+      "ruleset": "Ruleset",
+      "allRulesets": "All rulesets",
+      "allClasses": "All classes",
+      "allStatuses": "All statuses"
+    },
+    "banner": {
+      "title": "{unverified} rule values are unverified and {missing} are not on file ({verified} verified).",
+      "body": "Designs cannot be approved on unverified or missing values. Open a rule to verify it against the licensed document."
+    },
+    "verify": {
+      "open": "Verify this value",
+      "title": "Verify rule value",
+      "description": "Confirm that this value and clause match the licensed document. This is a signed action and is recorded with your note.",
+      "noteLabel": "E-signature note",
+      "notePlaceholder": "For example: Checked against ACI 318-19 Table 19.3.2.1, row S2",
+      "noteHint": "Type at least 5 characters. You cannot verify a value you changed yourself.",
+      "submit": "Sign and verify",
+      "done": "Rule verified"
+    },
+    "edit": {
+      "open": "Correct value",
+      "title": "Correct rule value",
+      "description": "This creates version {version}, which must be verified again. The current version stays in the history.",
+      "value": "Value",
+      "clause": "Clause reference",
+      "reason": "Reason for the change",
+      "reasonPlaceholder": "Why is the current value wrong?",
+      "warning": "The corrected value will be unverified until a different QC manager verifies it.",
+      "submit": "Save as new version",
+      "done": "New version saved",
+      "valueRequired": "Enter a value",
+      "boolean": "Enter true or false",
+      "badJson": "This is not valid JSON",
+      "hint": {
+        "default": "Enter the value in the rule's units.",
+        "limit_max": "A number, or a fraction like 1/3.",
+        "limit_min": "A number, or a fraction like 1/3.",
+        "tolerance": "A number (plus or minus).",
+        "prohibition": "true if prohibited, false if permitted.",
+        "allowed_set": "Separate items with semicolons.",
+        "table": "JSON table definition (rows, cols, data, interpolation).",
+        "range": "JSON: {\"19\": {\"min\": 90, \"max\": 100}} per sieve.",
+        "value": "JSON.",
+        "parameter": "JSON or a number.",
+        "info": "JSON or text."
+      },
+      "notNumber": "This is not a number"
+    },
+    "import": {
+      "intro": "Upload the Jordanian code values as a CSV. The file is checked first and nothing changes until you commit. Imported values start unverified.",
+      "template": "Download the CSV template",
+      "file": "CSV file",
+      "paste": "Or paste the CSV text",
+      "preview": "Check file",
+      "previewTitle": "Validation preview",
+      "summary": "{total} rows: {ok} will change, {unchanged} unchanged, {errors} with errors.",
+      "line": "Line",
+      "change": "Change",
+      "status": {
+        "ok": "Will change",
+        "unchanged": "Unchanged",
+        "error": "Error"
+      },
+      "commit": "Apply {count} changes",
+      "done": "Imported {count} values",
+      "fixFirst": "Fix the errors in the file and check it again."
+    }
+  }
 }

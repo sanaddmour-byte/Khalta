@@ -163,6 +163,16 @@ html[lang='ar'] * {
     transform: translateX(calc(-100% * var(--dir-sign)));
   }
 }
+@keyframes k-slide-end-in {
+  from {
+    transform: translateX(calc(100% * var(--dir-sign)));
+  }
+}
+@keyframes k-slide-end-out {
+  to {
+    transform: translateX(calc(100% * var(--dir-sign)));
+  }
+}
 @keyframes k-pop-in {
   from {
     opacity: 0;

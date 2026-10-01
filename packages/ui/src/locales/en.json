@@ -2,8 +2,16 @@
   "ui": {
     "close": "Close",
     "loading": "Loading",
-    "status": { "pass": "Pass", "warn": "Warning", "fail": "Fail" },
-    "code": { "ACI": "ACI", "JS": "JS", "PROJECT": "Project" },
+    "status": {
+      "pass": "Pass",
+      "warn": "Warning",
+      "fail": "Fail"
+    },
+    "code": {
+      "ACI": "ACI",
+      "JS": "JS",
+      "PROJECT": "Project"
+    },
     "evidence": {
       "CODE_VERIFIED": "Code verified",
       "PROJECT_VERIFIED": "Project verified",
@@ -15,7 +23,20 @@
       "INPUT_MISSING": "Input missing",
       "TRIAL_REQUIRED": "Trial required"
     },
-    "saving": { "theoretical": "Theoretical", "approved": "Approved", "realized": "Realized" },
-    "palette": { "placeholder": "Type a command or search…", "empty": "No results" }
+    "saving": {
+      "theoretical": "Theoretical",
+      "approved": "Approved",
+      "realized": "Realized"
+    },
+    "palette": {
+      "placeholder": "Type a command or search…",
+      "empty": "No results"
+    },
+    "verification": {
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "missing": "Not on file",
+      "info": "Informational"
+    }
   }
 }

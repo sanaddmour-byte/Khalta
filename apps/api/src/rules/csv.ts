@@ -80,7 +80,7 @@ function parseCell(
   if (!v) return { error: 'value is empty (leave the row out to keep "not on file")' };
   if (v.startsWith('inherits:')) {
     const ref = v.slice('inherits:'.length).trim();
-    return /^[A-Z0-9_]+:[A-Za-z0-9_.\-]+$/.test(ref)
+    return /^[A-Z0-9_]+:[A-Za-z0-9_.-]+$/.test(ref)
       ? { inherits: ref }
       : { error: 'inherits needs the form inherits:ACI:<rule_key>' };
   }
@@ -115,7 +115,7 @@ export function previewCsv(
   refExists: (ref: string) => boolean,
 ): ImportPreview {
   const fileErrors: string[] = [];
-  const parsed = Papa.parse<Record<string, string>>(csv.replace(/^﻿/, ''), {
+  const parsed = Papa.parse<Record<string, string>>(csv.replace(/^\uFEFF/, ''), {
     header: true,
     skipEmptyLines: 'greedy',
     transformHeader: (h) => h.trim(),

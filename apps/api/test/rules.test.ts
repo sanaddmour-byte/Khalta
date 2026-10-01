@@ -271,9 +271,22 @@ describe('correcting values', () => {
       (
         await qcm
           .patch(`/api/rules/${w.id}/value`)
-          .send({ definition: null, reason: 'not a table' })
+
+          .send({
+            definition: { cols: { name: 'x', values: [1] }, data: [[1]], interpolation: 'linear' },
+            reason: 'not a table',
+          })
       ).status,
     ).toBe(409);
+  });
+
+  it('a value cannot be blanked ("not on file" only comes from the seed files)', async () => {
+    const w = await rule('ACI', 'durability.W2.max_wcm');
+    const res = await qcm
+      .patch(`/api/rules/${w.id}/value`)
+      .send({ value: null, reason: 'try to clear it' });
+    expect(res.status).toBe(400);
+    expect((await rule('ACI', 'durability.W2.max_wcm')).version).toBe(w.version);
   });
 
   it('tables take a validated definition, not a value', async () => {

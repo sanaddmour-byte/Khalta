@@ -1,0 +1,2 @@
+rule_key,value,units,clause_ref,requirement_class,note_ar,note_en,value_json
+durability.S2.max_wcm,0.45,ratio,JSC-2022 §…,CODE_HARD,…,…,

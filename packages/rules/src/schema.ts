@@ -47,7 +47,7 @@ export type Units = (typeof UNITS)[number];
 export const CODE_RULESETS = ['ACI', 'JS'] as const;
 
 const FRACTION = /^\d+\/\d+$/;
-const KEY = /^[A-Za-z0-9_]+(?:[.\-][A-Za-z0-9_]+)*$/;
+const KEY = /^[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*$/;
 
 export const tableDefinitionSchema = z
   .strictObject({
@@ -134,7 +134,7 @@ export const ruleSchema = z
     definition: tableDefinitionSchema.nullable().optional(),
     inherits: z
       .string()
-      .regex(/^[A-Z0-9_]+:[A-Za-z0-9_.\-]+$/, 'inherits must look like "ACI:<rule_key>"')
+      .regex(/^[A-Z0-9_]+:[A-Za-z0-9_.-]+$/, 'inherits must look like "ACI:<rule_key>"')
       .optional(),
     units: z.enum(UNITS),
     clause_ref: z.string().min(1),
