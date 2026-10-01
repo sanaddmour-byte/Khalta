@@ -25,6 +25,7 @@ const SPEC: Record<Role, Capability[]> = {
     'import.run',
     'export.priceCost',
     'audit.read',
+    'rules.read',
   ],
   qc_manager: [
     'price.view',
@@ -34,6 +35,7 @@ const SPEC: Record<Role, Capability[]> = {
     'lab.enter',
     'trial.pass',
     'design.approve',
+    'rules.read',
     'rules.verify',
     'design.attest',
     'production.release',
@@ -52,6 +54,7 @@ const SPEC: Record<Role, Capability[]> = {
     'lab.enter',
     'insight.draft',
     'library.read',
+    'rules.read',
   ],
   procurement: ['price.view', 'price.edit', 'cost.view', 'library.read', 'export.priceCost'],
   plant_manager: ['price.view', 'cost.view', 'lab.enter', 'production.release', 'library.read'],

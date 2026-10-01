@@ -1,0 +1,15 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'hot.max_concrete_temp_c'
+    requirement: 'hot.max_concrete_temp_c'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Hot weather'
+    value: null
+    units: 'degC'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Maximum concrete temperature at placement unless the project is stricter (many Jordanian specifications use 32 °C) (Jordanian value to be entered.)'
+    note_ar: 'أقصى درجة حرارة للخرسانة عند الصب ما لم يكن المشروع أكثر تشدداً (تعتمد مواصفات أردنية كثيرة 32 °م) (تُدخل القيمة الأردنية.)'

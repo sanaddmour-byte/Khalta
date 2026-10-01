@@ -22,6 +22,7 @@ export const CAPABILITIES = [
   'lab.enter', // material tests, trial batches, strength results
   'trial.pass',
   'design.approve',
+  'rules.read',
   'rules.verify',
   'design.attest',
   'production.release', // release to / suspend in production
@@ -67,6 +68,7 @@ const MATRIX: Record<Capability, Record<Role, Cell>> = {
   'lab.enter': row({ qc_manager: ALL, qc_engineer: ALL, plant_manager: ALL }),
   'trial.pass': row({ qc_manager: ALL }),
   'design.approve': row({ qc_manager: ALL }),
+  'rules.read': row({ admin: ALL, qc_manager: ALL, qc_engineer: ALL }),
   'rules.verify': row({ qc_manager: ALL }),
   'design.attest': row({ qc_manager: ALL }),
   'production.release': row({ qc_manager: ALL, plant_manager: ALL }),

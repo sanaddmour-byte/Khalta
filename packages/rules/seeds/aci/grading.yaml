@@ -1,0 +1,26 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'grading.fine.limits'
+    requirement: 'grading.fine.limits'
+    kind: 'range'
+    requirement_class: 'CODE_HARD'
+    group: 'Grading'
+    value: null
+    units: '%'
+    clause_ref: 'ASTM C33'
+    verified: false
+    note_en: 'Fine aggregate grading limits per sieve. Not on file: enter from the licensed standard.'
+    note_ar: 'حدود تدرج الركام الناعم لكل منخل. غير متوفرة: تُدخل من المواصفة المرخصة.'
+  - key: 'grading.coarse.limits'
+    requirement: 'grading.coarse.limits'
+    kind: 'range'
+    requirement_class: 'CODE_HARD'
+    group: 'Grading'
+    value: null
+    units: '%'
+    clause_ref: 'ASTM C33'
+    verified: false
+    note_en: 'Coarse aggregate grading limits per sieve and size number. Not on file.'
+    note_ar: 'حدود تدرج الركام الخشن لكل منخل ورقم المقاس. غير متوفرة.'

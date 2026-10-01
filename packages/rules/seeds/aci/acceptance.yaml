@@ -1,0 +1,50 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'accept.avg3.min_ratio_fc'
+    requirement: 'accept.avg3.min_ratio_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    value: 1.0
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 §26.12.3.1'
+    verified: false
+    note_en: "Every average of 3 consecutive tests must be at least f'c (ratio to f'c)"
+    note_ar: "يجب ألا يقل متوسط كل ثلاثة فحوص متتالية عن f'c (نسبة إلى f'c)"
+  - key: 'accept.fc_threshold_mpa'
+    requirement: 'accept.fc_threshold_mpa'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    value: 35
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 §26.12.3.1'
+    verified: false
+    note_en: 'Strength at which the single-test criterion changes'
+    note_ar: 'المقاومة التي يتغير عندها معيار الفحص المنفرد'
+  - key: 'accept.single.max_deficit_mpa'
+    requirement: 'accept.single.max_deficit_mpa'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    applies_to: { 'fc_mpa': { 'lte': 35 } }
+    value: 3.5
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 §26.12.3.1'
+    verified: false
+    note_en: "No single test may fall below f'c by more than this (f'c ≤ 35 MPa)"
+    note_ar: "يجب ألا ينخفض أي فحص منفرد عن f'c بأكثر من هذه القيمة (f'c ≤ 35)"
+  - key: 'accept.single.min_ratio_fc'
+    requirement: 'accept.single.min_ratio_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    applies_to: { 'fc_mpa': { 'gt': 35 } }
+    value: 0.9
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 §26.12.3.1'
+    verified: false
+    note_en: "No single test may fall below this ratio of f'c (f'c > 35 MPa)"
+    note_ar: "يجب ألا ينخفض أي فحص منفرد عن هذه النسبة من f'c (f'c > 35)"

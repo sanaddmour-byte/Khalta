@@ -7,7 +7,9 @@
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --coverage",
-    "seed:dev": "tsx src/dev-seed.ts"
+    "seed:dev": "tsx src/dev-seed.ts",
+    "rules:sync": "tsx src/rules/cli.ts sync",
+    "rules:export-seed": "tsx src/rules/cli.ts export"
   },
   "dependencies": {
     "express": "catalog:",
@@ -18,7 +20,10 @@
     "@asteasolutions/zod-to-openapi": "catalog:",
     "@khalta/db": "workspace:*",
     "@khalta/rbac": "workspace:*",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "@khalta/rules": "workspace:*",
+    "papaparse": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@types/express": "catalog:",
@@ -30,6 +35,7 @@
     "vitest": "catalog:",
     "@types/node": "catalog:",
     "pg": "catalog:",
-    "@types/pg": "catalog:"
+    "@types/pg": "catalog:",
+    "@types/papaparse": "catalog:"
   }
 }

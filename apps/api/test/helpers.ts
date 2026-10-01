@@ -10,6 +10,8 @@ import { createAuth } from '../src/auth';
 import { bootstrap } from '../src/bootstrap';
 import { loadConfig, type Config } from '../src/config';
 import { insertUserWithPassword } from '../src/routes/users';
+import { syncRules } from '../src/rules/service';
+import { loadSeeds } from '@khalta/rules/loader';
 
 export const PASSWORD = 'correct-horse-battery-staple';
 const SECRET = 'test-secret-test-secret-test-secret-123';
@@ -25,7 +27,10 @@ export function testEnv(url: string): NodeJS.ProcessEnv {
   };
 }
 
-export async function createTestEnv(overrides: Partial<NodeJS.ProcessEnv> = {}) {
+export async function createTestEnv(
+  overrides: Partial<NodeJS.ProcessEnv> = {},
+  opts: { seedRules?: boolean } = {},
+) {
   const adminUrl = inject('adminUrl');
   const name = `khalta_t_${randomBytes(5).toString('hex')}`;
   const admin = new pg.Client({ connectionString: adminUrl });
@@ -38,6 +43,12 @@ export async function createTestEnv(overrides: Partial<NodeJS.ProcessEnv> = {}) 
   const handle = createDb(config.DATABASE_URL);
   const auth = createAuth(handle.db, config);
   const { tenantId } = await bootstrap(handle.db, auth, config);
+  if (opts.seedRules) {
+    const seeds = loadSeeds();
+    await withAudit(handle.db, { tenantId, actor: null, requestId: 'test-seed' }, (tx, audit) =>
+      syncRules(tx, audit, tenantId, seeds),
+    );
+  }
   const app = createApp({ config, db: handle.db, auth, logger: pino({ level: 'silent' }) });
   let n = 0;
 

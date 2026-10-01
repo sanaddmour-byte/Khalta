@@ -13,6 +13,7 @@ import { ApiRoutes } from './route';
 import { auditRoutes } from './routes/audit';
 import { meRoutes } from './routes/me';
 import { plantRoutes } from './routes/plants';
+import { ruleRoutes } from './routes/rules';
 import { settingsRoutes } from './routes/settings';
 import { userRoutes } from './routes/users';
 
@@ -58,6 +59,7 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   plantRoutes(api);
   settingsRoutes(api);
   auditRoutes(api);
+  ruleRoutes(api);
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {
     res.json(api.openApiDocument());
   });

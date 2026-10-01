@@ -1,0 +1,496 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'durability.F0.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['F0'] }
+    value: 17
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class F0"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض F0"
+  - key: 'durability.F1.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['F1'] }
+    value: 0.55
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class F1'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض F1'
+  - key: 'durability.F1.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['F1'] }
+    value: 24
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class F1"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض F1"
+  - key: 'durability.F2.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['F2'] }
+    value: 0.45
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class F2'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض F2'
+  - key: 'durability.F2.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['F2'] }
+    value: 31
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class F2"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض F2"
+  - key: 'durability.F3.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['F3'] }
+    value: 0.4
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class F3'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض F3'
+  - key: 'durability.F3.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['F3'] }
+    value: 35
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class F3"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض F3"
+  - key: 'durability.S0.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S0'] }
+    value: 17
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class S0"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض S0"
+  - key: 'durability.S1.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S1'] }
+    value: 0.5
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class S1'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض S1'
+  - key: 'durability.S1.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S1'] }
+    value: 28
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class S1"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض S1"
+  - key: 'durability.S2.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S2'] }
+    value: 0.45
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class S2'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض S2'
+  - key: 'durability.S2.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S2'] }
+    value: 31
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class S2"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض S2"
+  - key: 'durability.S3.opt1.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 1 }
+    value: 0.45
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class S3 (option 1)'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض S3 (option 1)'
+  - key: 'durability.S3.opt1.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 1 }
+    value: 31
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class S3 (option 1)"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض S3 (option 1)"
+  - key: 'durability.S3.opt2.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 2 }
+    value: 0.4
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class S3 (option 2)'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض S3 (option 2)'
+  - key: 'durability.S3.opt2.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 2 }
+    value: 35
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class S3 (option 2)"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض S3 (option 2)"
+  - key: 'durability.W0.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['W0'] }
+    value: 17
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class W0"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض W0"
+  - key: 'durability.W1.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['W1'] }
+    value: 17
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class W1"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض W1"
+  - key: 'durability.W2.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['W2'] }
+    value: 0.5
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class W2'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض W2'
+  - key: 'durability.W2.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['W2'] }
+    value: 28
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class W2"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض W2"
+  - key: 'durability.C0.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C0'] }
+    value: 17
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class C0"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض C0"
+  - key: 'durability.C1.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C1'] }
+    value: 17
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class C1"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض C1"
+  - key: 'durability.C2.max_wcm'
+    requirement: 'max_wcm'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C2'] }
+    value: 0.4
+    units: 'ratio'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum w/cm for exposure class C2'
+    note_ar: 'أقصى نسبة ماء إلى مواد إسمنتية لفئة التعرض C2'
+  - key: 'durability.C2.min_fc'
+    requirement: 'min_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C2'] }
+    value: 35
+    units: 'MPa'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: "Minimum specified compressive strength f'c for exposure class C2"
+    note_ar: "أدنى مقاومة ضغط محددة f'c لفئة التعرض C2"
+  - key: 'durability.C0.max_cl_nonprestressed'
+    requirement: 'max_cl_nonprestressed'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C0'] }
+    value: 1.0
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum water-soluble chloride (% of cementitious), non-prestressed, class C0'
+    note_ar: 'أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة غير مسبقة الإجهاد، الفئة C0'
+  - key: 'durability.C0.max_cl_prestressed'
+    requirement: 'max_cl_prestressed'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C0'] }
+    value: 0.06
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum water-soluble chloride (% of cementitious), prestressed, class C0'
+    note_ar: 'أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة مسبقة الإجهاد، الفئة C0'
+  - key: 'durability.C1.max_cl_nonprestressed'
+    requirement: 'max_cl_nonprestressed'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C1'] }
+    value: 0.3
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum water-soluble chloride (% of cementitious), non-prestressed, class C1'
+    note_ar: 'أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة غير مسبقة الإجهاد، الفئة C1'
+  - key: 'durability.C1.max_cl_prestressed'
+    requirement: 'max_cl_prestressed'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C1'] }
+    value: 0.06
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum water-soluble chloride (% of cementitious), prestressed, class C1'
+    note_ar: 'أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة مسبقة الإجهاد، الفئة C1'
+  - key: 'durability.C2.max_cl_nonprestressed'
+    requirement: 'max_cl_nonprestressed'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C2'] }
+    value: 0.15
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum water-soluble chloride (% of cementitious), non-prestressed, class C2'
+    note_ar: 'أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة غير مسبقة الإجهاد، الفئة C2'
+  - key: 'durability.C2.max_cl_prestressed'
+    requirement: 'max_cl_prestressed'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C2'] }
+    value: 0.06
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Maximum water-soluble chloride (% of cementitious), prestressed, class C2'
+    note_ar: 'أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة مسبقة الإجهاد، الفئة C2'
+  - key: 'durability.S2.cacl2_prohibited'
+    requirement: 'cacl2_prohibited'
+    kind: 'prohibition'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S2'] }
+    value: true
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Calcium chloride admixtures are not permitted for class S2'
+    note_ar: 'يُمنع استخدام إضافات كلوريد الكالسيوم للفئة S2'
+  - key: 'durability.S3.opt1.cacl2_prohibited'
+    requirement: 'cacl2_prohibited'
+    kind: 'prohibition'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 1 }
+    value: true
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Calcium chloride admixtures are not permitted for class S3 (option 1)'
+    note_ar: 'يُمنع استخدام إضافات كلوريد الكالسيوم للفئة S3 (option 1)'
+  - key: 'durability.S3.opt2.cacl2_prohibited'
+    requirement: 'cacl2_prohibited'
+    kind: 'prohibition'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 2 }
+    value: true
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Calcium chloride admixtures are not permitted for class S3 (option 2)'
+    note_ar: 'يُمنع استخدام إضافات كلوريد الكالسيوم للفئة S3 (option 2)'
+  - key: 'durability.S1.sulfate_cement'
+    requirement: 'sulfate_cement'
+    kind: 'allowed_set'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S1'] }
+    value: ['moderate', 'high']
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Cement sulfate resistance level allowed for class S1: C150 Type II / C595 (MS) / C1157 MS. Checked from mill-certificate properties (C3A), not labels.'
+    note_ar: 'مستوى مقاومة الإسمنت للكبريتات المسموح للفئة S1. يُفحص من خصائص شهادة المصنع (C3A) وليس من التسمية.'
+  - key: 'durability.S2.sulfate_cement'
+    requirement: 'sulfate_cement'
+    kind: 'allowed_set'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S2'] }
+    value: ['high']
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Cement sulfate resistance level allowed for class S2: C150 Type V / C595 (HS) / C1157 HS. Checked from mill-certificate properties (C3A), not labels.'
+    note_ar: 'مستوى مقاومة الإسمنت للكبريتات المسموح للفئة S2. يُفحص من خصائص شهادة المصنع (C3A) وليس من التسمية.'
+  - key: 'durability.S3.opt1.sulfate_cement'
+    requirement: 'sulfate_cement'
+    kind: 'allowed_set'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 1 }
+    value: ['high']
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Cement sulfate resistance level allowed for class S3 (option 1): Type V (with pozzolan or slag). Checked from mill-certificate properties (C3A), not labels.'
+    note_ar: 'مستوى مقاومة الإسمنت للكبريتات المسموح للفئة S3 (option 1). يُفحص من خصائص شهادة المصنع (C3A) وليس من التسمية.'
+  - key: 'durability.S3.opt2.sulfate_cement'
+    requirement: 'sulfate_cement'
+    kind: 'allowed_set'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 2 }
+    value: ['high']
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'Cement sulfate resistance level allowed for class S3 (option 2): Type V. Checked from mill-certificate properties (C3A), not labels.'
+    note_ar: 'مستوى مقاومة الإسمنت للكبريتات المسموح للفئة S3 (option 2). يُفحص من خصائص شهادة المصنع (C3A) وليس من التسمية.'
+  - key: 'durability.S3.opt1.scm_required'
+    requirement: 'scm_required'
+    kind: 'allowed_set'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['S3'], 's3_option': 1 }
+    value: ['pozzolan', 'slag']
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.2.1'
+    verified: false
+    note_en: 'At least one of these supplementary cementitious materials must be in the mix (Type V + pozzolan or slag).'
+    note_ar: 'يجب أن تحتوي الخلطة على أحد هذه المواد الإسمنتية التكميلية على الأقل (إسمنت النوع V مع بوزولان أو خبث).'
+  - key: 'durability.W1.asr_mitigation'
+    requirement: 'asr_mitigation'
+    kind: 'info'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['W1'] }
+    value: 'required'
+    units: 'none'
+    clause_ref: 'ACI 318-19 §26.4.2.2(d)'
+    verified: false
+    note_en: 'Alkali-silica reaction mitigation is required for class W1'
+    note_ar: 'يلزم اتخاذ إجراءات للحد من تفاعل القلويات والسيليكا للفئة W1'
+  - key: 'durability.W2.asr_mitigation'
+    requirement: 'asr_mitigation'
+    kind: 'info'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['W2'] }
+    value: 'required'
+    units: 'none'
+    clause_ref: 'ACI 318-19 §26.4.2.2(d)'
+    verified: false
+    note_en: 'Alkali-silica reaction mitigation is required for class W2'
+    note_ar: 'يلزم اتخاذ إجراءات للحد من تفاعل القلويات والسيليكا للفئة W2'
+  - key: 'durability.C2.min_cover'
+    requirement: 'min_cover'
+    kind: 'info'
+    requirement_class: 'CODE_HARD'
+    group: 'Durability'
+    applies_to: { 'exposure': ['C2'] }
+    value: null
+    units: 'mm'
+    clause_ref: 'ACI 318-19 Chapter 20'
+    verified: false
+    note_en: 'Minimum concrete cover is a structural requirement, not checked by mix design.'
+    note_ar: 'الغطاء الخرساني الأدنى متطلب إنشائي ولا يُفحص في تصميم الخلطة.'

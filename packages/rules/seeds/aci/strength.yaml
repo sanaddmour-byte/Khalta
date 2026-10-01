@@ -1,0 +1,174 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'fcr.statistical.min_tests'
+    requirement: 'fcr.statistical.min_tests'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 15
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: 'Minimum number of consecutive tests for the statistical method'
+    note_ar: 'أدنى عدد من الفحوص المتتالية لتطبيق الطريقة الإحصائية'
+  - key: 'fcr.statistical.fc_window_mpa'
+    requirement: 'fcr.statistical.fc_window_mpa'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 7
+    units: 'MPa'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "Tests must come from mixes with f'c within this many MPa of the specified value"
+    note_ar: 'يجب أن تكون الفحوص من خلطات تقع مقاومتها ضمن هذا الفرق (ميغاباسكال) من القيمة المحددة'
+  - key: 'fcr.statistical.n_factor'
+    requirement: 'fcr.statistical.n_factor'
+    kind: 'table'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    definition:
+      {
+        'cols': { 'name': 'tests', 'values': [15, 20, 25, 30] },
+        'data': [[1.16, 1.08, 1.03, 1.0]],
+        'interpolation': 'linear',
+      }
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: 'Standard-deviation multiplier by number of tests (1.00 from 30 tests)'
+    note_ar: 'معامل ضرب الانحراف المعياري حسب عدد الفحوص (1.00 عند 30 فحصاً)'
+  - key: 'fcr.threshold_mpa'
+    requirement: 'fcr.threshold_mpa'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 35
+    units: 'MPa'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "Strength at which the f'cr equations change"
+    note_ar: "المقاومة التي تتغير عندها معادلات f'cr"
+  - key: 'fcr.statistical.le35.k1'
+    requirement: 'fcr.statistical.le35.k1'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 1.34
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "f'cr = max(f'c + k1·s, f'c + k2·s − offset) for f'c ≤ 35 MPa: k1"
+    note_ar: "المعادلة لـ f'c ≤ 35: المعامل k1"
+  - key: 'fcr.statistical.le35.k2'
+    requirement: 'fcr.statistical.le35.k2'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 2.33
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: 'Same equation: k2'
+    note_ar: 'المعامل k2'
+  - key: 'fcr.statistical.le35.offset'
+    requirement: 'fcr.statistical.le35.offset'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 3.45
+    units: 'MPa'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: 'Same equation: offset subtracted (MPa)'
+    note_ar: 'القيمة المطروحة (ميغاباسكال)'
+  - key: 'fcr.statistical.gt35.k1'
+    requirement: 'fcr.statistical.gt35.k1'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 1.34
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "f'cr = max(f'c + k1·s, factor·f'c + k2·s) for f'c > 35 MPa: k1"
+    note_ar: "المعادلة لـ f'c > 35: المعامل k1"
+  - key: 'fcr.statistical.gt35.k2'
+    requirement: 'fcr.statistical.gt35.k2'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 2.33
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: 'Same equation: k2'
+    note_ar: 'المعامل k2'
+  - key: 'fcr.statistical.gt35.factor'
+    requirement: 'fcr.statistical.gt35.factor'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 0.9
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "Same equation: factor on f'c"
+    note_ar: "المعامل المضروب في f'c"
+  - key: 'fcr.no_data.lower_threshold_mpa'
+    requirement: 'fcr.no_data.lower_threshold_mpa'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 21
+    units: 'MPa'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: 'Strength below which the no-data addition is the lowest'
+    note_ar: 'المقاومة التي دونها تُطبق أصغر إضافة عند غياب البيانات'
+  - key: 'fcr.no_data.lt21.add'
+    requirement: 'fcr.no_data.lt21.add'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 7.0
+    units: 'MPa'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "No-data required average strength: f'c + this, for f'c < 21 MPa"
+    note_ar: "المقاومة المتوسطة المطلوبة عند غياب البيانات: f'c + هذه القيمة عندما f'c < 21"
+  - key: 'fcr.no_data.mid.add'
+    requirement: 'fcr.no_data.mid.add'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 8.3
+    units: 'MPa'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "No-data: f'c + this, for 21 ≤ f'c ≤ 35 MPa"
+    note_ar: "عند غياب البيانات: f'c + هذه القيمة عندما 21 ≤ f'c ≤ 35"
+  - key: 'fcr.no_data.gt35.factor'
+    requirement: 'fcr.no_data.gt35.factor'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 1.1
+    units: 'none'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "No-data: factor on f'c for f'c > 35 MPa"
+    note_ar: "عند غياب البيانات: المعامل المضروب في f'c عندما f'c > 35"
+  - key: 'fcr.no_data.gt35.add'
+    requirement: 'fcr.no_data.gt35.add'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Required average strength'
+    value: 5.0
+    units: 'MPa'
+    clause_ref: 'ACI 301 §4.2.3.3'
+    verified: false
+    note_en: "No-data: addition (MPa) for f'c > 35 MPa"
+    note_ar: "عند غياب البيانات: الإضافة (ميغاباسكال) عندما f'c > 35"

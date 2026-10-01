@@ -1,0 +1,40 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'air.F1.target_pct'
+    requirement: 'air_target_pct'
+    kind: 'table'
+    requirement_class: 'CODE_HARD'
+    group: 'Air content'
+    applies_to: { 'exposure': ['F1'] }
+    definition: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Target air content for F1 by nominal maximum aggregate size (Jordanian value to be entered.)'
+    note_ar: 'محتوى الهواء المستهدف للفئة F1 حسب المقاس الاعتباري الأكبر للركام (تُدخل القيمة الأردنية.)'
+  - key: 'air.F2_F3.target_pct'
+    requirement: 'air_target_pct'
+    kind: 'table'
+    requirement_class: 'CODE_HARD'
+    group: 'Air content'
+    applies_to: { 'exposure': ['F2', 'F3'] }
+    definition: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Target air content for F2 and F3 by nominal maximum aggregate size (Jordanian value to be entered.)'
+    note_ar: 'محتوى الهواء المستهدف للفئتين F2 وF3 حسب المقاس الاعتباري الأكبر للركام (تُدخل القيمة الأردنية.)'
+  - key: 'air.tolerance_pct'
+    requirement: 'air_tolerance_pct'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Air content'
+    applies_to: { 'exposure': ['F1', 'F2', 'F3'] }
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Air content tolerance (plus or minus) (Jordanian value to be entered.)'
+    note_ar: 'تفاوت محتوى الهواء (زائد أو ناقص) (تُدخل القيمة الأردنية.)'

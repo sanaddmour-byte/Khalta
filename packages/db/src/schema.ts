@@ -3,6 +3,7 @@ import {
   bigserial,
   boolean,
   index,
+  integer,
   jsonb,
   numeric,
   pgTable,
@@ -200,3 +201,107 @@ export const auditLog = pgTable(
     index('audit_at_idx').on(t.tenantId, t.at),
   ],
 );
+
+// ---- Rules (M0.4) ------------------------------------------------------------------------------
+export const rulesets = pgTable(
+  'rulesets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    code: text('code').notNull(), // ACI | JS | SHARED | ENGINEERING | EN206 ...
+    edition: text('edition').notNull(),
+    sourceDoc: text('source_doc'),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('rulesets_tenant_code_uq').on(t.tenantId, t.code)],
+);
+
+/**
+ * One row per rule VERSION. Content never changes in place: an edit inserts a new version
+ * (unverified) and supersedes the old one. A trigger rejects content updates (migration 0003).
+ */
+export const rules = pgTable(
+  'rules',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    rulesetId: uuid('ruleset_id')
+      .notNull()
+      .references(() => rulesets.id),
+    key: text('key').notNull(),
+    requirement: text('requirement').notNull(),
+    version: integer('version').notNull(),
+    isCurrent: boolean('is_current').notNull().default(true),
+    kind: text('kind').notNull(),
+    requirementClass: text('requirement_class').notNull(),
+    grp: text('grp'),
+    appliesTo: jsonb('applies_to').notNull().default({}),
+    prerequisites: jsonb('prerequisites').notNull().default([]),
+    value: jsonb('value'), // null = "not on file"
+    definition: jsonb('definition'), // table rules
+    inherits: text('inherits'),
+    units: text('units').notNull(),
+    clauseRef: text('clause_ref').notNull(),
+    sourceDoc: text('source_doc'),
+    validFrom: text('valid_from'),
+    validTo: text('valid_to'),
+    noteEn: text('note_en'),
+    noteAr: text('note_ar'),
+    verified: boolean('verified').notNull().default(false),
+    verifiedBy: text('verified_by').references(() => users.id),
+    verifiedAt: ts('verified_at'),
+    origin: text('origin', { enum: ['seed', 'ui', 'csv'] }).notNull(),
+    changeReason: text('change_reason'),
+    createdAt: createdAt(),
+    createdBy: text('created_by').references(() => users.id), // null = seed / system
+    supersededAt: ts('superseded_at'),
+  },
+  (t) => [
+    uniqueIndex('rules_version_uq').on(t.tenantId, t.rulesetId, t.key, t.version),
+    uniqueIndex('rules_current_uq')
+      .on(t.tenantId, t.rulesetId, t.key)
+      .where(sql`${t.isCurrent}`),
+    index('rules_requirement_idx').on(t.tenantId, t.requirement),
+  ],
+);
+
+/** Append-only (trigger): who verified which rule version, with the typed e-signature note. */
+export const ruleVerifications = pgTable(
+  'rule_verifications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    ruleId: uuid('rule_id')
+      .notNull()
+      .references(() => rules.id),
+    verifiedBy: text('verified_by')
+      .notNull()
+      .references(() => users.id),
+    note: text('note').notNull(),
+    at: ts('at').notNull().defaultNow(),
+  },
+  (t) => [index('rule_verifications_rule_idx').on(t.ruleId)],
+);
+
+export const ruleImportBatches = pgTable('rule_import_batches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  kind: text('kind').notNull(), // js_csv
+  filename: text('filename'),
+  rows: jsonb('rows').notNull(), // validated preview rows, immutable once stored
+  summary: jsonb('summary').notNull(),
+  status: text('status', { enum: ['previewed', 'committed'] }).notNull(),
+  createdBy: text('created_by')
+    .notNull()
+    .references(() => users.id),
+  createdAt: createdAt(),
+  committedAt: ts('committed_at'),
+});

@@ -1,0 +1,41 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'exposure.sulfate.thresholds'
+    requirement: 'exposure.sulfate.thresholds'
+    kind: 'value'
+    requirement_class: 'CODE_HARD'
+    group: 'Exposure'
+    value:
+      [
+        {
+          'class': 'S0',
+          'soil_so4_pct': [null, 0.1],
+          'water_so4_ppm': [null, 150],
+          'seawater': false,
+        },
+        {
+          'class': 'S1',
+          'soil_so4_pct': [0.1, 0.2],
+          'water_so4_ppm': [150, 1500],
+          'seawater': true,
+        },
+        {
+          'class': 'S2',
+          'soil_so4_pct': [0.2, 2.0],
+          'water_so4_ppm': [1500, 10000],
+          'seawater': false,
+        },
+        {
+          'class': 'S3',
+          'soil_so4_pct': [2.0, null],
+          'water_so4_ppm': [10000, null],
+          'seawater': false,
+        },
+      ]
+    units: 'none'
+    clause_ref: 'ACI 318-19 Table 19.3.1.1'
+    verified: false
+    note_en: 'Sulfate exposure classes by water-soluble sulfate in soil (% by mass) and in water (ppm). Seawater is S1.'
+    note_ar: 'فئات التعرض للكبريتات حسب الكبريتات الذائبة في التربة (% بالكتلة) وفي الماء (جزء في المليون). ماء البحر ضمن الفئة S1.'

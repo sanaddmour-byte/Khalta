@@ -1,0 +1,15 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'exposure.sulfate.thresholds'
+    requirement: 'exposure.sulfate.thresholds'
+    kind: 'value'
+    requirement_class: 'CODE_HARD'
+    group: 'Exposure'
+    value: null
+    units: 'none'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Sulfate exposure classes by water-soluble sulfate in soil (% by mass) and in water (ppm). Seawater is S1. (Jordanian value to be entered.)'
+    note_ar: 'فئات التعرض للكبريتات حسب الكبريتات الذائبة في التربة (% بالكتلة) وفي الماء (جزء في المليون). ماء البحر ضمن الفئة S1. (تُدخل القيمة الأردنية.)'

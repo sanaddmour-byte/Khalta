@@ -41,6 +41,8 @@ export class ApiRoutes {
   readonly router = Router();
   readonly registry = new OpenAPIRegistry();
   readonly mutationRoutes = new Set<string>();
+  /** POST routes that only read (the body carries the query). They write nothing, so they bypass withAudit; listed so tests can prove it. */
+  readonly readOnlyPosts = new Set<string>();
   /** Every declared route with the capability it needs (drives the generated RBAC tests). */
   readonly routes: { method: string; path: string; capability: Capability | null }[] = [];
 
@@ -78,6 +80,24 @@ export class ApiRoutes {
       const params = (o.params ? o.params.parse(req.params) : req.params) as P;
       const query = (o.query ? o.query.parse(req.query) : req.query) as Q;
       res.status(o.status ?? 200).json(await handler({ auth, params, query, db: this.db }));
+    });
+  }
+
+  /** A read-only operation that needs a request body (e.g. "resolve rules for this context"). */
+  readPost<B = undefined>(
+    path: string,
+    o: Opts<B, unknown, never>,
+    handler: (a: ReadArgs<unknown, unknown> & { body: B }) => Promise<unknown>,
+  ) {
+    this.document('post', path, o);
+    this.readOnlyPosts.add(`POST ${path}`);
+    this.router.post(path, async (req: Request, res: Response) => {
+      const auth = res.locals['auth'] as AuthContext;
+      this.authorize(auth, o.capability);
+      const body = (o.body ? o.body.parse(req.body) : undefined) as B;
+      res
+        .status(o.status ?? 200)
+        .json(await handler({ auth, params: req.params, query: req.query, db: this.db, body }));
     });
   }
 

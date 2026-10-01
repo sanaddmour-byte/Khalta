@@ -46,7 +46,7 @@ export const NAV: NavItem[] = [
     id: 'rules',
     path: '/rules',
     icon: BookCheck,
-    anyOf: ['rules.verify', 'import.run', 'design.write'],
+    anyOf: ['rules.read'],
   },
   { id: 'imports', path: '/imports', icon: Upload, anyOf: ['import.run'] },
   { id: 'settings', path: '/settings', icon: Settings, anyOf: ['org.manage'] },

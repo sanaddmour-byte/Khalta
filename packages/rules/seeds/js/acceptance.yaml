@@ -1,0 +1,50 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'accept.avg3.min_ratio_fc'
+    requirement: 'accept.avg3.min_ratio_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    value: null
+    units: 'ratio'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: "Every average of 3 consecutive tests must be at least f'c (ratio to f'c) (Jordanian value to be entered.)"
+    note_ar: "يجب ألا يقل متوسط كل ثلاثة فحوص متتالية عن f'c (نسبة إلى f'c) (تُدخل القيمة الأردنية.)"
+  - key: 'accept.fc_threshold_mpa'
+    requirement: 'accept.fc_threshold_mpa'
+    kind: 'parameter'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    value: null
+    units: 'MPa'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Strength at which the single-test criterion changes (Jordanian value to be entered.)'
+    note_ar: 'المقاومة التي يتغير عندها معيار الفحص المنفرد (تُدخل القيمة الأردنية.)'
+  - key: 'accept.single.max_deficit_mpa'
+    requirement: 'accept.single.max_deficit_mpa'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    applies_to: { 'fc_mpa': { 'lte': 35 } }
+    value: null
+    units: 'MPa'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: "No single test may fall below f'c by more than this (f'c ≤ 35 MPa) (Jordanian value to be entered.)"
+    note_ar: "يجب ألا ينخفض أي فحص منفرد عن f'c بأكثر من هذه القيمة (f'c ≤ 35) (تُدخل القيمة الأردنية.)"
+  - key: 'accept.single.min_ratio_fc'
+    requirement: 'accept.single.min_ratio_fc'
+    kind: 'limit_min'
+    requirement_class: 'CODE_HARD'
+    group: 'Acceptance'
+    applies_to: { 'fc_mpa': { 'gt': 35 } }
+    value: null
+    units: 'ratio'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: "No single test may fall below this ratio of f'c (f'c > 35 MPa) (Jordanian value to be entered.)"
+    note_ar: "يجب ألا ينخفض أي فحص منفرد عن هذه النسبة من f'c (f'c > 35) (تُدخل القيمة الأردنية.)"

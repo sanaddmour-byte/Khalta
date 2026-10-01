@@ -1,0 +1,109 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 211.1 Standard Practice for Selecting Proportions for Normal, Heavyweight, and Mass Concrete'
+rules:
+  - key: 'prop.water.non_ae'
+    requirement: 'prop.water.non_ae'
+    kind: 'table'
+    requirement_class: 'DESIGN_AID'
+    group: 'Proportioning (ACI 211.1)'
+    applies_to: { 'air_entrained': false }
+    definition:
+      {
+        'rows': { 'name': 'slump_mm', 'values': [[25, 50], [75, 100], [150, 175]] },
+        'cols': { 'name': 'nmas_mm', 'values': [9.5, 12.5, 19, 25, 37.5, 50] },
+        'data':
+          [
+            [207, 199, 190, 179, 166, 154],
+            [228, 216, 205, 193, 181, 169],
+            [243, 228, 216, 202, 190, 178],
+          ],
+        'interpolation': 'linear',
+      }
+    units: 'kg/m3'
+    clause_ref: 'ACI 211.1 Table 6.3.3'
+    verified: false
+    note_en: 'Approximate mixing water for non-air-entrained concrete by slump and NMAS (baseline estimate, not a plant prediction)'
+    note_ar: 'ماء الخلط التقريبي للخرسانة غير المحتوية على هواء مُدخل حسب الهبوط والمقاس (تقدير مرجعي وليس تنبؤاً بالمحطة)'
+  - key: 'prop.air_entrapped.non_ae'
+    requirement: 'prop.air_entrapped.non_ae'
+    kind: 'table'
+    requirement_class: 'DESIGN_AID'
+    group: 'Proportioning (ACI 211.1)'
+    applies_to: { 'air_entrained': false }
+    definition:
+      {
+        'cols': { 'name': 'nmas_mm', 'values': [9.5, 12.5, 19, 25, 37.5, 50] },
+        'data': [[3.0, 2.5, 2.0, 1.5, 1.0, 0.5]],
+        'interpolation': 'linear',
+      }
+    units: '%'
+    clause_ref: 'ACI 211.1 Table 6.3.3'
+    verified: false
+    note_en: 'Approximate entrapped air for non-air-entrained concrete by NMAS'
+    note_ar: 'الهواء المحبوس التقريبي للخرسانة غير المحتوية على هواء مُدخل حسب المقاس'
+  - key: 'prop.wc_strength.non_ae'
+    requirement: 'prop.wc_strength.non_ae'
+    kind: 'table'
+    requirement_class: 'DESIGN_AID'
+    group: 'Proportioning (ACI 211.1)'
+    applies_to: { 'air_entrained': false }
+    definition:
+      {
+        'cols': { 'name': 'fcr_mpa', 'values': [15, 20, 25, 30, 35, 40] },
+        'data': [[0.79, 0.69, 0.61, 0.54, 0.47, 0.42]],
+        'interpolation': 'linear',
+      }
+    units: 'ratio'
+    clause_ref: 'ACI 211.1 Table 6.3.4(a)'
+    verified: false
+    note_en: 'Water/cement ratio versus 28-day cylinder strength, non-air-entrained (baseline)'
+    note_ar: 'نسبة الماء إلى الإسمنت مقابل مقاومة الأسطوانة بعمر 28 يوماً، بدون هواء مُدخل (مرجعية)'
+  - key: 'prop.ca_volume'
+    requirement: 'prop.ca_volume'
+    kind: 'table'
+    requirement_class: 'DESIGN_AID'
+    group: 'Proportioning (ACI 211.1)'
+    definition:
+      {
+        'rows': { 'name': 'nmas_mm', 'values': [9.5, 12.5, 19, 25, 37.5] },
+        'cols': { 'name': 'fm_sand', 'values': [2.4, 2.6, 2.8, 3.0] },
+        'data':
+          [
+            [0.5, 0.48, 0.46, 0.44],
+            [0.59, 0.57, 0.55, 0.53],
+            [0.66, 0.64, 0.62, 0.6],
+            [0.71, 0.69, 0.67, 0.65],
+            [0.75, 0.73, 0.71, 0.69],
+          ],
+        'interpolation': 'linear',
+      }
+    units: 'none'
+    clause_ref: 'ACI 211.1 Table 6.3.6'
+    verified: false
+    note_en: 'Dry-rodded coarse aggregate volume per unit volume of concrete (sanity bound on the optimized blend only)'
+    note_ar: 'حجم الركام الخشن المرصوص جافاً لكل وحدة حجم من الخرسانة (حد تحقق للخلطة المحسّنة فقط)'
+  - key: 'prop.water.ae'
+    requirement: 'prop.water.ae'
+    kind: 'table'
+    requirement_class: 'DESIGN_AID'
+    group: 'Proportioning (ACI 211.1)'
+    applies_to: { 'air_entrained': true }
+    definition: null
+    units: 'kg/m3'
+    clause_ref: 'ACI 211.1 Table 6.3.3 (air-entrained)'
+    verified: false
+    note_en: 'Mixing water for air-entrained concrete. Not on file: air-entrained design is blocked until entered.'
+    note_ar: 'ماء الخلط للخرسانة المحتوية على هواء مُدخل. غير متوفر: يُمنع التصميم للخرسانة المحتوية على هواء مُدخل حتى إدخاله.'
+  - key: 'prop.wc_strength.ae'
+    requirement: 'prop.wc_strength.ae'
+    kind: 'table'
+    requirement_class: 'DESIGN_AID'
+    group: 'Proportioning (ACI 211.1)'
+    applies_to: { 'air_entrained': true }
+    definition: null
+    units: 'ratio'
+    clause_ref: 'ACI 211.1 Table 6.3.4(a) (air-entrained)'
+    verified: false
+    note_en: 'Water/cement ratio versus strength for air-entrained concrete. Not on file.'
+    note_ar: 'نسبة الماء إلى الإسمنت مقابل المقاومة للخرسانة المحتوية على هواء مُدخل. غير متوفرة.'

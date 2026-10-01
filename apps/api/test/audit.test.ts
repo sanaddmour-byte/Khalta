@@ -182,8 +182,10 @@ describe('audit completeness', () => {
     };
     walk(stack);
     expect(found.length).toBeGreaterThan(0);
-    for (const f of found) expect(env.app.api.mutationRoutes, f).toContain(f);
-    expect(found.length).toBe(env.app.api.mutationRoutes.size);
+    // Read-only POSTs (a body carries the query) write nothing and are declared separately.
+    const writes = found.filter((f) => !env.app.api.readOnlyPosts.has(f));
+    for (const f of writes) expect(env.app.api.mutationRoutes, f).toContain(f);
+    expect(writes.length).toBe(env.app.api.mutationRoutes.size);
   });
 
   it('audit_log is append-only at the database level', async () => {

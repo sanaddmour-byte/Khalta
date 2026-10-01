@@ -4,18 +4,20 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./loader": "./src/loader.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage",
-    "test:rules": "vitest run test/seeds.test.ts"
+    "test": "vitest run",
+    "test:rules": "vitest run test/seeds.test.ts test/cross-check.test.ts test/resolver.test.ts test/properties.test.ts"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "fast-check": "catalog:"
   },
   "dependencies": {
     "yaml": "catalog:",

@@ -1,0 +1,64 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'scm.max.fly_ash_pozzolan_pct'
+    requirement: 'scm.max.fly_ash_pozzolan_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: 25
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 26.4.2.2(b)'
+    verified: false
+    note_en: 'Maximum fly ash or natural pozzolan, % of total cementitious (F3)'
+    note_ar: 'أقصى نسبة رماد متطاير أو بوزولان طبيعي % من إجمالي المواد الإسمنتية (F3)'
+  - key: 'scm.max.slag_pct'
+    requirement: 'scm.max.slag_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: 50
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 26.4.2.2(b)'
+    verified: false
+    note_en: 'Maximum slag, % of total cementitious (F3)'
+    note_ar: 'أقصى نسبة خبث % من إجمالي المواد الإسمنتية (F3)'
+  - key: 'scm.max.silica_fume_pct'
+    requirement: 'scm.max.silica_fume_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: 10
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 26.4.2.2(b)'
+    verified: false
+    note_en: 'Maximum silica fume, % of total cementitious (F3)'
+    note_ar: 'أقصى نسبة غبار السيليكا % من إجمالي المواد الإسمنتية (F3)'
+  - key: 'scm.max.fly_ash_silica_fume_pct'
+    requirement: 'scm.max.fly_ash_silica_fume_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: 35
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 26.4.2.2(b)'
+    verified: false
+    note_en: 'Maximum fly ash plus silica fume, % of total cementitious (F3)'
+    note_ar: 'أقصى مجموع الرماد المتطاير وغبار السيليكا % من إجمالي المواد الإسمنتية (F3)'
+  - key: 'scm.max.total_pct'
+    requirement: 'scm.max.total_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: 50
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 26.4.2.2(b)'
+    verified: false
+    note_en: 'Maximum total of fly ash, slag and silica fume, % of total cementitious (F3)'
+    note_ar: 'أقصى مجموع الرماد المتطاير والخبث وغبار السيليكا % من إجمالي المواد الإسمنتية (F3)'

@@ -1,0 +1,26 @@
+ruleset: 'SHARED'
+edition: 'Cross-code cement equivalence (02-codes §5)'
+source_doc: '02-codes §5'
+rules:
+  - key: 'cement.equivalence.moderate.max_c3a_pct'
+    requirement: 'cement.equivalence.moderate.max_c3a_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Cement'
+    value: 8
+    units: '%'
+    clause_ref: 'ASTM C150 Type II (cross-code equivalence)'
+    verified: false
+    note_en: 'Moderate sulfate resistance (ACI Type II / MS): C3A at most this. CEM II/x-P with documented sulfate performance is flagged for QC review.'
+    note_ar: 'مقاومة معتدلة للكبريتات (النوع II / MS): C3A لا يزيد عن هذه القيمة. يُحال إسمنت CEM II/x-P الموثّق الأداء إلى مراجعة ضبط الجودة.'
+  - key: 'cement.equivalence.high.max_c3a_pct'
+    requirement: 'cement.equivalence.high.max_c3a_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Cement'
+    value: 5
+    units: '%'
+    clause_ref: 'ASTM C150 Type V (cross-code equivalence)'
+    verified: false
+    note_en: 'High sulfate resistance (ACI Type V / HS; CEM I SR3 or SR5): C3A at most this.'
+    note_ar: 'مقاومة عالية للكبريتات (النوع V / HS؛ CEM I SR3 أو SR5): C3A لا يزيد عن هذه القيمة.'
