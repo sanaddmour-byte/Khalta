@@ -10,7 +10,10 @@ export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 /** Content type from the file signature (never from the client): PDF, PNG or JPEG only. */
 export function sniff(buf: Buffer): string | null {
   if (buf.subarray(0, 5).toString('latin1') === '%PDF-') return 'application/pdf';
-  if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])))
+  if (
+    buf.length >= 8 &&
+    buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  )
     return 'image/png';
   if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
   return null;
@@ -38,7 +41,8 @@ export function attachmentRoutes(api: ApiRoutes) {
     async ({ auth, body, query, tx, audit }) => {
       if (body.length === 0) throw new ApiError(400, 'invalid_request', 'The upload is empty');
       const contentType = sniff(body);
-      if (!contentType) throw new ApiError(415, 'unsupported_type', 'Only PDF, PNG and JPEG files are accepted');
+      if (!contentType)
+        throw new ApiError(415, 'unsupported_type', 'Only PDF, PNG and JPEG files are accepted');
       const sha256 = createHash('sha256').update(body).digest('hex');
       const [row] = await tx
         .insert(schema.attachments)
@@ -59,7 +63,12 @@ export function attachmentRoutes(api: ApiRoutes) {
           sha256: schema.attachments.sha256,
         });
       if (!row) throw new Error('insert failed');
-      await audit.record({ action: 'attachment.upload', entityType: 'attachment', entityId: row.id, after: row });
+      await audit.record({
+        action: 'attachment.upload',
+        entityType: 'attachment',
+        entityId: row.id,
+        after: row,
+      });
       return row;
     },
   );
@@ -71,7 +80,9 @@ export function attachmentRoutes(api: ApiRoutes) {
       const [a] = await db
         .select()
         .from(schema.attachments)
-        .where(and(eq(schema.attachments.id, params.id), eq(schema.attachments.tenantId, auth.tenantId)));
+        .where(
+          and(eq(schema.attachments.id, params.id), eq(schema.attachments.tenantId, auth.tenantId)),
+        );
       if (!a) throw notFound('Attachment not found');
       if (!auth.scope.all) {
         // plant-scoped users may open files only for materials they can see (tenant-level or own plant)
@@ -84,7 +95,9 @@ export function attachmentRoutes(api: ApiRoutes) {
               eq(schema.materialTests.attachmentId, a.id),
               or(
                 isNull(schema.materials.plantId),
-                auth.scope.plantIds.length ? inArray(schema.materials.plantId, [...auth.scope.plantIds]) : undefined,
+                auth.scope.plantIds.length
+                  ? inArray(schema.materials.plantId, [...auth.scope.plantIds])
+                  : undefined,
               ),
             ),
           );

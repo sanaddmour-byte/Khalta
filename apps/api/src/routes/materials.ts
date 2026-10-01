@@ -102,22 +102,40 @@ async function mustSee(db: Executor, auth: AuthContext, id: string) {
 }
 
 function assertPlantWritable(auth: AuthContext, plantId: string | null | undefined) {
-  if (plantId && !canAccessPlant(auth.scope, plantId)) throw forbidden('That plant is outside your scope');
+  if (plantId && !canAccessPlant(auth.scope, plantId))
+    throw forbidden('That plant is outside your scope');
 }
 
-async function assertRefs(db: Executor, auth: AuthContext, plantId?: string | null, supplierId?: string | null) {
+async function assertRefs(
+  db: Executor,
+  auth: AuthContext,
+  plantId?: string | null,
+  supplierId?: string | null,
+) {
   if (plantId) {
     const [p] = await db
       .select({ id: schema.plants.id })
       .from(schema.plants)
-      .where(and(eq(schema.plants.id, plantId), eq(schema.plants.tenantId, auth.tenantId), isNull(schema.plants.deletedAt)));
+      .where(
+        and(
+          eq(schema.plants.id, plantId),
+          eq(schema.plants.tenantId, auth.tenantId),
+          isNull(schema.plants.deletedAt),
+        ),
+      );
     if (!p) throw new ApiError(400, 'invalid_request', 'Unknown plant');
   }
   if (supplierId) {
     const [s] = await db
       .select({ id: schema.suppliers.id })
       .from(schema.suppliers)
-      .where(and(eq(schema.suppliers.id, supplierId), eq(schema.suppliers.tenantId, auth.tenantId), isNull(schema.suppliers.deletedAt)));
+      .where(
+        and(
+          eq(schema.suppliers.id, supplierId),
+          eq(schema.suppliers.tenantId, auth.tenantId),
+          isNull(schema.suppliers.deletedAt),
+        ),
+      );
     if (!s) throw new ApiError(400, 'invalid_request', 'Unknown supplier');
   }
 }
@@ -136,7 +154,10 @@ const materialDto = (m: MaterialRow) => ({
   promotedFrom: m.promotedFrom,
 });
 
-const testDto = (t: TestRow, attachment?: { filename: string; contentType: string; sizeBytes: number } | null) => ({
+const testDto = (
+  t: TestRow,
+  attachment?: { filename: string; contentType: string; sizeBytes: number } | null,
+) => ({
   id: t.id,
   version: t.version,
   isCurrent: t.isCurrent,
@@ -158,7 +179,8 @@ const testDto = (t: TestRow, attachment?: { filename: string; contentType: strin
 
 async function attachmentMeta(db: Executor, tenantId: string, ids: (string | null)[]) {
   const wanted = [...new Set(ids.filter((i): i is string => !!i))];
-  if (wanted.length === 0) return new Map<string, { filename: string; contentType: string; sizeBytes: number }>();
+  if (wanted.length === 0)
+    return new Map<string, { filename: string; contentType: string; sizeBytes: number }>();
   const rows = await db
     .select({
       id: schema.attachments.id,
@@ -187,7 +209,12 @@ async function addTest(
     const [a] = await tx
       .select({ id: schema.attachments.id })
       .from(schema.attachments)
-      .where(and(eq(schema.attachments.id, body.attachmentId), eq(schema.attachments.tenantId, auth.tenantId)));
+      .where(
+        and(
+          eq(schema.attachments.id, body.attachmentId),
+          eq(schema.attachments.tenantId, auth.tenantId),
+        ),
+      );
     if (!a) throw new ApiError(400, 'invalid_request', 'Unknown attachment');
   }
   const r = resolveNewTest(
@@ -203,7 +230,11 @@ async function addTest(
     auth.settings,
   );
   const now = new Date();
-  if (prev) await tx.update(schema.materialTests).set({ isCurrent: false, supersededAt: now }).where(eq(schema.materialTests.id, prev.id));
+  if (prev)
+    await tx
+      .update(schema.materialTests)
+      .set({ isCurrent: false, supersededAt: now })
+      .where(eq(schema.materialTests.id, prev.id));
   const anyDeclared = r.declared.length > 0 || r.source === 'user_declared';
   const [row] = await tx
     .insert(schema.materialTests)
@@ -236,15 +267,36 @@ async function addTest(
   });
   const summary = summarize(m.category as Category, row, prev, settingsParams, now);
   const meta = await attachmentMeta(tx, auth.tenantId, [row.attachmentId]);
-  return { test: testDto(row, row.attachmentId ? (meta.get(row.attachmentId) ?? null) : null), warnings: r.warnings, summary };
+  return {
+    test: testDto(row, row.attachmentId ? (meta.get(row.attachmentId) ?? null) : null),
+    warnings: r.warnings,
+    summary,
+  };
 }
 
 export function materialRoutes(api: ApiRoutes) {
   api.get(
+    '/api/materials/params',
+    {
+      summary:
+        'Engineering parameters the materials screens use (FM series, age limits, drift tolerances)',
+      capability: 'materials.read',
+    },
+    async ({ auth, db }) => loadMaterialParams(db, auth.tenantId),
+  );
+
+  api.get(
     '/api/materials',
-    { summary: 'List materials with readiness, freshness and source', capability: 'materials.read', query: listQuery },
+    {
+      summary: 'List materials with readiness, freshness and source',
+      capability: 'materials.read',
+      query: listQuery,
+    },
     async ({ auth, query, db }) => {
-      const where = [eq(schema.materials.tenantId, auth.tenantId), isNull(schema.materials.deletedAt)];
+      const where = [
+        eq(schema.materials.tenantId, auth.tenantId),
+        isNull(schema.materials.deletedAt),
+      ];
       if (!query.includeInactive) where.push(eq(schema.materials.isActive, true));
       if (query.category) where.push(eq(schema.materials.category, query.category));
       if (query.plantId) where.push(eq(schema.materials.plantId, query.plantId));
@@ -262,7 +314,10 @@ export function materialRoutes(api: ApiRoutes) {
       if (!auth.scope.all) {
         where.push(
           auth.scope.plantIds.length
-            ? or(isNull(schema.materials.plantId), inArray(schema.materials.plantId, [...auth.scope.plantIds]))!
+            ? or(
+                isNull(schema.materials.plantId),
+                inArray(schema.materials.plantId, [...auth.scope.plantIds]),
+              )!
             : isNull(schema.materials.plantId),
         );
       }
@@ -281,7 +336,10 @@ export function materialRoutes(api: ApiRoutes) {
             and(
               eq(schema.materialTests.tenantId, auth.tenantId),
               eq(schema.materialTests.isCurrent, true),
-              inArray(schema.materialTests.materialId, mats.map((m) => m.id)),
+              inArray(
+                schema.materialTests.materialId,
+                mats.map((m) => m.id),
+              ),
             ),
           ),
       ]);
@@ -308,16 +366,29 @@ export function materialRoutes(api: ApiRoutes) {
 
   api.get(
     '/api/materials/:id',
-    { summary: 'Material with its current test and readiness', capability: 'materials.read', params: idParam },
+    {
+      summary: 'Material with its current test and readiness',
+      capability: 'materials.read',
+      params: idParam,
+    },
     async ({ auth, params, db }) => {
       const m = await mustSee(db, auth, params.id);
-      const [hist, p] = await Promise.all([testHistory(db, auth.tenantId, m.id), loadMaterialParams(db, auth.tenantId)]);
+      const [hist, p] = await Promise.all([
+        testHistory(db, auth.tenantId, m.id),
+        loadMaterialParams(db, auth.tenantId),
+      ]);
       const cur = hist.find((t) => t.isCurrent);
       const prev = cur ? hist.find((t) => t.version === cur.version - 1) : undefined;
-      const att = await attachmentMeta(db, auth.tenantId, hist.map((t) => t.attachmentId));
+      const att = await attachmentMeta(
+        db,
+        auth.tenantId,
+        hist.map((t) => t.attachmentId),
+      );
       return {
         material: materialDto(m),
-        current: cur ? testDto(cur, cur.attachmentId ? (att.get(cur.attachmentId) ?? null) : null) : null,
+        current: cur
+          ? testDto(cur, cur.attachmentId ? (att.get(cur.attachmentId) ?? null) : null)
+          : null,
         summary: summarize(m.category as Category, cur, prev, p, new Date()),
         versions: hist.length,
       };
@@ -330,7 +401,11 @@ export function materialRoutes(api: ApiRoutes) {
     async ({ auth, params, db }) => {
       const m = await mustSee(db, auth, params.id);
       const hist = await testHistory(db, auth.tenantId, m.id);
-      const att = await attachmentMeta(db, auth.tenantId, hist.map((t) => t.attachmentId));
+      const att = await attachmentMeta(
+        db,
+        auth.tenantId,
+        hist.map((t) => t.attachmentId),
+      );
       return hist.map((t) => testDto(t, t.attachmentId ? (att.get(t.attachmentId) ?? null) : null));
     },
   );
@@ -345,7 +420,10 @@ export function materialRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, query, db }) => {
       const m = await mustSee(db, auth, params.id);
-      const [cur, p] = await Promise.all([currentTest(db, auth.tenantId, m.id), loadMaterialParams(db, auth.tenantId)]);
+      const [cur, p] = await Promise.all([
+        currentTest(db, auth.tenantId, m.id),
+        loadMaterialParams(db, auth.tenantId),
+      ]);
       return summarize(m.category as Category, cur, undefined, p, new Date(), {
         ...(query.sulfateGoverns !== undefined && { sulfateGoverns: query.sulfateGoverns }),
         ...(query.asrActive !== undefined && { asrActive: query.asrActive }),
@@ -357,7 +435,12 @@ export function materialRoutes(api: ApiRoutes) {
   api.mutate(
     'post',
     '/api/materials',
-    { summary: 'Create a material (tests are added separately)', capability: 'materials.write', body: createBody, status: 201 },
+    {
+      summary: 'Create a material (tests are added separately)',
+      capability: 'materials.write',
+      body: createBody,
+      status: 201,
+    },
     async ({ auth, body, tx, audit }) => {
       assertPlantWritable(auth, body.plantId);
       await assertRefs(tx, auth, body.plantId, body.supplierId);
@@ -366,7 +449,12 @@ export function materialRoutes(api: ApiRoutes) {
         .values({ ...body, tenantId: auth.tenantId, createdBy: auth.user.id })
         .returning();
       if (!row) throw new Error('insert failed');
-      await audit.record({ action: 'material.create', entityType: 'material', entityId: row.id, after: materialDto(row) });
+      await audit.record({
+        action: 'material.create',
+        entityType: 'material',
+        entityId: row.id,
+        after: materialDto(row),
+      });
       return materialDto(row);
     },
   );
@@ -374,7 +462,12 @@ export function materialRoutes(api: ApiRoutes) {
   api.mutate(
     'patch',
     '/api/materials/:id',
-    { summary: 'Update a material (source and category are fixed once tested)', capability: 'materials.write', body: patchBody, params: idParam },
+    {
+      summary: 'Update a material (source and category are fixed once tested)',
+      capability: 'materials.write',
+      body: patchBody,
+      params: idParam,
+    },
     async ({ auth, body, params, tx, audit }) => {
       const before = await mustSee(tx, auth, params.id);
       if (body.plantId !== undefined) assertPlantWritable(auth, body.plantId);
@@ -383,7 +476,9 @@ export function materialRoutes(api: ApiRoutes) {
         (body.supplierId !== undefined && body.supplierId !== before.supplierId) ||
         (body.sourceName !== undefined && body.sourceName !== before.sourceName);
       if (changesSource && (await currentTest(tx, auth.tenantId, before.id)))
-        throw conflict('A tested material cannot change supplier or source; create a new material instead');
+        throw conflict(
+          'A tested material cannot change supplier or source; create a new material instead',
+        );
       const [after] = await tx
         .update(schema.materials)
         .set({ ...body, updatedAt: new Date() })
@@ -404,11 +499,23 @@ export function materialRoutes(api: ApiRoutes) {
   api.mutate(
     'delete',
     '/api/materials/:id',
-    { summary: 'Soft-delete a material (history is kept)', capability: 'materials.write', params: idParam },
+    {
+      summary: 'Soft-delete a material (history is kept)',
+      capability: 'materials.write',
+      params: idParam,
+    },
     async ({ auth, params, tx, audit }) => {
       const before = await mustSee(tx, auth, params.id);
-      await tx.update(schema.materials).set({ deletedAt: new Date(), isActive: false }).where(eq(schema.materials.id, before.id));
-      await audit.record({ action: 'material.delete', entityType: 'material', entityId: before.id, before: materialDto(before) });
+      await tx
+        .update(schema.materials)
+        .set({ deletedAt: new Date(), isActive: false })
+        .where(eq(schema.materials.id, before.id));
+      await audit.record({
+        action: 'material.delete',
+        entityType: 'material',
+        entityId: before.id,
+        before: materialDto(before),
+      });
     },
   );
 
@@ -460,7 +567,12 @@ export function materialRoutes(api: ApiRoutes) {
         })
         .returning();
       if (!row) throw new Error('insert failed');
-      await audit.record({ action: 'material.promote', entityType: 'material', entityId: row.id, after: materialDto(row) });
+      await audit.record({
+        action: 'material.promote',
+        entityType: 'material',
+        entityId: row.id,
+        after: materialDto(row),
+      });
       const result = await addTest(tx, audit, auth, row, {
         properties: a.properties,
         source: 'user_declared',
@@ -476,4 +588,3 @@ export function materialRoutes(api: ApiRoutes) {
     },
   );
 }
-

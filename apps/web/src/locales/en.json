@@ -104,7 +104,8 @@
     "forbidden": "Not available for your role",
     "forbiddenHint": "This section is hidden for your role. Ask an administrator if you need access.",
     "loadFailed": "Could not load this page",
-    "retry": "Try again"
+    "retry": "Try again",
+    "network": "Could not reach the server. Your entries are still on screen; try again."
   },
   "roles": {
     "admin": "Administrator",
@@ -296,6 +297,299 @@
       "commit": "Apply {count} changes",
       "done": "Imported {count} values",
       "fixFirst": "Fix the errors in the file and check it again."
+    }
+  },
+  "materials": {
+    "intro": "The materials you design with, their characteristics and where each value came from. Every value keeps its source: lab report, supplier datasheet, or declared by a person.",
+    "new": "New material",
+    "search": "Search materials",
+    "allCategories": "All categories",
+    "noTest": "No test yet",
+    "empty": {
+      "title": "No materials yet",
+      "description": "Add a material and its characteristics. SG and absorption are enough to evaluate a mix; a sieve analysis is needed to generate one."
+    },
+    "fm": "Fineness modulus",
+    "fmMissing": "cannot be computed yet: missing sieves {sieves} mm",
+    "declaredKey": "Key values typed by a person, not from a document: {fields}",
+    "col": {
+      "name": "Material",
+      "category": "Category",
+      "plant": "Plant",
+      "supplier": "Supplier",
+      "tested": "Tested",
+      "source": "Source",
+      "freshness": "Test age",
+      "ready": "Usable for"
+    },
+    "category": {
+      "cement": "Cement",
+      "scm": "Supplementary cementitious",
+      "fine_agg": "Fine aggregate",
+      "coarse_agg": "Coarse aggregate",
+      "water": "Water",
+      "admixture": "Admixture",
+      "fiber": "Fiber",
+      "pigment": "Pigment"
+    },
+    "source": {
+      "lab_report": "Lab report",
+      "supplier_datasheet": "Supplier datasheet",
+      "user_declared": "Declared by user"
+    },
+    "freshness": {
+      "fresh": "Within age limit",
+      "expired": "Test too old",
+      "not_configured": "Age limit not set"
+    },
+    "ready": {
+      "evaluate": "Can evaluate",
+      "design": "Can design"
+    },
+    "notReady": {
+      "evaluate": "Cannot evaluate yet",
+      "design": "Cannot design yet"
+    },
+    "blockers": {
+      "evaluate": "Missing to evaluate",
+      "design": "Missing to design",
+      "invalid": "invalid"
+    },
+    "drift": {
+      "beyond": "{field} moved from {from} to {to}, beyond the tolerance QC set.",
+      "noTol": "{field} moved from {from} to {to} (no drift tolerance is set)."
+    },
+    "trend": {
+      "single": "One test so far",
+      "label": "{name} trend: {from} to {to}"
+    },
+    "chart": {
+      "sieve": "Sieve size (mm)",
+      "passing": "% passing",
+      "aria": "Gradation curve of {name} with {count} sieves"
+    },
+    "sheet": {
+      "newTest": "Record a new test",
+      "upgrade": "Attach a report to declared values",
+      "properties": "Properties",
+      "gradation": "Gradation",
+      "history": "Test history",
+      "noTest": "No test has been recorded for this material.",
+      "current": "current"
+    },
+    "entry": {
+      "titleNew": "New material",
+      "titleTest": "New test: {name}",
+      "titleUpgrade": "Attach a report: {name}",
+      "intro": "Enter what you have. Nothing is assumed: values you leave empty stay empty, and every value is stored with its source.",
+      "identity": "Material",
+      "nameEn": "Name (English)",
+      "nameAr": "Name (Arabic)",
+      "sourceName": "Quarry / brand",
+      "allPlants": "All plants",
+      "unset": "Not set",
+      "sgConfirmed": "I confirmed the water specific gravity (1.000 is not assumed)",
+      "pasteHint": "Paste from Excel: a row of sieve sizes above a row of % passing, or two columns. Values are read as % passing.",
+      "pasteLabel": "Gradation pasted from Excel",
+      "pasteApply": "Read pasted values",
+      "gradationClear": "Clear gradation",
+      "wrHint": "Water reduction at each dosage (at least 3 points, dosage ascending). Dosage is % of cementitious mass.",
+      "wrDosage": "Dosage (% of cementitious)",
+      "wrReduction": "Water reduction (%)",
+      "wrAdd": "Add point",
+      "wrRemove": "Remove point",
+      "sanity": "{field} = {value} is outside the usual range {min} to {max}. You can still save it.",
+      "sourceTitle": "Where do these values come from?",
+      "sourceHint": "This decides how far the values can be trusted. Declared values are always flagged on every design that uses them.",
+      "sourceDesc": {
+        "lab_report": "From a lab report. The report file must be attached.",
+        "supplier_datasheet": "From the supplier’s datasheet (attaching it is recommended).",
+        "user_declared": "Typed by you without a document. You will be asked why."
+      },
+      "testedAt": "Test date",
+      "labRef": "Report reference",
+      "attachRequired": "Lab report file (required)",
+      "attachOptional": "Attach a document (optional)",
+      "attachHint": "PDF, PNG or JPEG, up to 10 MB.",
+      "reason": "Why is this declared without a document?",
+      "reasonPlaceholder": "For example: bench measurement on site, report to follow",
+      "save": "Save test",
+      "saved": "Saved as version {version}",
+      "warnings": "{count} value(s) outside the usual range. Saved anyway.",
+      "noCreate": "Your role cannot create materials.",
+      "offline": "You are offline. Your entries are kept on this device as a draft; save when the connection returns.",
+      "draftFound": "A draft from {when} was found on this device.",
+      "draftRestore": "Restore draft",
+      "draftDiscard": "Discard"
+    },
+    "tier": {
+      "evaluate": "Needed to evaluate a mix",
+      "design": "Needed to generate a mix",
+      "optional": "Optional",
+      "evaluateHint": "The minimum for Evaluate.",
+      "designHint": "Also needed for Generate. Anything missing is named as a blocker.",
+      "optionalHint": "Improves checks and models; never assumed when empty."
+    },
+    "err": {
+      "notNumber": "Enter a number"
+    },
+    "gradErr": {
+      "too_few_points": "A gradation needs at least two sieves",
+      "unknown_sieve": "{sieve} mm is not a standard sieve",
+      "duplicate_sieve": "Sieve {sieve} mm appears twice",
+      "out_of_range": "% passing at {sieve} mm must be between 0 and 100",
+      "not_monotonic": "% passing rises at {sieve} mm; it must never increase toward finer sieves",
+      "top_not_100": "The largest sieve must show 100% passing"
+    },
+    "field": {
+      "sieve_analysis": "Sieve analysis",
+      "sg_ssd": "Specific gravity (SSD)",
+      "absorption_pct": "Absorption",
+      "finer_75um_pct": "Finer than 75 µm",
+      "dry_rodded_unit_weight_kg_m3": "Dry-rodded unit weight",
+      "total_moisture_pct": "Total moisture",
+      "chlorides_pct": "Chlorides",
+      "sulfates_pct": "Sulfates",
+      "la_abrasion_pct": "Los Angeles abrasion",
+      "flakiness_pct": "Flakiness",
+      "elongation_pct": "Elongation",
+      "shape": "Particle shape",
+      "texture": "Surface texture",
+      "fineness_modulus": "Fineness modulus",
+      "sg": "Specific gravity",
+      "mortar_strength_28d_mpa": "28-day mortar strength",
+      "c3a_pct": "C₃A",
+      "pozzolan_pct": "Pozzolan content",
+      "limestone_pct": "Limestone content",
+      "alkali_na2o_eq_pct": "Alkali (Na₂O eq.)",
+      "blaine_m2_kg": "Blaine fineness",
+      "cement_type": "Cement type",
+      "scm_type": "SCM type",
+      "type": "Admixture type (ASTM C494)",
+      "solids_pct": "Solids content",
+      "min_dosage_pct": "Minimum dosage",
+      "max_dosage_pct": "Maximum dosage",
+      "set_retardation_min": "Set retardation",
+      "water_convention": "Water convention",
+      "water_reduction_table": "Dosage–water-reduction table",
+      "water_source": "Water source",
+      "chloride_mg_l": "Chloride",
+      "fiber_type": "Fiber type"
+    },
+    "opt": {
+      "shape": {
+        "rounded": "Rounded",
+        "sub_rounded": "Sub-rounded",
+        "sub_angular": "Sub-angular",
+        "angular": "Angular"
+      },
+      "texture": {
+        "smooth": "Smooth",
+        "granular": "Granular",
+        "rough": "Rough",
+        "crystalline": "Crystalline",
+        "honeycombed": "Honeycombed"
+      },
+      "scm_type": {
+        "fly_ash": "Fly ash",
+        "ggbs": "GGBS",
+        "silica_fume": "Silica fume",
+        "natural_pozzolan": "Natural pozzolan",
+        "limestone_filler": "Limestone filler"
+      },
+      "water_convention": {
+        "liquid_counts_as_water": "Liquid counts as mixing water",
+        "liquid_ignored": "Liquid ignored"
+      },
+      "type": {
+        "A": "Type A",
+        "B": "Type B",
+        "C": "Type C",
+        "D": "Type D",
+        "E": "Type E",
+        "F": "Type F",
+        "G": "Type G"
+      }
+    }
+  },
+  "plants": {
+    "intro": "Your batching plants. Prices, materials and designs are scoped to a plant.",
+    "count": "{count} of {max} plants",
+    "new": "New plant",
+    "edit": "Edit plant",
+    "editNamed": "Edit plant {name}",
+    "formHint": "The code is how the plant appears in lists and exports.",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "region": "Region",
+    "haul": "Haul cost",
+    "save": "Save",
+    "saved": "Plant saved",
+    "active": "Active",
+    "inactive": "Inactive",
+    "col": {
+      "code": "Code",
+      "name": "Name",
+      "city": "City",
+      "ambient": "Climate",
+      "active": "Status"
+    },
+    "ambient": {
+      "moderate": "Moderate",
+      "hot": "Hot"
+    },
+    "empty": {
+      "title": "No plants yet",
+      "description": "Add your first plant to start entering materials and prices."
+    },
+    "haulUnit": "JOD per m³·km"
+  },
+  "settings": {
+    "intro": "Organisation-wide settings and users. Engineering parameters live in the rules library, not here.",
+    "general": "General",
+    "materials": "Materials",
+    "maxPlants": "Maximum plants",
+    "stalePriceDays": "Price age limit (empty = not set)",
+    "days": "days",
+    "insightMinSaving": "Minimum saving worth an insight",
+    "insightMinAnnual": "Minimum annual saving worth an insight",
+    "numberFormat": "Digits",
+    "digits": {
+      "latin": "Western (0–9)",
+      "arabic-indic": "Arabic-Indic (٠–٩)"
+    },
+    "salesCanViewCost": "Sales can see cost figures",
+    "sanityHint": "Typed values outside these ranges are flagged but never blocked. Leave a field empty for no limit.",
+    "sgMin": "Aggregate SG, minimum",
+    "sgMax": "Aggregate SG, maximum",
+    "absMin": "Aggregate absorption, minimum",
+    "absMax": "Aggregate absorption, maximum",
+    "requiresLab": "Approval requires lab-report sources",
+    "requiresLabHint": "When on, a design that relies on user-declared key values cannot be approved. Enforced when approvals arrive.",
+    "save": "Save settings",
+    "saved": "Settings saved"
+  },
+  "users": {
+    "title": "Users",
+    "intro": "Create users, set their role and plants, reset a password or deactivate. Every change is recorded in the audit log.",
+    "new": "New user",
+    "newHint": "The person signs in with this email and password. Share the password securely.",
+    "create": "Create user",
+    "created": "User created",
+    "saved": "User updated",
+    "deactivate": "Deactivate",
+    "deactivated": "User deactivated",
+    "plants": "Plants",
+    "plantsHint": "Admin and QC Manager see every plant. Other roles see only the plants ticked here.",
+    "password": "Password",
+    "passwordHint": "At least 8 characters.",
+    "resetPassword": "Reset password",
+    "reset": "Reset",
+    "passwordReset": "Password reset",
+    "col": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role"
     }
   }
 }

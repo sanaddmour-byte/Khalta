@@ -152,7 +152,9 @@ export class ApiRoutes {
   file<P = unknown>(
     path: string,
     o: Opts<never, P, never>,
-    handler: (a: ReadArgs<P, unknown>) => Promise<{ filename: string; contentType: string; data: Buffer }>,
+    handler: (
+      a: ReadArgs<P, unknown>,
+    ) => Promise<{ filename: string; contentType: string; data: Buffer }>,
   ) {
     this.document('get', path, o);
     this.router.get(path, async (req: Request, res: Response) => {

@@ -14,6 +14,7 @@ import { Menu, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { signOut } from '../lib/api';
+import { clearAllDrafts } from '../materials/drafts';
 import { useMe } from '../lib/auth';
 import { visibleNav } from '../lib/nav';
 import { PlantProvider } from '../lib/plant';
@@ -42,6 +43,7 @@ export function Shell() {
     try {
       await signOut();
     } finally {
+      clearAllDrafts(); // lab-entry drafts must not outlive the session on a shared device
       queryClient.clear();
       void navigate({ to: '/login' });
     }

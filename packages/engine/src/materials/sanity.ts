@@ -20,13 +20,18 @@ export const DEFAULT_SANITY: SanityRanges = {
 };
 
 /** Soft checks that never block saving (07 §2.3). */
-export function sanityWarnings(category: Category, props: Properties, ranges: SanityRanges): SanityWarning[] {
+export function sanityWarnings(
+  category: Category,
+  props: Properties,
+  ranges: SanityRanges,
+): SanityWarning[] {
   const out: SanityWarning[] = [];
   const check = (field: string, key: string) => {
     const v = props[field];
     const r = ranges[key];
     if (typeof v !== 'number' || !r) return;
-    if ((r.min !== undefined && v < r.min) || (r.max !== undefined && v > r.max)) out.push({ field, value: v, range: r });
+    if ((r.min !== undefined && v < r.min) || (r.max !== undefined && v > r.max))
+      out.push({ field, value: v, range: r });
   };
   if (isAggregate(category)) {
     check('sg_ssd', 'aggregate_sg_ssd');

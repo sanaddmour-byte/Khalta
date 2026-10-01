@@ -6,10 +6,13 @@ import {
   FlaskConical,
   Hourglass,
   Info,
+  OctagonAlert,
   ShieldAlert,
   ShieldCheck,
+  SlidersHorizontal,
   TrendingDown,
   TriangleAlert,
+  UserPen,
   Wand2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -69,6 +72,9 @@ export const EVIDENCE_STATUSES = [
   'INPUT_STALE',
   'INPUT_MISSING',
   'TRIAL_REQUIRED',
+  'INPUT_USER_DECLARED',
+  'USER_OVERRIDE',
+  'MODEL_PREDICTS_SHORTFALL',
 ] as const;
 export type EvidenceStatus = (typeof EVIDENCE_STATUSES)[number];
 
@@ -82,6 +88,9 @@ const EVIDENCE_STYLE: Record<EvidenceStatus, { icon: LucideIcon; cls: string }> 
   TRIAL_REQUIRED: { icon: FlaskConical, cls: STATUS_STYLE.warn.cls },
   MODEL_BASELINE: { icon: Info, cls: 'border-olive bg-olive-tint text-olive-text' },
   INPUT_MISSING: { icon: CircleHelp, cls: STATUS_STYLE.fail.cls },
+  INPUT_USER_DECLARED: { icon: UserPen, cls: STATUS_STYLE.warn.cls },
+  USER_OVERRIDE: { icon: SlidersHorizontal, cls: STATUS_STYLE.warn.cls },
+  MODEL_PREDICTS_SHORTFALL: { icon: OctagonAlert, cls: STATUS_STYLE.fail.cls },
 };
 
 export function EvidenceChip({

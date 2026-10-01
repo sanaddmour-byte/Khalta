@@ -85,8 +85,9 @@ test("plant switcher is scoped to the user's plants", async ({ page }) => {
   await expect(page.getByRole('option')).toHaveCount(1);
   await page.keyboard.press('Escape');
 
-  await start(page, { role: 'admin' }); // unscoped: all plants + each plant
+  await start(page, { role: 'admin' }); // unscoped: "all plants" + each plant (other specs may add plants)
+  const plants = (await (await page.request.get('/api/plants')).json()) as unknown[];
   await page.goto('/');
   await page.getByTestId('plant-switcher').click();
-  await expect(page.getByRole('option')).toHaveCount(3);
+  await expect(page.getByRole('option')).toHaveCount(plants.length + 1);
 });

@@ -21,7 +21,10 @@
       "MODEL_EXTRAPOLATED": "Model extrapolated",
       "INPUT_STALE": "Input stale",
       "INPUT_MISSING": "Input missing",
-      "TRIAL_REQUIRED": "Trial required"
+      "TRIAL_REQUIRED": "Trial required",
+      "INPUT_USER_DECLARED": "Input declared by user",
+      "USER_OVERRIDE": "User override",
+      "MODEL_PREDICTS_SHORTFALL": "Model predicts shortfall"
     },
     "saving": {
       "theoretical": "Theoretical",

@@ -383,7 +383,9 @@ export const materialTests = pgTable(
       .references(() => materials.id),
     version: integer('version').notNull(),
     isCurrent: boolean('is_current').notNull().default(true),
-    source: text('source', { enum: ['lab_report', 'supplier_datasheet', 'user_declared'] }).notNull(),
+    source: text('source', {
+      enum: ['lab_report', 'supplier_datasheet', 'user_declared'],
+    }).notNull(),
     fieldSources: jsonb('field_sources').notNull().default({}),
     properties: jsonb('properties').notNull(),
     testedAt: date('tested_at', { mode: 'string' }).notNull(),

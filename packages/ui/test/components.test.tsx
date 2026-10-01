@@ -32,7 +32,7 @@ describe('StatusChip', () => {
 });
 
 describe('EvidenceChip', () => {
-  it('covers exactly the nine evidence statuses from CLAUDE.md', () => {
+  it('covers exactly the twelve evidence statuses (CLAUDE.md + Addendum A1)', () => {
     expect([...EVIDENCE_STATUSES]).toEqual([
       'CODE_VERIFIED',
       'PROJECT_VERIFIED',
@@ -43,6 +43,9 @@ describe('EvidenceChip', () => {
       'INPUT_STALE',
       'INPUT_MISSING',
       'TRIAL_REQUIRED',
+      'INPUT_USER_DECLARED',
+      'USER_OVERRIDE',
+      'MODEL_PREDICTS_SHORTFALL',
     ]);
   });
 

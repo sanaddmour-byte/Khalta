@@ -10,6 +10,9 @@ import {
 } from '@tanstack/react-router';
 import { meQuery } from './lib/api';
 import { NAV } from './lib/nav';
+import { PlantsPage } from './admin/PlantsPage';
+import { SettingsPage } from './admin/SettingsPage';
+import { MaterialsPage } from './materials/MaterialsPage';
 import { LoginPage } from './pages/Login';
 import { SectionPage } from './pages/Section';
 import { RulesPage } from './rules/RulesPage';
@@ -49,11 +52,19 @@ const appRoute = createRoute({
   component: Shell,
 });
 
+// Sections that have a real screen; the rest still show their teaching placeholder.
+const SCREENS: Record<string, () => React.JSX.Element> = {
+  rules: RulesPage,
+  materials: MaterialsPage,
+  plants: PlantsPage,
+  settings: SettingsPage,
+};
+
 const sectionRoutes = NAV.map((n) =>
   createRoute({
     getParentRoute: () => appRoute,
     path: n.path,
-    component: n.id === 'rules' ? RulesPage : () => <SectionPage id={n.id} />,
+    component: SCREENS[n.id] ?? (() => <SectionPage id={n.id} />),
   }),
 );
 

@@ -33,7 +33,10 @@ export interface Me {
   role: Role;
   capabilities: Capability[];
   scope: PlantScope;
-  settings: { numberFormat: 'latin' | 'arabic-indic' };
+  settings: {
+    numberFormat: 'latin' | 'arabic-indic';
+    sanityRanges: Record<string, { min?: number; max?: number }>;
+  };
 }
 export interface Plant {
   id: string;

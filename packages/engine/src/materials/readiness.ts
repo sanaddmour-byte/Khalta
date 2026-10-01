@@ -1,5 +1,11 @@
 import { fineModulus, validateGradation, type GradationPoint } from './gradation';
-import { isAggregate, SOURCE_STRENGTH, type Category, type Properties, type Source } from './properties';
+import {
+  isAggregate,
+  SOURCE_STRENGTH,
+  type Category,
+  type Properties,
+  type Source,
+} from './properties';
 
 export type Workflow = 'evaluate' | 'design';
 
@@ -33,11 +39,20 @@ function required(category: Category, ctx: ReadinessContext): [string, Workflow]
     case 'coarse_agg':
       return [...ev('sg_ssd', 'absorption_pct'), ...de('sieve_analysis', 'finer_75um_pct')];
     case 'cement':
-      return [...ev('sg'), ...de(...(ctx.sulfateGoverns ? ['c3a_pct'] : []), ...(ctx.asrActive ? ['alkali_na2o_eq_pct'] : []))];
+      return [
+        ...ev('sg'),
+        ...de(
+          ...(ctx.sulfateGoverns ? ['c3a_pct'] : []),
+          ...(ctx.asrActive ? ['alkali_na2o_eq_pct'] : []),
+        ),
+      ];
     case 'scm':
       return [...ev('scm_type', 'sg'), ...de(...(ctx.asrActive ? ['alkali_na2o_eq_pct'] : []))];
     case 'admixture':
-      return [...ev('type', 'sg', 'solids_pct'), ...de('min_dosage_pct', 'max_dosage_pct', 'water_reduction_table')];
+      return [
+        ...ev('type', 'sg', 'solids_pct'),
+        ...de('min_dosage_pct', 'max_dosage_pct', 'water_reduction_table'),
+      ];
     case 'water':
       return [...ev('water_source', 'sg'), ...de(...(ctx.recycledWater ? ['chloride_mg_l'] : []))];
     default:
@@ -46,24 +61,48 @@ function required(category: Category, ctx: ReadinessContext): [string, Workflow]
 }
 
 /** Named blockers for a workflow: everything missing or unusable. Design includes the evaluate set. */
-export function blockers(category: Category, props: Properties, workflow: Workflow, ctx: ReadinessContext = {}): Blocker[] {
+export function blockers(
+  category: Category,
+  props: Properties,
+  workflow: Workflow,
+  ctx: ReadinessContext = {},
+): Blocker[] {
   const out: Blocker[] = [];
   for (const [field, wf] of required(category, ctx)) {
     if (workflow === 'evaluate' && wf === 'design') continue;
     if (field === 'sieve_analysis') {
       const pts = props['sieve_analysis'] as GradationPoint[] | undefined;
       if (!pts || pts.length === 0) out.push({ field, workflow: wf, code: 'missing' });
-      else if (validateGradation(pts).length > 0) out.push({ field, workflow: wf, code: 'invalid', detail: validateGradation(pts)[0]!.message });
+      else if (validateGradation(pts).length > 0)
+        out.push({
+          field,
+          workflow: wf,
+          code: 'invalid',
+          detail: validateGradation(pts)[0]!.message,
+        });
       else {
         const fm = fineModulus(pts, ctx.fmSieves);
-        if (!fm.ok) out.push({ field: 'fineness_modulus', workflow: wf, code: 'missing', detail: `sieves ${fm.missing.join(', ')} mm` });
+        if (!fm.ok)
+          out.push({
+            field: 'fineness_modulus',
+            workflow: wf,
+            code: 'missing',
+            detail: `sieves ${fm.missing.join(', ')} mm`,
+          });
       }
     } else if (field === 'water_reduction_table') {
       const t = props[field] as unknown[] | undefined;
       if (!t) out.push({ field, workflow: wf, code: 'missing' });
-      else if (t.length < 3) out.push({ field, workflow: wf, code: 'invalid', detail: 'needs at least 3 points' });
+      else if (t.length < 3)
+        out.push({ field, workflow: wf, code: 'invalid', detail: 'needs at least 3 points' });
     } else if (field === 'sg' && category === 'water') {
-      if (!has(props, 'sg') || props['sg_confirmed'] !== true) out.push({ field: 'sg', workflow: wf, code: 'missing', detail: 'confirm the specific gravity (default 1.000)' });
+      if (!has(props, 'sg') || props['sg_confirmed'] !== true)
+        out.push({
+          field: 'sg',
+          workflow: wf,
+          code: 'missing',
+          detail: 'confirm the specific gravity (default 1.000)',
+        });
     } else if (!has(props, field)) out.push({ field, workflow: wf, code: 'missing' });
   }
   return out;
@@ -77,9 +116,15 @@ export function readiness(category: Category, props: Properties, ctx: ReadinessC
 }
 
 /** Fields a design depends on whose value is only user-declared (07 §2.5 "key properties"). */
-export function declaredKeyFields(category: Category, props: Properties, provenance: Provenance, ctx: ReadinessContext = {}): string[] {
+export function declaredKeyFields(
+  category: Category,
+  props: Properties,
+  provenance: Provenance,
+  ctx: ReadinessContext = {},
+): string[] {
   const keys = new Set(required(category, ctx).map(([f]) => f));
-  if (isAggregate(category)) ['sieve_analysis', 'sg_ssd', 'absorption_pct'].forEach((k) => keys.add(k));
+  if (isAggregate(category))
+    ['sieve_analysis', 'sg_ssd', 'absorption_pct'].forEach((k) => keys.add(k));
   return [...keys].filter((k) => has(props, k) && provenance[k] === 'user_declared');
 }
 

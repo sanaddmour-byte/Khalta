@@ -36,19 +36,30 @@ export interface MaterialParams {
 }
 
 export async function loadMaterialParams(db: Executor, tenantId: string): Promise<MaterialParams> {
-  const params: MaterialParams = { fmSieves: DEFAULT_FM_SIEVES, testAgeLimitDays: {}, driftTolerance: {} };
+  const params: MaterialParams = {
+    fmSieves: DEFAULT_FM_SIEVES,
+    testAgeLimitDays: {},
+    driftTolerance: {},
+  };
   for (const { row, ruleset } of await currentRules(db, tenantId)) {
     if (ruleset !== 'ENGINEERING') continue;
     const num = typeof row.value === 'number' ? row.value : null;
-    if (row.key === 'eng.fm.sieves' && Array.isArray(row.value) && row.value.every((v) => typeof v === 'number'))
+    if (
+      row.key === 'eng.fm.sieves' &&
+      Array.isArray(row.value) &&
+      row.value.every((v) => typeof v === 'number')
+    )
       params.fmSieves = row.value as number[];
-    else if (row.key.startsWith('eng.test_age_limit_days.')) params.testAgeLimitDays[row.key.slice(24)] = num;
-    else if (row.key.startsWith('eng.drift.tolerance.')) params.driftTolerance[row.key.slice(20)] = num;
+    else if (row.key.startsWith('eng.test_age_limit_days.'))
+      params.testAgeLimitDays[row.key.slice(24)] = num;
+    else if (row.key.startsWith('eng.drift.tolerance.'))
+      params.driftTolerance[row.key.slice(20)] = num;
   }
   return params;
 }
 
-const jsonErr = (message: string, details?: unknown) => new ApiError(400, 'invalid_request', message, details);
+const jsonErr = (message: string, details?: unknown) =>
+  new ApiError(400, 'invalid_request', message, details);
 
 export interface TestInput {
   properties: Properties;
@@ -90,7 +101,13 @@ export function resolveNewTest(
   for (const k of present) {
     // Same value keeps its provenance unless the caller explicitly re-sources it (a source upgrade is a change).
     const explicit = input.fieldSources?.[k];
-    if (previous && k in prevProps && sameJson(prevProps[k], props[k]) && prevSources[k] && (!explicit || explicit === prevSources[k]))
+    if (
+      previous &&
+      k in prevProps &&
+      sameJson(prevProps[k], props[k]) &&
+      prevSources[k] &&
+      (!explicit || explicit === prevSources[k])
+    )
       sources[k] = prevSources[k]!;
     else {
       sources[k] = explicit ?? input.source;
@@ -98,19 +115,23 @@ export function resolveNewTest(
     }
   }
   for (const k of Object.keys(input.fieldSources ?? {}))
-    if (!present.includes(k)) throw jsonErr(`fieldSources names "${k}", which is not in properties`);
+    if (!present.includes(k))
+      throw jsonErr(`fieldSources names "${k}", which is not in properties`);
   const removed = Object.keys(prevProps).filter((k) => !present.includes(k));
-  if (changed.length === 0 && removed.length === 0) throw new ApiError(409, 'conflict', 'Nothing changed from the current test');
+  if (changed.length === 0 && removed.length === 0)
+    throw new ApiError(409, 'conflict', 'Nothing changed from the current test');
 
   const needsAttachment = changed.some((k) => sources[k] === 'lab_report');
-  if (needsAttachment && !input.hasAttachment) throw jsonErr('A lab-report value needs the report attached');
+  if (needsAttachment && !input.hasAttachment)
+    throw jsonErr('A lab-report value needs the report attached');
   const declared = changed.filter((k) => sources[k] === 'user_declared');
   if (declared.length && !(input.declaredReason && input.declaredReason.trim().length >= 3))
     throw jsonErr('Say why these values are declared without a document', { fields: declared });
 
   const source = overallSource(sources, input.source);
   // DB rule: a lab_report record carries its attachment (the weakest source is lab_report only if every field is).
-  if (source === 'lab_report' && !input.hasAttachment) throw jsonErr('A lab-report value needs the report attached');
+  if (source === 'lab_report' && !input.hasAttachment)
+    throw jsonErr('A lab-report value needs the report attached');
   const warnings = sanityWarnings(category, props, settings.sanityRanges);
   return { props, sources, source, changed, removed, declared, warnings };
 }
@@ -142,7 +163,12 @@ export function summarize(
     declaredKeyFields: declaredKeyFields(category, props, fieldSources, fctx),
     freshness: freshness(test.testedAt, now, params.testAgeLimitDays[category]),
     drift: previous
-      ? detectDrift(previous.properties as Properties, props, params.driftTolerance, params.fmSieves)
+      ? detectDrift(
+          previous.properties as Properties,
+          props,
+          params.driftTolerance,
+          params.fmSieves,
+        )
       : [],
   };
 }
@@ -165,7 +191,12 @@ export async function testHistory(db: Executor, tenantId: string, materialId: st
   return db
     .select()
     .from(schema.materialTests)
-    .where(and(eq(schema.materialTests.tenantId, tenantId), eq(schema.materialTests.materialId, materialId)))
+    .where(
+      and(
+        eq(schema.materialTests.tenantId, tenantId),
+        eq(schema.materialTests.materialId, materialId),
+      ),
+    )
     .orderBy(desc(schema.materialTests.version));
 }
 
@@ -173,7 +204,13 @@ export async function loadMaterial(db: Executor, tenantId: string, id: string) {
   const [m] = await db
     .select()
     .from(schema.materials)
-    .where(and(eq(schema.materials.id, id), eq(schema.materials.tenantId, tenantId), isNull(schema.materials.deletedAt)));
+    .where(
+      and(
+        eq(schema.materials.id, id),
+        eq(schema.materials.tenantId, tenantId),
+        isNull(schema.materials.deletedAt),
+      ),
+    );
   return m;
 }
 

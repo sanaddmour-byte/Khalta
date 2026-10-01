@@ -45,12 +45,17 @@ const columns = {
 };
 
 export function supplierRoutes(api: ApiRoutes) {
-  api.get('/api/suppliers', { summary: 'List suppliers', capability: 'materials.read' }, async ({ auth, db }) =>
-    db
-      .select(columns)
-      .from(schema.suppliers)
-      .where(and(eq(schema.suppliers.tenantId, auth.tenantId), isNull(schema.suppliers.deletedAt)))
-      .orderBy(asc(schema.suppliers.nameEn)),
+  api.get(
+    '/api/suppliers',
+    { summary: 'List suppliers', capability: 'materials.read' },
+    async ({ auth, db }) =>
+      db
+        .select(columns)
+        .from(schema.suppliers)
+        .where(
+          and(eq(schema.suppliers.tenantId, auth.tenantId), isNull(schema.suppliers.deletedAt)),
+        )
+        .orderBy(asc(schema.suppliers.nameEn)),
   );
 
   api.mutate(
@@ -63,7 +68,12 @@ export function supplierRoutes(api: ApiRoutes) {
         .values({ ...body, tenantId: auth.tenantId, createdBy: auth.user.id })
         .returning(columns);
       if (!row) throw new Error('insert failed');
-      await audit.record({ action: 'supplier.create', entityType: 'supplier', entityId: row.id, after: row });
+      await audit.record({
+        action: 'supplier.create',
+        entityType: 'supplier',
+        entityId: row.id,
+        after: row,
+      });
       return row;
     },
   );
@@ -85,7 +95,13 @@ export function supplierRoutes(api: ApiRoutes) {
         .set({ ...body, updatedAt: new Date() })
         .where(scope)
         .returning(columns);
-      await audit.record({ action: 'supplier.update', entityType: 'supplier', entityId: params.id, before, after });
+      await audit.record({
+        action: 'supplier.update',
+        entityType: 'supplier',
+        entityId: params.id,
+        before,
+        after,
+      });
       return after;
     },
   );
@@ -102,8 +118,16 @@ export function supplierRoutes(api: ApiRoutes) {
       );
       const [before] = await tx.select(columns).from(schema.suppliers).where(scope);
       if (!before) throw notFound('Supplier not found');
-      await tx.update(schema.suppliers).set({ deletedAt: new Date(), isActive: false }).where(scope);
-      await audit.record({ action: 'supplier.delete', entityType: 'supplier', entityId: params.id, before });
+      await tx
+        .update(schema.suppliers)
+        .set({ deletedAt: new Date(), isActive: false })
+        .where(scope);
+      await audit.record({
+        action: 'supplier.delete',
+        entityType: 'supplier',
+        entityId: params.id,
+        before,
+      });
     },
   );
 }

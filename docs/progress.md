@@ -107,3 +107,39 @@ Also verified by temporarily adding violating files: lint reported all three cus
 - `rules:export-seed` writes `verified: false` always.
 
 **Next:** M1.1 (materials and tests, with F-007 material characteristics entry) — write `docs/plans/M1.1.md` and list questions.
+
+## 2026-10-01 — M1.1 Materials and tests (F-005, F-006, F-007)
+
+**Changed**
+
+- `packages/engine` (pure): sieve parsing (ASTM/ISO labels, µm, Arabic digits), gradation validation (six error codes), fineness modulus from the configured series (infers 0 % / 100 % retained only where the data forces it, otherwise names the missing sieves), Excel paste parser (row pair or two columns, header detection, decimal commas, returns its assumptions), per-category property schemas, minimum sets per workflow (07 §2.2), freshness (a missing limit is "not configured", never "fresh"), drift (null tolerance reports the raw delta only), warn-only sanity ranges, ad-hoc material schema.
+- `packages/db`: migrations 0004–0005 (`materials`, versioned `material_tests` with per-field provenance, `attachments`; suppliers gain contact fields). Triggers/constraints: no hard delete, test content immutable, attachments append-only, one current test per material, a `lab_report` needs its attachment, a declared record needs its author, 10 MB cap.
+- `packages/rbac`: `materials.read`, `materials.write`, `suppliers.write` (matrix and spec table updated).
+- `packages/rules`: seed `eng.fm.sieves` and null `eng.drift.tolerance.*` parameters.
+- `apps/api`: `/api/suppliers`, `/api/materials` (list, detail, create, patch, soft delete, params, readiness, promote), `/api/materials/:id/tests`, `/api/attachments` (raw upload, signature-checked PDF/PNG/JPEG, authorized `attachment` + `nosniff` download). New `ApiRoutes.upload`/`file` helpers (audited, in the OpenAPI doc). Settings gain `sanityRanges` and `approvalRequiresLabSource`; `/api/me` exposes the sanity ranges. Dev seed adds four materials labelled SYNTHETIC.
+- `apps/web`: Materials (list, detail sheet, quick-entry with paste gradation, live FM, tiered fields, source/reason/attachment rules, offline-safe local drafts cleared at sign-out, ECharts gradation curve on a log axis never mirrored in Arabic with a table alternative, trend sparklines, drift/freshness/source chips, "attach a report to declared values" upgrade), Plants, Settings (general + Users). `EvidenceChip` now covers the twelve statuses (adds `INPUT_USER_DECLARED`, `USER_OVERRIDE`, `MODEL_PREDICTS_SHORTFALL`).
+- `docs/i18n-review.md`: 231 more drafted Arabic strings.
+
+**Commands run (all green):** `typecheck`, `lint`, `test` (engine 37, rbac 161, rules 159, ui 120, web 25, api 106), `test:rules` (143), `features:check`, `e2e` (60, incl. 9 new: F-007 flows, lab-report needs file, upgrade keeps both versions, drafts survive reload, sanity warnings, plant manager cannot create, Arabic chart not mirrored, plants/users/settings, axe on the new screens EN/AR), `screens` (`docs/screens/M1.1/`, 41 images + dark), `db:drift`.
+
+**Defects found by tests/review and fixed**
+
+- Fineness-modulus inference had the sieve direction reversed (a sand entered from 9.5 mm down could not compute); caught by the hand-calculated test.
+- The first versioning logic treated "same values, better source" as "nothing changed", which would have blocked the declared→lab upgrade; a source change now counts as a change.
+- i18n used ICU single braces while my first strings used `{{x}}`; all fixed.
+- Materials table overflowed at 1024 px and wrapped dates; secondary columns now hide by breakpoint and the table scrolls.
+- Chart axis labels collided at the fine end; trend cards no longer show for a single test.
+- Two older e2e specs were racy/brittle (lazy gallery chunk; fixed plant count) and now wait/derive.
+
+**Verification note:** tests prove FM arithmetic, gradation/sanity/readiness rules, provenance and versioning, plant scoping, attachment checks and database integrity as implemented. They do **not** prove the FM sieve series, sanity ranges, age limits or drift tolerances are the right engineering policy (age limits and tolerances are deliberately unset), nor that entered lab values are true. Arabic wording and tablet ergonomics need your review.
+
+**Open items / notes**
+
+- Ad-hoc promotion (F-007 AC4) is covered by the API only; its UI arrives with the Studio. A promoted material's price is returned, not stored (prices are M1.2).
+- `approvalRequiresLabSource` is stored but enforced only when approvals exist (M4.1).
+- Material rename/archive UI is not built (API exists and is tested).
+- Main bundle ≈ 884 kB (was 655 kB); the chart is a separate lazy chunk (≈ 495 kB). Route-level code splitting is deferred.
+- At 390 px the materials table scrolls horizontally in Arabic; acceptable for now.
+- `06-features.md` statuses left for you to flip.
+
+**Next:** M1.2 (price matrix) — write `docs/plans/M1.2.md` and list questions.

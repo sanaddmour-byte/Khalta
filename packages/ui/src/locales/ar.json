@@ -21,7 +21,10 @@
       "MODEL_EXTRAPOLATED": "نموذج خارج النطاق",
       "INPUT_STALE": "مدخلات قديمة",
       "INPUT_MISSING": "مدخلات ناقصة",
-      "TRIAL_REQUIRED": "تتطلب خلطة تجريبية"
+      "TRIAL_REQUIRED": "تتطلب خلطة تجريبية",
+      "INPUT_USER_DECLARED": "قيمة أدخلها المستخدم",
+      "USER_OVERRIDE": "تجاوز المستخدم",
+      "MODEL_PREDICTS_SHORTFALL": "النموذج يتوقع قصوراً"
     },
     "saving": {
       "theoretical": "وفر نظري",

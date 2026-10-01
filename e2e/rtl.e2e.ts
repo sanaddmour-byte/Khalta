@@ -124,7 +124,8 @@ test('Western digits by default in Arabic (no Arabic-Indic digits on screen)', a
 test('dev gallery isolates codes and units in the RTL panel', async ({ page }) => {
   await start(page, { lang: 'en' });
   await page.goto('/dev/components');
+  await expect(page.locator('[data-panel=rtl]')).toBeVisible(); // the gallery chunk is lazy: wait for it
   const tokens = page.locator('[data-panel=rtl] bdi[dir=ltr]');
-  expect(await tokens.count()).toBeGreaterThan(5);
+  await expect.poll(() => tokens.count()).toBeGreaterThan(5);
   await expect(page.locator('[data-panel=rtl] bdi', { hasText: 'C30/37' })).toBeVisible();
 });

@@ -22,10 +22,14 @@ export const US_SIEVES: Record<string, number> = {
 export const ISO_SIEVES: readonly number[] = [63, 31.5, 16, 8, 4, 2, 1, 0.5, 0.25, 0.125, 0.063];
 
 /** Every sieve size a gradation may use (ASTM ∪ ISO), descending. */
-export const KNOWN_SIEVES: readonly number[] = [...new Set([...Object.values(US_SIEVES), ...ISO_SIEVES, 150, 100])].sort((a, b) => b - a);
+export const KNOWN_SIEVES: readonly number[] = [
+  ...new Set([...Object.values(US_SIEVES), ...ISO_SIEVES, 150, 100]),
+].sort((a, b) => b - a);
 
 /** Starter fineness-modulus series (ASTM C125 / C136). The authoritative value is the engineering seed `eng.fm.sieves`. */
-export const DEFAULT_FM_SIEVES: readonly number[] = [150, 75, 37.5, 19, 9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15];
+export const DEFAULT_FM_SIEVES: readonly number[] = [
+  150, 75, 37.5, 19, 9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15,
+];
 
 const compact = (s: string) => s.toLowerCase().replace(/\s+/g, '');
 const US_BY_LABEL = new Map(Object.entries(US_SIEVES).map(([label, mm]) => [compact(label), mm]));

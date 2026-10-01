@@ -64,4 +64,3 @@ catalog:
   papaparse: 5.7.0
   '@types/papaparse': 5.5.2
   echarts: 6.1.0
-  echarts-for-react: 3.0.6

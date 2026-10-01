@@ -27,7 +27,8 @@
     "clsx": "catalog:",
     "@khalta/ui": "workspace:*",
     "@khalta/rbac": "workspace:*",
-    "@khalta/engine": "workspace:*"
+    "@khalta/engine": "workspace:*",
+    "echarts": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
