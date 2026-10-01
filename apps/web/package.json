@@ -26,7 +26,8 @@
     "sonner": "catalog:",
     "clsx": "catalog:",
     "@khalta/ui": "workspace:*",
-    "@khalta/rbac": "workspace:*"
+    "@khalta/rbac": "workspace:*",
+    "@khalta/engine": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

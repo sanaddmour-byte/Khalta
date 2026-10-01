@@ -38,7 +38,7 @@ export const NAV: NavItem[] = [
     id: 'materials',
     path: '/materials',
     icon: Boxes,
-    anyOf: ['lab.enter', 'price.view', 'design.write'],
+    anyOf: ['materials.read'],
   },
   { id: 'prices', path: '/prices', icon: CircleDollarSign, anyOf: ['price.view'] },
   { id: 'plants', path: '/plants', icon: Factory, anyOf: ['org.manage'] },

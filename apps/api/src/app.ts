@@ -11,10 +11,13 @@ import { errorHandler, notFound } from './errors';
 import { authenticate, originGuard } from './middleware';
 import { ApiRoutes } from './route';
 import { auditRoutes } from './routes/audit';
+import { attachmentRoutes } from './routes/attachments';
+import { materialRoutes } from './routes/materials';
 import { meRoutes } from './routes/me';
 import { plantRoutes } from './routes/plants';
 import { ruleRoutes } from './routes/rules';
 import { settingsRoutes } from './routes/settings';
+import { supplierRoutes } from './routes/suppliers';
 import { userRoutes } from './routes/users';
 
 export interface AppDeps {
@@ -60,6 +63,9 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   settingsRoutes(api);
   auditRoutes(api);
   ruleRoutes(api);
+  supplierRoutes(api);
+  attachmentRoutes(api);
+  materialRoutes(api);
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {
     res.json(api.openApiDocument());
   });

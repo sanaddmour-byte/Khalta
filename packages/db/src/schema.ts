@@ -2,6 +2,8 @@ import { sql } from 'drizzle-orm';
 import {
   bigserial,
   boolean,
+  customType,
+  date,
   index,
   integer,
   jsonb,
@@ -163,6 +165,10 @@ export const suppliers = pgTable('suppliers', {
   nameAr: text('name_ar').notNull(),
   nameEn: text('name_en').notNull(),
   contact: text('contact'),
+  phone: text('phone'),
+  email: text('email'),
+  city: text('city'),
+  isActive: boolean('is_active').notNull().default(true),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
   createdBy: text('created_by').references(() => users.id),
@@ -305,3 +311,98 @@ export const ruleImportBatches = pgTable('rule_import_batches', {
   createdAt: createdAt(),
   committedAt: ts('committed_at'),
 });
+
+// ---- Materials (M1.1) --------------------------------------------------------------------------
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => 'bytea' });
+
+/** Evidence files (lab reports, datasheets) stored in Postgres: ≤ 10 MB, immutable, no hard delete. */
+export const attachments = pgTable(
+  'attachments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    filename: text('filename').notNull(),
+    contentType: text('content_type').notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    sha256: text('sha256').notNull(),
+    data: bytea('data').notNull(),
+    createdAt: createdAt(),
+    createdBy: text('created_by').references(() => users.id),
+  },
+  (t) => [index('attachments_tenant_idx').on(t.tenantId)],
+);
+
+/** Tenant-level material; `plantId` is an optional home plant (prices are per plant, M1.2). */
+export const materials = pgTable(
+  'materials',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    plantId: uuid('plant_id').references(() => plants.id),
+    supplierId: uuid('supplier_id').references(() => suppliers.id),
+    category: text('category').notNull(), // @khalta/engine CATEGORIES
+    marketNameAr: text('market_name_ar'),
+    marketNameEn: text('market_name_en').notNull(), // Jordanian market name, e.g. "Adasiyeh"
+    technicalName: text('technical_name'),
+    sourceName: text('source_name'), // quarry / plant / brand
+    notes: text('notes'),
+    isActive: boolean('is_active').notNull().default(true),
+    /** Set when promoted from an ad-hoc request material. */
+    promotedFrom: text('promoted_from'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    createdBy: text('created_by').references(() => users.id),
+    deletedAt: ts('deleted_at'),
+  },
+  (t) => [
+    index('materials_tenant_idx').on(t.tenantId, t.category),
+    uniqueIndex('materials_tenant_name_uq')
+      .on(t.tenantId, t.category, t.marketNameEn)
+      .where(sql`${t.deletedAt} is null`),
+  ],
+);
+
+/**
+ * One row per test VERSION of a material. Content never changes in place: a correction inserts a new
+ * version and supersedes the old one (trigger in migration 0005). `fieldSources` records the provenance
+ * of every property; `source` is the weakest of them.
+ */
+export const materialTests = pgTable(
+  'material_tests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    materialId: uuid('material_id')
+      .notNull()
+      .references(() => materials.id),
+    version: integer('version').notNull(),
+    isCurrent: boolean('is_current').notNull().default(true),
+    source: text('source', { enum: ['lab_report', 'supplier_datasheet', 'user_declared'] }).notNull(),
+    fieldSources: jsonb('field_sources').notNull().default({}),
+    properties: jsonb('properties').notNull(),
+    testedAt: date('tested_at', { mode: 'string' }).notNull(),
+    validUntil: date('valid_until', { mode: 'string' }),
+    labRef: text('lab_ref'),
+    attachmentId: uuid('attachment_id').references(() => attachments.id),
+    declaredReason: text('declared_reason'),
+    declaredBy: text('declared_by').references(() => users.id),
+    declaredAt: ts('declared_at'),
+    changeReason: text('change_reason'),
+    createdAt: createdAt(),
+    createdBy: text('created_by').references(() => users.id),
+    supersededAt: ts('superseded_at'),
+  },
+  (t) => [
+    uniqueIndex('material_tests_version_uq').on(t.materialId, t.version),
+    uniqueIndex('material_tests_current_uq')
+      .on(t.materialId)
+      .where(sql`${t.isCurrent}`),
+    index('material_tests_tenant_idx').on(t.tenantId, t.materialId),
+  ],
+);

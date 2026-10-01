@@ -1,7 +1,7 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { withAudit, type AuditRecorder, type Db, type RequestContext, type Tx } from '@khalta/db';
 import { roleCan, type Capability } from '@khalta/rbac';
-import { Router, type Request, type Response } from 'express';
+import express, { Router, type Request, type Response } from 'express';
 import type { ZodType } from 'zod';
 import type { AuthContext } from './middleware';
 import { forbidden } from './errors';
@@ -120,6 +120,55 @@ export class ApiRoutes {
         handler({ auth, body, params, tx, audit }),
       );
       res.status(o.status ?? 200).json(result ?? { ok: true });
+    });
+  }
+
+  /** Audited binary upload (raw request body, `limit` bytes). Metadata travels in the query string. */
+  upload<Q = unknown>(
+    path: string,
+    o: Opts<never, unknown, Q> & { limitBytes: number },
+    handler: (a: MutateArgs<Buffer, unknown> & { query: Q }) => Promise<unknown>,
+  ) {
+    this.document('post', path, o);
+    this.mutationRoutes.add(`POST ${path}`);
+    this.router.post(
+      path,
+      express.raw({ type: () => true, limit: o.limitBytes }),
+      async (req: Request, res: Response) => {
+        const auth = res.locals['auth'] as AuthContext;
+        this.authorize(auth, o.capability);
+        const query = (o.query ? o.query.parse(req.query) : req.query) as Q;
+        // A non-binary body (e.g. JSON already parsed upstream) is treated as an empty upload.
+        const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+        const result = await withAudit(this.db, auth.ctx, (tx, audit) =>
+          handler({ auth, body, params: req.params, query, tx, audit }),
+        );
+        res.status(o.status ?? 201).json(result ?? { ok: true });
+      },
+    );
+  }
+
+  /** Authorized file download. Always `attachment`, never sniffed, never cached by shared caches. */
+  file<P = unknown>(
+    path: string,
+    o: Opts<never, P, never>,
+    handler: (a: ReadArgs<P, unknown>) => Promise<{ filename: string; contentType: string; data: Buffer }>,
+  ) {
+    this.document('get', path, o);
+    this.router.get(path, async (req: Request, res: Response) => {
+      const auth = res.locals['auth'] as AuthContext;
+      this.authorize(auth, o.capability);
+      const params = (o.params ? o.params.parse(req.params) : req.params) as P;
+      const f = await handler({ auth, params, query: req.query, db: this.db });
+      res
+        .status(200)
+        .set({
+          'Content-Type': f.contentType,
+          'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(f.filename)}`,
+          'X-Content-Type-Options': 'nosniff',
+          'Cache-Control': 'private, no-store',
+        })
+        .send(f.data);
     });
   }
 

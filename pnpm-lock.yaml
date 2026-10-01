@@ -245,6 +245,9 @@ importers:
       '@khalta/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@khalta/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@khalta/rbac':
         specifier: workspace:*
         version: link:../../packages/rbac
@@ -321,6 +324,9 @@ importers:
       '@fontsource/ibm-plex-sans-arabic':
         specifier: 'catalog:'
         version: 5.3.0
+      '@khalta/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@khalta/rbac':
         specifier: workspace:*
         version: link:../../packages/rbac

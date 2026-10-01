@@ -19,6 +19,7 @@
     "zod": "catalog:",
     "@asteasolutions/zod-to-openapi": "catalog:",
     "@khalta/db": "workspace:*",
+    "@khalta/engine": "workspace:*",
     "@khalta/rbac": "workspace:*",
     "drizzle-orm": "catalog:",
     "@khalta/rules": "workspace:*",

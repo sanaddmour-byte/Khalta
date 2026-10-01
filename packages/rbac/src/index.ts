@@ -29,6 +29,9 @@ export const CAPABILITIES = [
   'insight.accept',
   'insight.draft', // create a trial-only draft from an insight
   'library.read',
+  'materials.read',
+  'materials.write', // material records and their tests (plant managers: own plants, via lab.enter)
+  'suppliers.write',
   'import.run', // legacy designs, JS rule values
   'export.priceCost',
   'audit.read',
@@ -83,6 +86,15 @@ const MATRIX: Record<Capability, Record<Role, Cell>> = {
     sales: ALL,
     viewer: ALL,
   }),
+  'materials.read': row({
+    admin: ALL,
+    qc_manager: ALL,
+    qc_engineer: ALL,
+    procurement: ALL,
+    plant_manager: ALL,
+  }),
+  'materials.write': row({ qc_manager: ALL, qc_engineer: ALL }),
+  'suppliers.write': row({ qc_manager: ALL, qc_engineer: ALL, procurement: ALL }),
   'import.run': row({ admin: ALL, qc_manager: ALL }),
   'export.priceCost': row({ admin: ALL, qc_manager: ALL, procurement: ALL }),
   'audit.read': row({ admin: ALL, qc_manager: ALL }),

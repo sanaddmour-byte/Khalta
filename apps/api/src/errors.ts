@@ -47,6 +47,9 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   } else if (pgCode(err) === '23505') {
     status = 409;
     body = { code: 'conflict', message: 'A record with these values already exists' };
+  } else if (err?.type === 'entity.too.large') {
+    status = 413;
+    body = { code: 'too_large', message: 'The upload is too large' };
   } else if (err?.type === 'entity.parse.failed') {
     status = 400;
     body = { code: 'invalid_json', message: 'Malformed JSON body' };
