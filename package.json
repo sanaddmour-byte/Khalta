@@ -16,9 +16,10 @@
     "test:rules": "turbo run test:rules",
     "e2e": "playwright test",
     "screens": "playwright test --config playwright.screens.config.ts",
-    "db:migrate": "node scripts/stub.mjs db:migrate M0.2",
+    "db:migrate": "pnpm --filter @khalta/db migrate",
     "db:seed:demo": "node scripts/stub.mjs db:seed:demo M1.3",
-    "fixtures:export": "node scripts/stub.mjs fixtures:export M2.2"
+    "fixtures:export": "node scripts/stub.mjs fixtures:export M2.2",
+    "db:drift": "pnpm --filter @khalta/db drift"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",

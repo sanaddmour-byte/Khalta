@@ -8,11 +8,23 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage"
+    "test": "vitest run --passWithNoTests",
+    "migrate": "tsx src/migrate.ts",
+    "generate": "drizzle-kit generate",
+    "drift": "drizzle-kit generate --name drift_check && git diff --quiet -- migrations && test -z \"$(git ls-files -o --exclude-standard migrations)\""
   },
   "devDependencies": {
     "@vitest/coverage-v8": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "drizzle-kit": "catalog:",
+    "@types/pg": "catalog:",
+    "@types/node": "catalog:",
+    "tsx": "catalog:"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:",
+    "@khalta/rbac": "workspace:*"
   }
 }

@@ -22,6 +22,14 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
+  {
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
   { languageOptions: { globals: { ...globals.node } } },
   {
     files: uiFiles,
@@ -33,5 +41,19 @@ export default tseslint.config(
     files: ['packages/validator/**/*.{ts,tsx}'],
     plugins: { khalta },
     rules: { 'khalta/validator-isolation': 'error' },
+  },
+  {
+    // CLAUDE.md rule 6: no hard deletes. Only Better Auth's own tables may be deleted from.
+    files: ['apps/api/src/**/*.ts', 'packages/db/src/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.property.name='delete'][arguments.0.type='MemberExpression'][arguments.0.object.name='schema']:not([arguments.0.property.name=/^(sessions|accounts|verifications)$/])",
+          message: 'No hard deletes on business tables: set deleted_at (soft delete) instead.',
+        },
+      ],
+    },
   },
 );

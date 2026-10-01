@@ -6,12 +6,19 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "seed:dev": "tsx src/dev-seed.ts"
   },
   "dependencies": {
     "express": "catalog:",
     "pino": "catalog:",
-    "pino-http": "catalog:"
+    "pino-http": "catalog:",
+    "better-auth": "catalog:",
+    "zod": "catalog:",
+    "@asteasolutions/zod-to-openapi": "catalog:",
+    "@khalta/db": "workspace:*",
+    "@khalta/rbac": "workspace:*",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@types/express": "catalog:",
@@ -20,6 +27,9 @@
     "supertest": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@types/node": "catalog:",
+    "pg": "catalog:",
+    "@types/pg": "catalog:"
   }
 }

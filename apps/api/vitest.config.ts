@@ -1,5 +1,10 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  test: { coverage: { include: ['src/app.ts'] } },
+  test: {
+    globalSetup: ['./test/global-setup.ts'],
+    testTimeout: 30_000,
+    hookTimeout: 60_000,
+    coverage: { include: ['src/**/*.ts'], exclude: ['src/server.ts'] },
+  },
 });
