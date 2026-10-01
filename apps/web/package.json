@@ -28,7 +28,8 @@
     "@khalta/ui": "workspace:*",
     "@khalta/rbac": "workspace:*",
     "@khalta/engine": "workspace:*",
-    "echarts": "catalog:"
+    "echarts": "catalog:",
+    "@tanstack/react-virtual": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
