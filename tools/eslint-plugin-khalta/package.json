@@ -1,0 +1,18 @@
+{
+  "name": "@khalta/eslint-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "echo 'plain JS plugin, no typecheck'"
+  },
+  "devDependencies": {
+    "eslint": "catalog:",
+    "vitest": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@khalta/boundaries",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "echo 'no typecheck'"
+  },
+  "devDependencies": {
+    "dependency-cruiser": "catalog:",
+    "vitest": "catalog:"
+  }
+}

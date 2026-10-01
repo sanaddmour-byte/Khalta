@@ -1,0 +1,39 @@
+{
+  "name": "khalta",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "lint": "eslint . && prettier --check . && pnpm lint:boundaries",
+    "lint:boundaries": "depcruise packages apps --config tools/boundaries/dependency-cruiser.cjs",
+    "format": "prettier --write .",
+    "test": "turbo run test",
+    "test:rules": "turbo run test:rules",
+    "e2e": "playwright test",
+    "screens": "playwright test --config playwright.screens.config.ts",
+    "db:migrate": "node scripts/stub.mjs db:migrate M0.2",
+    "db:seed:demo": "node scripts/stub.mjs db:seed:demo M1.3",
+    "fixtures:export": "node scripts/stub.mjs fixtures:export M2.2"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "catalog:",
+    "@eslint/js": "catalog:",
+    "@khalta/eslint-plugin": "workspace:*",
+    "@playwright/test": "catalog:",
+    "@types/node": "catalog:",
+    "dependency-cruiser": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "globals": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
+}

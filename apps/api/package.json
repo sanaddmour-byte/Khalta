@@ -1,0 +1,25 @@
+{
+  "name": "@khalta/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage"
+  },
+  "dependencies": {
+    "express": "catalog:",
+    "pino": "catalog:",
+    "pino-http": "catalog:"
+  },
+  "devDependencies": {
+    "@types/express": "catalog:",
+    "@types/supertest": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "supertest": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

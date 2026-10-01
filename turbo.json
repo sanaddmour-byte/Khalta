@@ -1,0 +1,9 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "typecheck": {},
+    "test": {},
+    "test:rules": {},
+    "dev": { "cache": false, "persistent": true }
+  }
+}

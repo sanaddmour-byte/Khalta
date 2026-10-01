@@ -1,0 +1,24 @@
+{
+  "name": "@khalta/rules",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:rules": "vitest run test/seeds.test.ts"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "@types/node": "catalog:"
+  },
+  "dependencies": {
+    "yaml": "catalog:",
+    "zod": "catalog:"
+  }
+}
