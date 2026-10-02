@@ -97,7 +97,13 @@ async function createRequest(tx: Tx, auth: AuthContext, audit: AuditRecorder, bo
       mode: body.mode,
       objective: body.objective,
       request: base.request,
-      inputs: { characteristics: body.characteristics ?? {}, materials: body.materials ?? {} },
+      inputs: {
+        characteristics: body.characteristics ?? {},
+        materials: run.resolved.materials ?? {},
+        profileIds: body.profileIds ?? [],
+      },
+      profileVersions: run.resolved.profiles,
+      profileOrigins: run.resolved.origins,
       snapshot: { ...base, characteristics: base.characteristics },
       status: r.status,
       outcome: {
@@ -418,6 +424,7 @@ export function designRequestRoutes(api: ApiRoutes) {
             rank: cand.rank,
             evidence: cand.evidence,
             note: 'an optimizer candidate: not approved; a trial is required',
+            profiles: req.profileVersions,
           },
           evaluationPending: true,
           sourceCandidateId: cand.id,
@@ -704,7 +711,25 @@ export function designRequestRoutes(api: ApiRoutes) {
           });
           continue;
         }
-        const res = await createRequest(tx, auth, audit, mapped.body);
+        // A plant profile applies only at its own plant: other plants run without it.
+        const ids = mapped.body.profileIds ?? [];
+        const keep = ids.length
+          ? (
+              await tx
+                .select({ id: schema.characteristicProfiles.id })
+                .from(schema.characteristicProfiles)
+                .where(
+                  and(
+                    inArray(schema.characteristicProfiles.id, ids),
+                    or(
+                      sql`${schema.characteristicProfiles.scope} <> 'plant'`,
+                      eq(schema.characteristicProfiles.plantId, p.plantId),
+                    ),
+                  ),
+                )
+            ).map((x) => x.id)
+          : [];
+        const res = await createRequest(tx, auth, audit, { ...mapped.body, profileIds: keep });
         out.push({
           plantId: p.plantId,
           status: res.status,

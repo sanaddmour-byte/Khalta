@@ -26,6 +26,7 @@ export const CAPABILITIES = [
   'rules.verify',
   'design.attest',
   'baseline.create', // cost baselines on a named price snapshot (QC manager)
+  'profile.approve', // QC manager: approve a characteristic profile version
   'candidate.authorize', // QC manager: allow an optimizer candidate that MODEL_PREDICTS_SHORTFALL into trials
   'production.release', // release to / suspend in production
   'insight.accept',
@@ -77,6 +78,7 @@ const MATRIX: Record<Capability, Record<Role, Cell>> = {
   'rules.verify': row({ qc_manager: ALL }),
   'design.attest': row({ qc_manager: ALL }),
   'baseline.create': row({ qc_manager: ALL }),
+  'profile.approve': row({ qc_manager: ALL }),
   'candidate.authorize': row({ qc_manager: ALL }),
   'production.release': row({ qc_manager: ALL, plant_manager: ALL }),
   'insight.accept': row({ qc_manager: ALL }),

@@ -113,6 +113,20 @@
       "when": 1790945275051,
       "tag": "0015_optimizer_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790949477142,
+      "tag": "0016_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790949478296,
+      "tag": "0017_profiles_integrity",
+      "breakpoints": true
     }
   ]
 }

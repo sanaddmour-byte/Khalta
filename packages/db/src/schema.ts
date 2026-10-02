@@ -754,6 +754,60 @@ export const costBaselines = pgTable(
   (t) => [uniqueIndex('cost_baselines_design_snapshot_uq').on(t.designId, t.priceSnapshotId)],
 );
 
+// ---- Characteristic profiles (M3.3) ---------------------------------------------------------------
+
+/** A named way of making a product. The content lives in immutable versions. */
+export const characteristicProfiles = pgTable(
+  'characteristic_profiles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    scope: text('scope', { enum: ['tenant', 'plant', 'product_family'] }).notNull(),
+    plantId: uuid('plant_id').references(() => plants.id),
+    nameAr: text('name_ar').notNull(),
+    nameEn: text('name_en').notNull(),
+    /** Free-text product family label (matching uses `applies_to`, not this). */
+    family: text('family'),
+    ownerId: text('owner_id').references(() => users.id),
+    createdAt: createdAt(),
+    deletedAt: ts('deleted_at'),
+  },
+  (t) => [index('characteristic_profiles_tenant_idx').on(t.tenantId, t.scope)],
+);
+
+/** One version of a profile. Content never changes; only a draft can become approved (once). */
+export const characteristicProfileVersions = pgTable(
+  'characteristic_profile_versions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    profileId: uuid('profile_id')
+      .notNull()
+      .references(() => characteristicProfiles.id),
+    version: integer('version').notNull(),
+    status: text('status', { enum: ['draft', 'approved'] })
+      .notNull()
+      .default('draft'),
+    appliesTo: jsonb('applies_to').notNull(),
+    characteristics: jsonb('characteristics').notNull(),
+    materials: jsonb('materials').notNull(),
+    objective: text('objective', { enum: ['cheapest', 'closest_to_targets'] }),
+    rulesetMode: text('ruleset_mode', { enum: ['ACI', 'JS', 'BOTH'] }),
+    changeNote: text('change_note'),
+    /** The loosening check against every exposure in `applies_to`, with the rule versions it used. */
+    check: jsonb('check').notNull(),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+    approvedBy: text('approved_by').references(() => users.id),
+    approvedAt: ts('approved_at'),
+  },
+  (t) => [uniqueIndex('characteristic_profile_versions_uq').on(t.profileId, t.version)],
+);
+
 /**
  * One optimizer request: the inputs, the exact snapshot (rules versions, materials, prices) it ran on, and the
  * outcome (candidates, blockers, conflicts, degrees of freedom). Immutable: a re-run is a new request.
@@ -783,6 +837,9 @@ export const designRequests = pgTable(
     outcome: jsonb('outcome').notNull(),
     optimizerVersion: text('optimizer_version').notNull(),
     solver: text('solver').notNull(),
+    /** [{ profileId, version }] applied to this request, and the origin of each resolved characteristic. */
+    profileVersions: jsonb('profile_versions').notNull().default([]),
+    profileOrigins: jsonb('profile_origins').notNull().default({}),
     createdBy: text('created_by').references(() => users.id),
     createdAt: createdAt(),
   },

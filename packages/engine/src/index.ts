@@ -14,3 +14,4 @@ export * from './legacy';
 export * from './lifecycle';
 export * from './evaluate/types';
 export * from './characteristics';
+export * from './profiles';

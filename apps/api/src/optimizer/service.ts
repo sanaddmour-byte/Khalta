@@ -5,6 +5,10 @@ import { schema, type Executor } from '@khalta/db';
 import {
   adHocMaterialSchema,
   checkCharacteristics,
+  idOf,
+  mergePreferences,
+  profileLayers,
+  type ResolvedCharacteristic,
   PRICE_PATTERN,
   todayAmman,
   type EvaluationSnapshot,
@@ -30,6 +34,7 @@ import { ApiError } from '../errors';
 import { loadSnapshotMaterials, runEvaluation as runEval } from '../evaluation/service';
 import { loadCurrentRecords } from '../rules/service';
 import { loadSettings, type Settings } from '../settings';
+import { applyProfiles } from '../profiles/service';
 
 export const requestBody = z.strictObject({
   plantId: z.uuid(),
@@ -51,6 +56,8 @@ export const requestBody = z.strictObject({
   }),
   /** What-if materials that exist only inside this request (07 §2.4); never saved, never usable in a design until promoted. */
   adHoc: z.array(adHocMaterialSchema).max(10).default([]),
+  /** Characteristic profiles to layer under the request (one per scope); trial generation needs approved versions. */
+  profileIds: z.array(z.uuid()).max(3).optional(),
   /** Appendix E characteristics; validated and checked against the hard limits by the engine. */
   characteristics: z.unknown().optional(),
   materials: z
@@ -193,10 +200,59 @@ export async function buildRequestSnapshot(
   };
 }
 
+export interface Resolved {
+  ok: boolean;
+  invalid: unknown[];
+  rejected: unknown[];
+  characteristics: ResolvedCharacteristic[];
+  profiles: { profileId: string; version: number; status: 'draft' | 'approved' }[];
+  origins: Record<string, string>;
+  materials: { include?: string[]; exclude?: string[]; prefer?: string[] } | undefined;
+}
+
+/** Profiles (least specific first) then the request, merged and checked against the hard limits. */
+export async function resolveCharacteristics(
+  db: Executor,
+  tenantId: string,
+  body: RequestBody,
+  snapshot: EvaluationSnapshot,
+  forGeneration: boolean,
+): Promise<Resolved> {
+  const prof = await applyProfiles(db, tenantId, body.plantId, body.profileIds, forGeneration);
+  const materials =
+    prof.chosen.length > 0 ? mergePreferences(prof.chosen, body.materials) : body.materials;
+  const hasAny = prof.chosen.length > 0 || body.characteristics !== undefined;
+  if (!hasAny)
+    return {
+      ok: true,
+      invalid: [],
+      rejected: [],
+      characteristics: [],
+      profiles: [],
+      origins: {},
+      materials,
+    };
+  const checked = checkCharacteristics(
+    profileLayers(prof.chosen, body.characteristics),
+    limitContextFor(snapshot),
+  );
+  const chars = checked.characteristics ?? [];
+  return {
+    ok: checked.ok,
+    invalid: checked.invalid,
+    rejected: checked.rejected,
+    characteristics: checked.ok ? chars : [],
+    profiles: prof.versions,
+    origins: Object.fromEntries(chars.map((c) => [idOf(c), c.origin])),
+    materials,
+  };
+}
+
 export interface RunResult {
   input: OptimizerInput;
   result: OptimizeResult;
   validations: Map<number, ReturnType<typeof validateCandidate>>;
+  resolved: Resolved;
 }
 
 export async function runOptimizer(
@@ -206,22 +262,17 @@ export async function runOptimizer(
 ): Promise<RunResult> {
   const settings = await loadSettings(db, tenantId);
   const base = await buildRequestSnapshot(db, tenantId, body);
-  if (body.characteristics !== undefined) {
-    const checked = checkCharacteristics(
-      [{ level: 'request', origin: 'request', characteristics: body.characteristics }],
-      limitContextFor({ ...base, lines: [] }),
-    );
-    if (!checked.ok)
-      throw new ApiError(400, 'characteristics_rejected', 'The characteristics were rejected', {
-        invalid: checked.invalid,
-        rejected: checked.rejected,
-      });
-    base.characteristics = checked.characteristics ?? [];
-  }
+  const resolved = await resolveCharacteristics(db, tenantId, body, { ...base, lines: [] }, true);
+  if (!resolved.ok)
+    throw new ApiError(400, 'characteristics_rejected', 'The characteristics were rejected', {
+      invalid: resolved.invalid,
+      rejected: resolved.rejected,
+    });
+  base.characteristics = resolved.characteristics;
   const input: OptimizerInput = {
     base,
     objective: body.objective,
-    ...(body.materials ? { materials: body.materials } : {}),
+    ...(resolved.materials ? { materials: resolved.materials } : {}),
     settings: optimizerSettings(settings),
   };
   const result = await optimize(input, {
@@ -231,10 +282,10 @@ export async function runOptimizer(
   const validations = new Map(
     result.candidates.map((c) => [
       c.rank,
-      validateCandidate(candidateRecord(c, body.materials ?? {})),
+      validateCandidate(candidateRecord(c, resolved.materials ?? {})),
     ]),
   );
-  return { input, result, validations };
+  return { input, result, validations, resolved };
 }
 
 /** The exact snapshot a stored candidate was judged on, rebuilt from the request and its overrides. */
@@ -276,24 +327,18 @@ const REQUIREMENTS_SHOWN = new Set([
 export async function preflight(db: Executor, tenantId: string, body: RequestBody) {
   const base = await buildRequestSnapshot(db, tenantId, body);
   const ctxLimits = limitContextFor({ ...base, lines: [] });
-  let characteristics: {
-    ok: boolean;
-    invalid: unknown[];
-    rejected: unknown[];
-  } = { ok: true, invalid: [], rejected: [] };
-  if (body.characteristics !== undefined) {
-    const checked = checkCharacteristics(
-      [{ level: 'request', origin: 'request', characteristics: body.characteristics }],
-      ctxLimits,
-    );
-    characteristics = { ok: checked.ok, invalid: checked.invalid, rejected: checked.rejected };
-    if (checked.ok) base.characteristics = checked.characteristics ?? [];
-  }
+  const resolved = await resolveCharacteristics(db, tenantId, body, { ...base, lines: [] }, false);
+  const characteristics = {
+    ok: resolved.ok,
+    invalid: resolved.invalid,
+    rejected: resolved.rejected,
+  };
+  if (resolved.ok) base.characteristics = resolved.characteristics;
   const settings = await loadSettings(db, tenantId);
   const prep = prepare({
     base,
     objective: body.objective,
-    ...(body.materials ? { materials: body.materials } : {}),
+    ...(resolved.materials ? { materials: resolved.materials } : {}),
     settings: optimizerSettings(settings),
   });
   const excluded = new Map(
@@ -330,6 +375,8 @@ export async function preflight(db: Executor, tenantId: string, body: RequestBod
         }
       : null,
     characteristics,
+    profiles: resolved.profiles,
+    origins: resolved.origins,
   };
 }
 
@@ -351,18 +398,13 @@ export async function evaluateMix(
   if (new Set(lines.map((l) => l.materialId)).size !== lines.length)
     throw new ApiError(400, 'invalid_request', 'A material appears twice in the lines');
   const snapshot: EvaluationSnapshot = { ...base, lines };
-  if (body.characteristics !== undefined) {
-    const checked = checkCharacteristics(
-      [{ level: 'request', origin: 'request', characteristics: body.characteristics }],
-      limitContextFor(snapshot),
-    );
-    if (!checked.ok)
-      throw new ApiError(400, 'characteristics_rejected', 'The characteristics were rejected', {
-        invalid: checked.invalid,
-        rejected: checked.rejected,
-      });
-    snapshot.characteristics = checked.characteristics ?? [];
-  }
+  const resolved = await resolveCharacteristics(db, tenantId, body, snapshot, false);
+  if (!resolved.ok)
+    throw new ApiError(400, 'characteristics_rejected', 'The characteristics were rejected', {
+      invalid: resolved.invalid,
+      rejected: resolved.rejected,
+    });
+  snapshot.characteristics = resolved.characteristics;
   return runEval(snapshot);
 }
 
