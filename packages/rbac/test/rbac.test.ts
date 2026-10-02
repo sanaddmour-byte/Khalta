@@ -40,6 +40,7 @@ const SPEC: Record<Role, Capability[]> = {
     'rules.verify',
     'design.attest',
     'baseline.create',
+    'candidate.authorize',
     'production.release',
     'insight.accept',
     'insight.draft',
@@ -112,6 +113,7 @@ describe('role x capability matrix', () => {
       'design.approve',
       'design.attest',
       'baseline.create',
+      'candidate.authorize',
       'rules.verify',
       'trial.pass',
     ] as const)

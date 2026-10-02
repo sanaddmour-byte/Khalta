@@ -50,18 +50,21 @@ describe('lifecycle graph (01-domain §14.1)', () => {
   });
 
   it('turns on only the edges that exist in this milestone', () => {
-    expect(ACTIVE_MILESTONE).toBe('M2.1');
+    expect(ACTIVE_MILESTONE).toBe('M3.1');
     const v = canTransition('draft', 'evaluated', ['evaluation_verified']);
     expect(v.ok).toBe(true);
     expect(canTransition('evaluated', 'evaluated', ['evaluation_verified']).ok).toBe(true);
     expect(canTransition('draft', 'approved', ['legacy_attestation']).ok).toBe(true);
     expect(canTransition('evaluated', 'approved', ['legacy_attestation']).ok).toBe(true);
     expect(canTransition('approved', 'in_production', ['release']).ok).toBe(true);
+    // M3.1: the optimizer's candidates may become trial candidates, on validator evidence only.
+    expect(canTransition('evaluated', 'trial_candidate', ['validated_candidate']).ok).toBe(true);
+    expect(canTransition('draft', 'trial_candidate', ['validated_candidate']).ok).toBe(true);
+    expect(canTransition('evaluated', 'trial_candidate', []).ok).toBe(false);
+    expect(canTransition('evaluated', 'draft', ['edit']).ok).toBe(true);
     for (const [from, to, ev, at] of [
-      ['evaluated', 'trial_candidate', ['validated_candidate'], 'M3.1'],
       ['trial_candidate', 'trial_in_progress', ['trial_batch'], 'M4.1'],
       ['approved', 'suspended', ['suspension_decision'], 'M5.1'],
-      ['evaluated', 'draft', ['edit'], 'M2.2'],
     ] as const) {
       const r = canTransition(from, to, ev);
       expect(r.ok).toBe(false);

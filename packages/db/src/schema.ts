@@ -601,6 +601,10 @@ export const mixDesigns = pgTable(
     importBatchId: uuid('import_batch_id').references(() => legacyImportBatches.id),
     synthetic: boolean('synthetic').notNull().default(false),
     parentDesignId: uuid('parent_design_id'),
+    /** The optimizer candidate this design was created from (set once, at insert). */
+    sourceCandidateId: uuid('source_candidate_id').references(
+      (): AnyPgColumn => designCandidates.id,
+    ),
     createdBy: text('created_by').references(() => users.id),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -748,6 +752,77 @@ export const costBaselines = pgTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('cost_baselines_design_snapshot_uq').on(t.designId, t.priceSnapshotId)],
+);
+
+/**
+ * One optimizer request: the inputs, the exact snapshot (rules versions, materials, prices) it ran on, and the
+ * outcome (candidates, blockers, conflicts, degrees of freedom). Immutable: a re-run is a new request.
+ */
+export const designRequests = pgTable(
+  'design_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    mode: text('mode', { enum: ['ACI', 'JS', 'BOTH'] }).notNull(),
+    objective: text('objective', { enum: ['cheapest', 'closest_to_targets'] }).notNull(),
+    /** The strength / exposure / slump / NMAS request, as the evaluator reads it. */
+    request: jsonb('request').notNull(),
+    /** The user's characteristics and material include/exclude lists, as submitted. */
+    inputs: jsonb('inputs').notNull(),
+    /** The evaluation snapshot minus proportions: rules, materials, prices, settings. */
+    snapshot: jsonb('snapshot').notNull(),
+    status: text('status', {
+      enum: ['candidates', 'blocked', 'infeasible', 'no_valid_candidate'],
+    }).notNull(),
+    /** { blockers, conflicts, dof, stats, excluded, notes } */
+    outcome: jsonb('outcome').notNull(),
+    optimizerVersion: text('optimizer_version').notNull(),
+    solver: text('solver').notNull(),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index('design_requests_plant_idx').on(t.tenantId, t.plantId, t.createdAt)],
+);
+
+/** One ranked candidate of a request. Never edited; turning it into a design creates a new draft design. */
+export const designCandidates = pgTable(
+  'design_candidates',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    requestId: uuid('request_id')
+      .notNull()
+      .references(() => designRequests.id),
+    rank: integer('rank').notNull(),
+    configuration: jsonb('configuration').notNull(),
+    lines: jsonb('lines').notNull(),
+    report: jsonb('report').notNull(),
+    /** The request and rounding tolerances that, with `lines`, rebuild the exact snapshot the candidate was judged on. */
+    overrides: jsonb('overrides').notNull(),
+    guardrails: jsonb('guardrails').notNull(),
+    margins: jsonb('margins').notNull(),
+    binding: jsonb('binding').notNull(),
+    characteristics: jsonb('characteristics').notNull(),
+    deviations: jsonb('deviations').notNull(),
+    notes: jsonb('notes').notNull(),
+    evidence: jsonb('evidence').notNull(),
+    /** MODEL_PREDICTS_SHORTFALL present: a QC manager must authorise before it can become a trial candidate. */
+    requiresAuthorization: boolean('requires_authorization').notNull(),
+    costJodPerM3: numeric('cost_jod_per_m3', { precision: 12, scale: 3 }),
+    objectiveValue: numeric('objective_value', { precision: 14, scale: 6 }).notNull(),
+    /** Result of the independent candidate validator at creation. Only `pass` candidates are stored. */
+    validator: jsonb('validator').notNull(),
+    validatorStatus: text('validator_status', { enum: ['pass', 'fail'] }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('design_candidates_request_rank_uq').on(t.requestId, t.rank)],
 );
 
 /** Ledger entries. Only `theoretical` exists until trials, approval and production volumes do (M4.x, M5.1). */

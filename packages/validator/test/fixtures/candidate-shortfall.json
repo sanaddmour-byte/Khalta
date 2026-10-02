@@ -1,0 +1,3357 @@
+{
+ "schema": 1,
+ "snapshot": {
+  "schema": 1,
+  "design": {
+   "id": "request",
+   "code": "REQUEST",
+   "name": "Optimizer request",
+   "plantId": "plant"
+  },
+  "mode": "ACI",
+  "evaluationDate": "2026-10-02",
+  "priceBasis": {
+   "kind": "live",
+   "date": "2026-10-02",
+   "snapshotId": null
+  },
+  "request": {
+   "fcMpa": 30,
+   "basis": "cylinder",
+   "testAgeDays": 28,
+   "exposure": [
+    "F0",
+    "S0",
+    "W0",
+    "C1"
+   ],
+   "s3Option": null,
+   "slumpMm": 100,
+   "nmasMm": 19,
+   "pumpable": false,
+   "airPct": null
+  },
+  "projectOverrides": [],
+  "tablePolicy": {},
+  "rules": [
+   {
+    "key": "accept.avg3.min_ratio_fc",
+    "requirement": "accept.avg3.min_ratio_fc",
+    "kind": "limit_min",
+    "requirement_class": "CODE_HARD",
+    "group": "Acceptance",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 1,
+    "units": "ratio",
+    "clause_ref": "ACI 318-19 §26.12.3.1",
+    "note_en": "Every average of 3 consecutive tests must be at least f'c (ratio to f'c)",
+    "note_ar": "يجب ألا يقل متوسط كل ثلاثة فحوص متتالية عن f'c (نسبة إلى f'c)",
+    "verified": false,
+    "id": "ACI:accept.avg3.min_ratio_fc",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "accept.fc_threshold_mpa",
+    "requirement": "accept.fc_threshold_mpa",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Acceptance",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 35,
+    "units": "MPa",
+    "clause_ref": "ACI 318-19 §26.12.3.1",
+    "note_en": "Strength at which the single-test criterion changes",
+    "note_ar": "المقاومة التي يتغير عندها معيار الفحص المنفرد",
+    "verified": false,
+    "id": "ACI:accept.fc_threshold_mpa",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "accept.single.max_deficit_mpa",
+    "requirement": "accept.single.max_deficit_mpa",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Acceptance",
+    "applies_to": {
+     "fc_mpa": {
+      "lte": 35
+     }
+    },
+    "prerequisites": [],
+    "value": 3.5,
+    "units": "MPa",
+    "clause_ref": "ACI 318-19 §26.12.3.1",
+    "note_en": "No single test may fall below f'c by more than this (f'c ≤ 35 MPa)",
+    "note_ar": "يجب ألا ينخفض أي فحص منفرد عن f'c بأكثر من هذه القيمة (f'c ≤ 35)",
+    "verified": false,
+    "id": "ACI:accept.single.max_deficit_mpa",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "accept.single.min_ratio_fc",
+    "requirement": "accept.single.min_ratio_fc",
+    "kind": "limit_min",
+    "requirement_class": "CODE_HARD",
+    "group": "Acceptance",
+    "applies_to": {
+     "fc_mpa": {
+      "gt": 35
+     }
+    },
+    "prerequisites": [],
+    "value": 0.9,
+    "units": "ratio",
+    "clause_ref": "ACI 318-19 §26.12.3.1",
+    "note_en": "No single test may fall below this ratio of f'c (f'c > 35 MPa)",
+    "note_ar": "يجب ألا ينخفض أي فحص منفرد عن هذه النسبة من f'c (f'c > 35)",
+    "verified": false,
+    "id": "ACI:accept.single.min_ratio_fc",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "durability.F0.min_fc",
+    "requirement": "min_fc",
+    "kind": "limit_min",
+    "requirement_class": "CODE_HARD",
+    "group": "Durability",
+    "applies_to": {
+     "exposure": [
+      "F0"
+     ]
+    },
+    "prerequisites": [],
+    "value": 17,
+    "units": "MPa",
+    "clause_ref": "ACI 318-19 Table 19.3.2.1",
+    "note_en": "Minimum specified compressive strength f'c for exposure class F0",
+    "note_ar": "أدنى مقاومة ضغط محددة f'c لفئة التعرض F0",
+    "verified": false,
+    "id": "ACI:durability.F0.min_fc",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "durability.S0.min_fc",
+    "requirement": "min_fc",
+    "kind": "limit_min",
+    "requirement_class": "CODE_HARD",
+    "group": "Durability",
+    "applies_to": {
+     "exposure": [
+      "S0"
+     ]
+    },
+    "prerequisites": [],
+    "value": 17,
+    "units": "MPa",
+    "clause_ref": "ACI 318-19 Table 19.3.2.1",
+    "note_en": "Minimum specified compressive strength f'c for exposure class S0",
+    "note_ar": "أدنى مقاومة ضغط محددة f'c لفئة التعرض S0",
+    "verified": false,
+    "id": "ACI:durability.S0.min_fc",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "durability.W0.min_fc",
+    "requirement": "min_fc",
+    "kind": "limit_min",
+    "requirement_class": "CODE_HARD",
+    "group": "Durability",
+    "applies_to": {
+     "exposure": [
+      "W0"
+     ]
+    },
+    "prerequisites": [],
+    "value": 17,
+    "units": "MPa",
+    "clause_ref": "ACI 318-19 Table 19.3.2.1",
+    "note_en": "Minimum specified compressive strength f'c for exposure class W0",
+    "note_ar": "أدنى مقاومة ضغط محددة f'c لفئة التعرض W0",
+    "verified": false,
+    "id": "ACI:durability.W0.min_fc",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "durability.C1.min_fc",
+    "requirement": "min_fc",
+    "kind": "limit_min",
+    "requirement_class": "CODE_HARD",
+    "group": "Durability",
+    "applies_to": {
+     "exposure": [
+      "C1"
+     ]
+    },
+    "prerequisites": [],
+    "value": 17,
+    "units": "MPa",
+    "clause_ref": "ACI 318-19 Table 19.3.2.1",
+    "note_en": "Minimum specified compressive strength f'c for exposure class C1",
+    "note_ar": "أدنى مقاومة ضغط محددة f'c لفئة التعرض C1",
+    "verified": false,
+    "id": "ACI:durability.C1.min_fc",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "durability.C1.max_cl_nonprestressed",
+    "requirement": "max_cl_nonprestressed",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Durability",
+    "applies_to": {
+     "exposure": [
+      "C1"
+     ]
+    },
+    "prerequisites": [],
+    "value": 0.3,
+    "units": "%",
+    "clause_ref": "ACI 318-19 Table 19.3.2.1",
+    "note_en": "Maximum water-soluble chloride (% of cementitious), non-prestressed, class C1",
+    "note_ar": "أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة غير مسبقة الإجهاد، الفئة C1",
+    "verified": false,
+    "id": "ACI:durability.C1.max_cl_nonprestressed",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "durability.C1.max_cl_prestressed",
+    "requirement": "max_cl_prestressed",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Durability",
+    "applies_to": {
+     "exposure": [
+      "C1"
+     ]
+    },
+    "prerequisites": [],
+    "value": 0.06,
+    "units": "%",
+    "clause_ref": "ACI 318-19 Table 19.3.2.1",
+    "note_en": "Maximum water-soluble chloride (% of cementitious), prestressed, class C1",
+    "note_ar": "أقصى محتوى كلوريدات ذائبة في الماء (% من المواد الإسمنتية) للخرسانة مسبقة الإجهاد، الفئة C1",
+    "verified": false,
+    "id": "ACI:durability.C1.max_cl_prestressed",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "exposure.sulfate.thresholds",
+    "requirement": "exposure.sulfate.thresholds",
+    "kind": "value",
+    "requirement_class": "CODE_HARD",
+    "group": "Exposure",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": [
+     {
+      "class": "S0",
+      "soil_so4_pct": [
+       null,
+       0.1
+      ],
+      "water_so4_ppm": [
+       null,
+       150
+      ],
+      "seawater": false
+     },
+     {
+      "class": "S1",
+      "soil_so4_pct": [
+       0.1,
+       0.2
+      ],
+      "water_so4_ppm": [
+       150,
+       1500
+      ],
+      "seawater": true
+     },
+     {
+      "class": "S2",
+      "soil_so4_pct": [
+       0.2,
+       2
+      ],
+      "water_so4_ppm": [
+       1500,
+       10000
+      ],
+      "seawater": false
+     },
+     {
+      "class": "S3",
+      "soil_so4_pct": [
+       2,
+       null
+      ],
+      "water_so4_ppm": [
+       10000,
+       null
+      ],
+      "seawater": false
+     }
+    ],
+    "units": "none",
+    "clause_ref": "ACI 318-19 Table 19.3.1.1",
+    "note_en": "Sulfate exposure classes by water-soluble sulfate in soil (% by mass) and in water (ppm). Seawater is S1.",
+    "note_ar": "فئات التعرض للكبريتات حسب الكبريتات الذائبة في التربة (% بالكتلة) وفي الماء (جزء في المليون). ماء البحر ضمن الفئة S1.",
+    "verified": false,
+    "id": "ACI:exposure.sulfate.thresholds",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "grading.fine.limits",
+    "requirement": "grading.fine.limits",
+    "kind": "range",
+    "requirement_class": "CODE_HARD",
+    "group": "Grading",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": [
+     {
+      "sieve_mm": 9.5,
+      "min_pct": 100,
+      "max_pct": 100
+     },
+     {
+      "sieve_mm": 4.75,
+      "min_pct": 90,
+      "max_pct": 100
+     },
+     {
+      "sieve_mm": 2.36,
+      "min_pct": 65,
+      "max_pct": 100
+     },
+     {
+      "sieve_mm": 1.18,
+      "min_pct": 40,
+      "max_pct": 90
+     },
+     {
+      "sieve_mm": 0.6,
+      "min_pct": 20,
+      "max_pct": 70
+     },
+     {
+      "sieve_mm": 0.3,
+      "min_pct": 8,
+      "max_pct": 40
+     },
+     {
+      "sieve_mm": 0.15,
+      "min_pct": 0,
+      "max_pct": 15
+     }
+    ],
+    "units": "%",
+    "clause_ref": "ASTM C33",
+    "note_en": "Fine aggregate grading limits per sieve. Not on file: enter from the licensed standard.",
+    "note_ar": "حدود تدرج الركام الناعم لكل منخل. غير متوفرة: تُدخل من المواصفة المرخصة.",
+    "verified": false,
+    "id": "ACI:grading.fine.limits",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "grading.coarse.limits",
+    "requirement": "grading.coarse.limits",
+    "kind": "range",
+    "requirement_class": "CODE_HARD",
+    "group": "Grading",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": [
+     {
+      "sieve_mm": 4.75,
+      "min_pct": 0,
+      "max_pct": 20
+     },
+     {
+      "sieve_mm": 2.36,
+      "min_pct": 0,
+      "max_pct": 6
+     }
+    ],
+    "units": "%",
+    "clause_ref": "ASTM C33",
+    "note_en": "Coarse aggregate grading limits per sieve and size number. Not on file.",
+    "note_ar": "حدود تدرج الركام الخشن لكل منخل ورقم المقاس. غير متوفرة.",
+    "verified": false,
+    "id": "ACI:grading.coarse.limits",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "hot.max_concrete_temp_c",
+    "requirement": "hot.max_concrete_temp_c",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Hot weather",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 35,
+    "units": "degC",
+    "clause_ref": "ACI 305.1",
+    "note_en": "Maximum concrete temperature at placement unless the project is stricter (many Jordanian specifications use 32 °C)",
+    "note_ar": "أقصى درجة حرارة للخرسانة عند الصب ما لم يكن المشروع أكثر تشدداً (تعتمد مواصفات أردنية كثيرة 32 °م)",
+    "verified": false,
+    "id": "ACI:hot.max_concrete_temp_c",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "nmas.max_fraction.narrowest_form_dimension",
+    "requirement": "nmas.max_fraction.narrowest_form_dimension",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Aggregate size",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": "1/5",
+    "units": "fraction",
+    "clause_ref": "ACI 318-19 §26.4.2.1(a)(4)",
+    "note_en": "Nominal maximum aggregate size must not exceed this fraction of the narrowest form dimension",
+    "note_ar": "يجب ألا يتجاوز المقاس الاعتباري الأكبر للركام هذا الكسر من أضيق بُعد للقالب",
+    "verified": false,
+    "id": "ACI:nmas.max_fraction.narrowest_form_dimension",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "nmas.max_fraction.slab_depth",
+    "requirement": "nmas.max_fraction.slab_depth",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Aggregate size",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": "1/3",
+    "units": "fraction",
+    "clause_ref": "ACI 318-19 §26.4.2.1(a)(4)",
+    "note_en": "Nominal maximum aggregate size must not exceed this fraction of the slab depth",
+    "note_ar": "يجب ألا يتجاوز المقاس الاعتباري الأكبر للركام هذا الكسر من سماكة البلاطة",
+    "verified": false,
+    "id": "ACI:nmas.max_fraction.slab_depth",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "nmas.max_fraction.min_clear_bar_spacing",
+    "requirement": "nmas.max_fraction.min_clear_bar_spacing",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Aggregate size",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": "3/4",
+    "units": "fraction",
+    "clause_ref": "ACI 318-19 §26.4.2.1(a)(4)",
+    "note_en": "Nominal maximum aggregate size must not exceed this fraction of the minimum clear spacing between bars",
+    "note_ar": "يجب ألا يتجاوز المقاس الاعتباري الأكبر للركام هذا الكسر من أدنى مسافة صافية بين القضبان",
+    "verified": false,
+    "id": "ACI:nmas.max_fraction.min_clear_bar_spacing",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "prop.water.non_ae",
+    "requirement": "prop.water.non_ae",
+    "kind": "table",
+    "requirement_class": "DESIGN_AID",
+    "group": "Proportioning (ACI 211.1)",
+    "applies_to": {
+     "air_entrained": false
+    },
+    "prerequisites": [],
+    "definition": {
+     "rows": {
+      "name": "slump_mm",
+      "values": [
+       [
+        25,
+        50
+       ],
+       [
+        75,
+        100
+       ],
+       [
+        150,
+        175
+       ]
+      ]
+     },
+     "cols": {
+      "name": "nmas_mm",
+      "values": [
+       9.5,
+       12.5,
+       19,
+       25,
+       37.5,
+       50
+      ]
+     },
+     "data": [
+      [
+       207,
+       199,
+       190,
+       179,
+       166,
+       154
+      ],
+      [
+       228,
+       216,
+       205,
+       193,
+       181,
+       169
+      ],
+      [
+       243,
+       228,
+       216,
+       202,
+       190,
+       178
+      ]
+     ],
+     "interpolation": "linear"
+    },
+    "units": "kg/m3",
+    "clause_ref": "ACI 211.1 Table 6.3.3",
+    "note_en": "Approximate mixing water for non-air-entrained concrete by slump and NMAS (baseline estimate, not a plant prediction)",
+    "note_ar": "ماء الخلط التقريبي للخرسانة غير المحتوية على هواء مُدخل حسب الهبوط والمقاس (تقدير مرجعي وليس تنبؤاً بالمحطة)",
+    "verified": false,
+    "id": "ACI:prop.water.non_ae",
+    "ruleset": "ACI",
+    "version": 1,
+    "value": null
+   },
+   {
+    "key": "prop.air_entrapped.non_ae",
+    "requirement": "prop.air_entrapped.non_ae",
+    "kind": "table",
+    "requirement_class": "DESIGN_AID",
+    "group": "Proportioning (ACI 211.1)",
+    "applies_to": {
+     "air_entrained": false
+    },
+    "prerequisites": [],
+    "definition": {
+     "cols": {
+      "name": "nmas_mm",
+      "values": [
+       9.5,
+       12.5,
+       19,
+       25,
+       37.5,
+       50
+      ]
+     },
+     "data": [
+      [
+       3,
+       2.5,
+       2,
+       1.5,
+       1,
+       0.5
+      ]
+     ],
+     "interpolation": "linear"
+    },
+    "units": "%",
+    "clause_ref": "ACI 211.1 Table 6.3.3",
+    "note_en": "Approximate entrapped air for non-air-entrained concrete by NMAS",
+    "note_ar": "الهواء المحبوس التقريبي للخرسانة غير المحتوية على هواء مُدخل حسب المقاس",
+    "verified": false,
+    "id": "ACI:prop.air_entrapped.non_ae",
+    "ruleset": "ACI",
+    "version": 1,
+    "value": null
+   },
+   {
+    "key": "prop.wc_strength.non_ae",
+    "requirement": "prop.wc_strength.non_ae",
+    "kind": "table",
+    "requirement_class": "DESIGN_AID",
+    "group": "Proportioning (ACI 211.1)",
+    "applies_to": {
+     "air_entrained": false
+    },
+    "prerequisites": [],
+    "definition": {
+     "cols": {
+      "name": "fcr_mpa",
+      "values": [
+       15,
+       20,
+       25,
+       30,
+       35,
+       40
+      ]
+     },
+     "data": [
+      [
+       0.79,
+       0.69,
+       0.61,
+       0.54,
+       0.47,
+       0.42
+      ]
+     ],
+     "interpolation": "linear"
+    },
+    "units": "ratio",
+    "clause_ref": "ACI 211.1 Table 6.3.4(a)",
+    "note_en": "Water/cement ratio versus 28-day cylinder strength, non-air-entrained (baseline)",
+    "note_ar": "نسبة الماء إلى الإسمنت مقابل مقاومة الأسطوانة بعمر 28 يوماً، بدون هواء مُدخل (مرجعية)",
+    "verified": false,
+    "id": "ACI:prop.wc_strength.non_ae",
+    "ruleset": "ACI",
+    "version": 1,
+    "value": null
+   },
+   {
+    "key": "prop.ca_volume",
+    "requirement": "prop.ca_volume",
+    "kind": "table",
+    "requirement_class": "DESIGN_AID",
+    "group": "Proportioning (ACI 211.1)",
+    "applies_to": {},
+    "prerequisites": [],
+    "definition": {
+     "rows": {
+      "name": "nmas_mm",
+      "values": [
+       9.5,
+       12.5,
+       19,
+       25,
+       37.5
+      ]
+     },
+     "cols": {
+      "name": "fm_sand",
+      "values": [
+       2.4,
+       2.6,
+       2.8,
+       3
+      ]
+     },
+     "data": [
+      [
+       0.5,
+       0.48,
+       0.46,
+       0.44
+      ],
+      [
+       0.59,
+       0.57,
+       0.55,
+       0.53
+      ],
+      [
+       0.66,
+       0.64,
+       0.62,
+       0.6
+      ],
+      [
+       0.71,
+       0.69,
+       0.67,
+       0.65
+      ],
+      [
+       0.75,
+       0.73,
+       0.71,
+       0.69
+      ]
+     ],
+     "interpolation": "linear"
+    },
+    "units": "none",
+    "clause_ref": "ACI 211.1 Table 6.3.6",
+    "note_en": "Dry-rodded coarse aggregate volume per unit volume of concrete (sanity bound on the optimized blend only)",
+    "note_ar": "حجم الركام الخشن المرصوص جافاً لكل وحدة حجم من الخرسانة (حد تحقق للخلطة المحسّنة فقط)",
+    "verified": false,
+    "id": "ACI:prop.ca_volume",
+    "ruleset": "ACI",
+    "version": 1,
+    "value": null
+   },
+   {
+    "key": "fcr.statistical.min_tests",
+    "requirement": "fcr.statistical.min_tests",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 15,
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Minimum number of consecutive tests for the statistical method",
+    "note_ar": "أدنى عدد من الفحوص المتتالية لتطبيق الطريقة الإحصائية",
+    "verified": false,
+    "id": "ACI:fcr.statistical.min_tests",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.fc_window_mpa",
+    "requirement": "fcr.statistical.fc_window_mpa",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 7,
+    "units": "MPa",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Tests must come from mixes with f'c within this many MPa of the specified value",
+    "note_ar": "يجب أن تكون الفحوص من خلطات تقع مقاومتها ضمن هذا الفرق (ميغاباسكال) من القيمة المحددة",
+    "verified": false,
+    "id": "ACI:fcr.statistical.fc_window_mpa",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.n_factor",
+    "requirement": "fcr.statistical.n_factor",
+    "kind": "table",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "definition": {
+     "cols": {
+      "name": "tests",
+      "values": [
+       15,
+       20,
+       25,
+       30
+      ]
+     },
+     "data": [
+      [
+       1.16,
+       1.08,
+       1.03,
+       1
+      ]
+     ],
+     "interpolation": "linear"
+    },
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Standard-deviation multiplier by number of tests (1.00 from 30 tests)",
+    "note_ar": "معامل ضرب الانحراف المعياري حسب عدد الفحوص (1.00 عند 30 فحصاً)",
+    "verified": false,
+    "id": "ACI:fcr.statistical.n_factor",
+    "ruleset": "ACI",
+    "version": 1,
+    "value": null
+   },
+   {
+    "key": "fcr.threshold_mpa",
+    "requirement": "fcr.threshold_mpa",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 35,
+    "units": "MPa",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Strength at which the f'cr equations change",
+    "note_ar": "المقاومة التي تتغير عندها معادلات f'cr",
+    "verified": false,
+    "id": "ACI:fcr.threshold_mpa",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.le35.k1",
+    "requirement": "fcr.statistical.le35.k1",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 1.34,
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "f'cr = max(f'c + k1·s, f'c + k2·s − offset) for f'c ≤ 35 MPa: k1",
+    "note_ar": "المعادلة لـ f'c ≤ 35: المعامل k1",
+    "verified": false,
+    "id": "ACI:fcr.statistical.le35.k1",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.le35.k2",
+    "requirement": "fcr.statistical.le35.k2",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 2.33,
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Same equation: k2",
+    "note_ar": "المعامل k2",
+    "verified": false,
+    "id": "ACI:fcr.statistical.le35.k2",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.le35.offset",
+    "requirement": "fcr.statistical.le35.offset",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 3.45,
+    "units": "MPa",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Same equation: offset subtracted (MPa)",
+    "note_ar": "القيمة المطروحة (ميغاباسكال)",
+    "verified": false,
+    "id": "ACI:fcr.statistical.le35.offset",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.gt35.k1",
+    "requirement": "fcr.statistical.gt35.k1",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 1.34,
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "f'cr = max(f'c + k1·s, factor·f'c + k2·s) for f'c > 35 MPa: k1",
+    "note_ar": "المعادلة لـ f'c > 35: المعامل k1",
+    "verified": false,
+    "id": "ACI:fcr.statistical.gt35.k1",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.gt35.k2",
+    "requirement": "fcr.statistical.gt35.k2",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 2.33,
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Same equation: k2",
+    "note_ar": "المعامل k2",
+    "verified": false,
+    "id": "ACI:fcr.statistical.gt35.k2",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.statistical.gt35.factor",
+    "requirement": "fcr.statistical.gt35.factor",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 0.9,
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Same equation: factor on f'c",
+    "note_ar": "المعامل المضروب في f'c",
+    "verified": false,
+    "id": "ACI:fcr.statistical.gt35.factor",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.no_data.lower_threshold_mpa",
+    "requirement": "fcr.no_data.lower_threshold_mpa",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 21,
+    "units": "MPa",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "Strength below which the no-data addition is the lowest",
+    "note_ar": "المقاومة التي دونها تُطبق أصغر إضافة عند غياب البيانات",
+    "verified": false,
+    "id": "ACI:fcr.no_data.lower_threshold_mpa",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.no_data.lt21.add",
+    "requirement": "fcr.no_data.lt21.add",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 7,
+    "units": "MPa",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "No-data required average strength: f'c + this, for f'c < 21 MPa",
+    "note_ar": "المقاومة المتوسطة المطلوبة عند غياب البيانات: f'c + هذه القيمة عندما f'c < 21",
+    "verified": false,
+    "id": "ACI:fcr.no_data.lt21.add",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.no_data.mid.add",
+    "requirement": "fcr.no_data.mid.add",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 8.3,
+    "units": "MPa",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "No-data: f'c + this, for 21 ≤ f'c ≤ 35 MPa",
+    "note_ar": "عند غياب البيانات: f'c + هذه القيمة عندما 21 ≤ f'c ≤ 35",
+    "verified": false,
+    "id": "ACI:fcr.no_data.mid.add",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.no_data.gt35.factor",
+    "requirement": "fcr.no_data.gt35.factor",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 1.1,
+    "units": "none",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "No-data: factor on f'c for f'c > 35 MPa",
+    "note_ar": "عند غياب البيانات: المعامل المضروب في f'c عندما f'c > 35",
+    "verified": false,
+    "id": "ACI:fcr.no_data.gt35.factor",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "fcr.no_data.gt35.add",
+    "requirement": "fcr.no_data.gt35.add",
+    "kind": "parameter",
+    "requirement_class": "CODE_HARD",
+    "group": "Required average strength",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 5,
+    "units": "MPa",
+    "clause_ref": "ACI 301 §4.2.3.3",
+    "note_en": "No-data: addition (MPa) for f'c > 35 MPa",
+    "note_ar": "عند غياب البيانات: الإضافة (ميغاباسكال) عندما f'c > 35",
+    "verified": false,
+    "id": "ACI:fcr.no_data.gt35.add",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "tolerance.slump.band2",
+    "requirement": "slump_tolerance_mm",
+    "kind": "tolerance",
+    "requirement_class": "CODE_HARD",
+    "group": "Tolerances",
+    "applies_to": {
+     "slump_mm": {
+      "gt": 50,
+      "lte": 100
+     }
+    },
+    "prerequisites": [],
+    "value": 25,
+    "units": "mm",
+    "clause_ref": "ASTM C94",
+    "note_en": "Slump tolerance (plus or minus) for nominal slump above 50 and up to 100 mm",
+    "note_ar": "تفاوت الهبوط (زائد أو ناقص) للهبوط الاسمي بين 50 و100 مم",
+    "verified": false,
+    "id": "ACI:tolerance.slump.band2",
+    "ruleset": "ACI",
+    "version": 1
+   },
+   {
+    "key": "eng.water.beta_fm",
+    "requirement": "eng.water.beta_fm",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Calibration",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "none",
+    "clause_ref": "02-codes §6",
+    "note_en": "Water-demand adjustment per unit fineness modulus: null until calibrated from trial batches (M5.2)",
+    "note_ar": "تعديل الطلب على الماء لكل وحدة معامل نعومة: فارغ حتى المعايرة من الخلطات التجريبية (M5.2)",
+    "verified": false,
+    "id": "ENGINEERING:eng.water.beta_fm",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.water.beta_75",
+    "requirement": "eng.water.beta_75",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Calibration",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "none",
+    "clause_ref": "02-codes §6",
+    "note_en": "Water-demand adjustment per percent finer than 75 µm: null until calibrated",
+    "note_ar": "تعديل الطلب على الماء لكل نسبة مارّة من 75 ميكرون: فارغ حتى المعايرة",
+    "verified": false,
+    "id": "ENGINEERING:eng.water.beta_75",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.grading.target.exponent",
+    "requirement": "eng.grading.target.exponent",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 0.45,
+    "units": "none",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Default combined grading target: power-curve exponent",
+    "note_ar": "الهدف الافتراضي للتدرج المركب: أس منحنى القدرة",
+    "verified": false,
+    "id": "ENGINEERING:eng.grading.target.exponent",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.grading.target.band_pct",
+    "requirement": "eng.grading.target.band_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 12,
+    "units": "%",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Default grading band around the 0.45-power curve (Sanad sets)",
+    "note_ar": "نطاق التدرج الافتراضي حول منحنى 0.45 (يحدده سند)",
+    "verified": false,
+    "id": "ENGINEERING:eng.grading.target.band_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.shilstone.cf.min",
+    "requirement": "eng.shilstone.cf.min",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 45,
+    "units": "none",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Shilstone coarseness factor: lower bound (starter, confirm)",
+    "note_ar": "عامل الخشونة (شيلستون): الحد الأدنى (قيمة مبدئية، يُؤكد)",
+    "verified": false,
+    "id": "ENGINEERING:eng.shilstone.cf.min",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.shilstone.cf.max",
+    "requirement": "eng.shilstone.cf.max",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 75,
+    "units": "none",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Shilstone coarseness factor: upper bound (starter, confirm)",
+    "note_ar": "عامل الخشونة (شيلستون): الحد الأعلى (قيمة مبدئية، يُؤكد)",
+    "verified": false,
+    "id": "ENGINEERING:eng.shilstone.cf.max",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.shilstone.wf.min",
+    "requirement": "eng.shilstone.wf.min",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 28,
+    "units": "none",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Shilstone workability factor: lower bound per NMAS (Sanad sets)",
+    "note_ar": "عامل قابلية التشغيل (شيلستون): الحد الأدنى لكل مقاس (يحدده سند)",
+    "verified": false,
+    "id": "ENGINEERING:eng.shilstone.wf.min",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.shilstone.wf.max",
+    "requirement": "eng.shilstone.wf.max",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 45,
+    "units": "none",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Shilstone workability factor: upper bound per NMAS (Sanad sets)",
+    "note_ar": "عامل قابلية التشغيل (شيلستون): الحد الأعلى لكل مقاس (يحدده سند)",
+    "verified": false,
+    "id": "ENGINEERING:eng.shilstone.wf.max",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.shilstone.wf.binder_adjust.points",
+    "requirement": "eng.shilstone.wf.binder_adjust.points",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 2.5,
+    "units": "none",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Workability factor added per binder step",
+    "note_ar": "نقاط عامل قابلية التشغيل المضافة لكل خطوة محتوى إسمنتي",
+    "verified": false,
+    "id": "ENGINEERING:eng.shilstone.wf.binder_adjust.points",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.shilstone.wf.binder_adjust.per_kg",
+    "requirement": "eng.shilstone.wf.binder_adjust.per_kg",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 56,
+    "units": "kg/m3",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Binder step size for the workability-factor adjustment",
+    "note_ar": "حجم خطوة المحتوى الإسمنتي لتعديل عامل قابلية التشغيل",
+    "verified": false,
+    "id": "ENGINEERING:eng.shilstone.wf.binder_adjust.per_kg",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.shilstone.wf.binder_adjust.above_kg",
+    "requirement": "eng.shilstone.wf.binder_adjust.above_kg",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 335,
+    "units": "kg/m3",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Binder content above which the adjustment starts",
+    "note_ar": "المحتوى الإسمنتي الذي يبدأ التعديل فوقه",
+    "verified": false,
+    "id": "ENGINEERING:eng.shilstone.wf.binder_adjust.above_kg",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.fines.max_pct_75um",
+    "requirement": "eng.fines.max_pct_75um",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 6,
+    "units": "%",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Maximum combined percent passing 75 µm (depends on crushed sand; Sanad sets)",
+    "note_ar": "أقصى نسبة مارّة من المنخل 75 ميكرون للمزيج (تعتمد على الرمل المكسر؛ يحددها سند)",
+    "verified": false,
+    "id": "ENGINEERING:eng.fines.max_pct_75um",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.pumpable.min_passing_0_3mm_pct",
+    "requirement": "eng.pumpable.min_passing_0_3mm_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 10,
+    "units": "%",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Pumpable mixes: minimum percent passing 0.3 mm (Sanad sets)",
+    "note_ar": "الخلطات المضخوخة: أدنى نسبة مارّة من المنخل 0.3 مم (يحددها سند)",
+    "verified": false,
+    "id": "ENGINEERING:eng.pumpable.min_passing_0_3mm_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.margin.wcm",
+    "requirement": "eng.margin.wcm",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 0.02,
+    "units": "ratio",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Robustness margin subtracted from the w/cm ceiling",
+    "note_ar": "هامش المتانة المطروح من الحد الأقصى لنسبة الماء إلى المواد الإسمنتية",
+    "verified": false,
+    "id": "ENGINEERING:eng.margin.wcm",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.margin.grading_pct_points",
+    "requirement": "eng.margin.grading_pct_points",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 2,
+    "units": "%",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Grading kept this many percentage points inside the envelope",
+    "note_ar": "يُبقى التدرج داخل المغلف بهذا العدد من النقاط المئوية",
+    "verified": false,
+    "id": "ENGINEERING:eng.margin.grading_pct_points",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.ca_volume.sanity_band_pct",
+    "requirement": "eng.ca_volume.sanity_band_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Engineering parameters",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 10,
+    "units": "%",
+    "clause_ref": "02-codes §6 (starter value; Sanad confirms)",
+    "note_en": "Tolerance on the ACI 211.1 coarse-aggregate volume sanity bound",
+    "note_ar": "تفاوت حد التحقق من حجم الركام الخشن وفق ACI 211.1",
+    "verified": false,
+    "id": "ENGINEERING:eng.ca_volume.sanity_band_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.fm.sieves",
+    "requirement": "eng.fm.sieves",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Materials",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": [
+     150,
+     75,
+     37.5,
+     19,
+     9.5,
+     4.75,
+     2.36,
+     1.18,
+     0.6,
+     0.3,
+     0.15
+    ],
+    "units": "mm",
+    "clause_ref": "ASTM C125 / C136 (fineness modulus series)",
+    "note_en": "Sieve series (mm) summed to compute fineness modulus: cumulative % retained ÷ 100",
+    "note_ar": "سلسلة المناخل (ملم) المستخدمة لحساب معامل النعومة: مجموع النسب المئوية المتراكمة المحجوزة ÷ 100",
+    "verified": false,
+    "id": "ENGINEERING:eng.fm.sieves",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.drift.tolerance.fm",
+    "requirement": "eng.drift.tolerance.fm",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Materials",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "none",
+    "clause_ref": "07-characteristics §2.6",
+    "note_en": "Largest absolute change in fineness modulus between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)",
+    "note_ar": "أكبر تغيّر مطلق في معامل النعومة بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)",
+    "verified": false,
+    "id": "ENGINEERING:eng.drift.tolerance.fm",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.drift.tolerance.sg_ssd",
+    "requirement": "eng.drift.tolerance.sg_ssd",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Materials",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "none",
+    "clause_ref": "07-characteristics §2.6",
+    "note_en": "Largest absolute change in aggregate specific gravity (SSD) between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)",
+    "note_ar": "أكبر تغيّر مطلق في الوزن النوعي للركام (مشبع جاف السطح) بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)",
+    "verified": false,
+    "id": "ENGINEERING:eng.drift.tolerance.sg_ssd",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.drift.tolerance.absorption_pct",
+    "requirement": "eng.drift.tolerance.absorption_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Materials",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "%",
+    "clause_ref": "07-characteristics §2.6",
+    "note_en": "Largest absolute change in aggregate absorption between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)",
+    "note_ar": "أكبر تغيّر مطلق في امتصاص الركام بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)",
+    "verified": false,
+    "id": "ENGINEERING:eng.drift.tolerance.absorption_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.drift.tolerance.finer_75um_pct",
+    "requirement": "eng.drift.tolerance.finer_75um_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Materials",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "%",
+    "clause_ref": "07-characteristics §2.6",
+    "note_en": "Largest absolute change in material finer than 75 µm between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)",
+    "note_ar": "أكبر تغيّر مطلق في المارّ من منخل 75 ميكرون بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)",
+    "verified": false,
+    "id": "ENGINEERING:eng.drift.tolerance.finer_75um_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.drift.tolerance.sg",
+    "requirement": "eng.drift.tolerance.sg",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Materials",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "none",
+    "clause_ref": "07-characteristics §2.6",
+    "note_en": "Largest absolute change in cement / SCM specific gravity between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)",
+    "note_ar": "أكبر تغيّر مطلق في الوزن النوعي للإسمنت/المواد التكميلية بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)",
+    "verified": false,
+    "id": "ENGINEERING:eng.drift.tolerance.sg",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.drift.tolerance.c3a_pct",
+    "requirement": "eng.drift.tolerance.c3a_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "Materials",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "%",
+    "clause_ref": "07-characteristics §2.6",
+    "note_en": "Largest absolute change in cement C₃A between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)",
+    "note_ar": "أكبر تغيّر مطلق في مركب C₃A في الإسمنت بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)",
+    "verified": false,
+    "id": "ENGINEERING:eng.drift.tolerance.c3a_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.test_age_limit_days.cement",
+    "requirement": "eng.test_age_limit_days.cement",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "days",
+    "clause_ref": "02-codes §6",
+    "note_en": "Maximum age of a cement test before it counts as stale (QC sets)",
+    "note_ar": "أقصى عمر لفحص الإسمنت قبل أن يُعدّ قديماً (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.test_age_limit_days.cement",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.test_age_limit_days.scm",
+    "requirement": "eng.test_age_limit_days.scm",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "days",
+    "clause_ref": "02-codes §6",
+    "note_en": "Maximum age of a scm test before it counts as stale (QC sets)",
+    "note_ar": "أقصى عمر لفحص المواد الإسمنتية التكميلية قبل أن يُعدّ قديماً (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.test_age_limit_days.scm",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.test_age_limit_days.fine_agg",
+    "requirement": "eng.test_age_limit_days.fine_agg",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "days",
+    "clause_ref": "02-codes §6",
+    "note_en": "Maximum age of a fine_agg test before it counts as stale (QC sets)",
+    "note_ar": "أقصى عمر لفحص الركام الناعم قبل أن يُعدّ قديماً (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.test_age_limit_days.fine_agg",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.test_age_limit_days.coarse_agg",
+    "requirement": "eng.test_age_limit_days.coarse_agg",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "days",
+    "clause_ref": "02-codes §6",
+    "note_en": "Maximum age of a coarse_agg test before it counts as stale (QC sets)",
+    "note_ar": "أقصى عمر لفحص الركام الخشن قبل أن يُعدّ قديماً (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.test_age_limit_days.coarse_agg",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.test_age_limit_days.admixture",
+    "requirement": "eng.test_age_limit_days.admixture",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "days",
+    "clause_ref": "02-codes §6",
+    "note_en": "Maximum age of a admixture test before it counts as stale (QC sets)",
+    "note_ar": "أقصى عمر لفحص الإضافات قبل أن يُعدّ قديماً (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.test_age_limit_days.admixture",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.moisture.max_total_pct",
+    "requirement": "eng.moisture.max_total_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "%",
+    "clause_ref": "02-codes §6",
+    "note_en": "Largest plausible total moisture entered for an aggregate (QC sets)",
+    "note_ar": "أكبر رطوبة كلية معقولة تُدخل للركام (يحددها ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.moisture.max_total_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.moisture.stale_hours",
+    "requirement": "eng.moisture.stale_hours",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "none",
+    "clause_ref": "02-codes §6",
+    "note_en": "Maximum age of a moisture reading in hours (QC sets)",
+    "note_ar": "أقصى عمر لقراءة الرطوبة بالساعات (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.moisture.stale_hours",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.trial.air_tolerance_pct",
+    "requirement": "eng.trial.air_tolerance_pct",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "%",
+    "clause_ref": "01-domain §14.4",
+    "note_en": "Trial batch air-content tolerance (QC sets)",
+    "note_ar": "تفاوت محتوى الهواء للخلطة التجريبية (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.trial.air_tolerance_pct",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.trial.density_band_kg_m3",
+    "requirement": "eng.trial.density_band_kg_m3",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "kg/m3",
+    "clause_ref": "01-domain §14.4",
+    "note_en": "Trial batch fresh-density band (QC sets)",
+    "note_ar": "نطاق الكثافة الطازجة للخلطة التجريبية (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.trial.density_band_kg_m3",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "eng.trial.yield_band_m3",
+    "requirement": "eng.trial.yield_band_m3",
+    "kind": "parameter",
+    "requirement_class": "ENGINEERING_GUARDRAIL",
+    "group": "QC limits",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": null,
+    "units": "none",
+    "clause_ref": "01-domain §14.4",
+    "note_en": "Trial batch yield band (QC sets)",
+    "note_ar": "نطاق ناتج الخلطة التجريبية (يحدده ضبط الجودة)",
+    "verified": false,
+    "id": "ENGINEERING:eng.trial.yield_band_m3",
+    "ruleset": "ENGINEERING",
+    "version": 1
+   },
+   {
+    "key": "cement.equivalence.moderate.max_c3a_pct",
+    "requirement": "cement.equivalence.moderate.max_c3a_pct",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Cement",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 8,
+    "units": "%",
+    "clause_ref": "ASTM C150 Type II (cross-code equivalence)",
+    "note_en": "Moderate sulfate resistance (ACI Type II / MS): C3A at most this. CEM II/x-P with documented sulfate performance is flagged for QC review.",
+    "note_ar": "مقاومة معتدلة للكبريتات (النوع II / MS): C3A لا يزيد عن هذه القيمة. يُحال إسمنت CEM II/x-P الموثّق الأداء إلى مراجعة ضبط الجودة.",
+    "verified": false,
+    "id": "SHARED:cement.equivalence.moderate.max_c3a_pct",
+    "ruleset": "SHARED",
+    "version": 1
+   },
+   {
+    "key": "cement.equivalence.high.max_c3a_pct",
+    "requirement": "cement.equivalence.high.max_c3a_pct",
+    "kind": "limit_max",
+    "requirement_class": "CODE_HARD",
+    "group": "Cement",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": 5,
+    "units": "%",
+    "clause_ref": "ASTM C150 Type V (cross-code equivalence)",
+    "note_en": "High sulfate resistance (ACI Type V / HS; CEM I SR3 or SR5): C3A at most this.",
+    "note_ar": "مقاومة عالية للكبريتات (النوع V / HS؛ CEM I SR3 أو SR5): C3A لا يزيد عن هذه القيمة.",
+    "verified": false,
+    "id": "SHARED:cement.equivalence.high.max_c3a_pct",
+    "ruleset": "SHARED",
+    "version": 1
+   },
+   {
+    "key": "strength.basis_map",
+    "requirement": "strength.basis_map",
+    "kind": "value",
+    "requirement_class": "DESIGN_AID",
+    "group": "Strength basis",
+    "applies_to": {},
+    "prerequisites": [],
+    "value": [
+     {
+      "cylinder_mpa": 20,
+      "cube_mpa": 25,
+      "en_class": "C20/25",
+      "b_grade": "B250"
+     },
+     {
+      "cylinder_mpa": 25,
+      "cube_mpa": 30,
+      "en_class": "C25/30",
+      "b_grade": "B300"
+     },
+     {
+      "cylinder_mpa": 30,
+      "cube_mpa": 37,
+      "en_class": "C30/37",
+      "b_grade": null,
+      "b_grade_candidates": [
+       "B350",
+       "B375"
+      ]
+     },
+     {
+      "cylinder_mpa": 35,
+      "cube_mpa": 45,
+      "en_class": "C35/45",
+      "b_grade": "B450"
+     },
+     {
+      "cylinder_mpa": 40,
+      "cube_mpa": 50,
+      "en_class": "C40/50",
+      "b_grade": "B500"
+     },
+     {
+      "cylinder_mpa": 45,
+      "cube_mpa": 55,
+      "en_class": "C45/55",
+      "b_grade": "B550"
+     },
+     {
+      "cylinder_mpa": 50,
+      "cube_mpa": 60,
+      "en_class": "C50/60",
+      "b_grade": "B600"
+     }
+    ],
+    "units": "MPa",
+    "clause_ref": "EN 206 class pairs; Jordanian practice (confirm)",
+    "note_en": "Cylinder, cube, EN 206 class and Jordanian B-grade equivalents. C30/37 has two B-grade candidates (B350 or B375) until confirmed; B-grade input for C30/37 stays blocked.",
+    "note_ar": "المعادلات بين الأسطوانة والمكعب وفئة EN 206 ودرجة B الأردنية. للفئة C30/37 احتمالان (B350 أو B375) حتى التأكيد، ويبقى إدخال درجة B لها محجوباً.",
+    "verified": false,
+    "id": "SHARED:strength.basis_map",
+    "ruleset": "SHARED",
+    "version": 1
+   }
+  ],
+  "materials": [
+   {
+    "id": "cem-i",
+    "category": "cement",
+    "nameEn": "cem-i",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg": 3.15,
+      "c3a_pct": 9
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "78",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "cem-sr",
+    "category": "cement",
+    "nameEn": "cem-sr",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg": 3.15,
+      "c3a_pct": 3.5
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "92",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "fly",
+    "category": "scm",
+    "nameEn": "fly",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg": 2.2,
+      "scm_type": "fly_ash"
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "40",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "ggbs",
+    "category": "scm",
+    "nameEn": "ggbs",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg": 2.9,
+      "scm_type": "ggbs"
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "55",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "sand",
+    "category": "fine_agg",
+    "nameEn": "sand",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg_ssd": 2.62,
+      "chlorides_pct": 0.01,
+      "dry_rodded_unit_weight_kg_m3": 1650,
+      "sieve_analysis": [
+       {
+        "sieve_mm": 9.5,
+        "passing_pct": 100
+       },
+       {
+        "sieve_mm": 4.75,
+        "passing_pct": 98
+       },
+       {
+        "sieve_mm": 2.36,
+        "passing_pct": 85
+       },
+       {
+        "sieve_mm": 1.18,
+        "passing_pct": 66
+       },
+       {
+        "sieve_mm": 0.6,
+        "passing_pct": 46
+       },
+       {
+        "sieve_mm": 0.3,
+        "passing_pct": 22
+       },
+       {
+        "sieve_mm": 0.15,
+        "passing_pct": 7
+       },
+       {
+        "sieve_mm": 0.075,
+        "passing_pct": 3
+       }
+      ]
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "9",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "crusher",
+    "category": "fine_agg",
+    "nameEn": "crusher",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg_ssd": 2.68,
+      "chlorides_pct": 0.005,
+      "sieve_analysis": [
+       {
+        "sieve_mm": 9.5,
+        "passing_pct": 100
+       },
+       {
+        "sieve_mm": 4.75,
+        "passing_pct": 95
+       },
+       {
+        "sieve_mm": 2.36,
+        "passing_pct": 72
+       },
+       {
+        "sieve_mm": 1.18,
+        "passing_pct": 48
+       },
+       {
+        "sieve_mm": 0.6,
+        "passing_pct": 30
+       },
+       {
+        "sieve_mm": 0.3,
+        "passing_pct": 20
+       },
+       {
+        "sieve_mm": 0.15,
+        "passing_pct": 12
+       },
+       {
+        "sieve_mm": 0.075,
+        "passing_pct": 5
+       }
+      ]
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "7",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "c20",
+    "category": "coarse_agg",
+    "nameEn": "c20",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg_ssd": 2.68,
+      "chlorides_pct": 0.005,
+      "dry_rodded_unit_weight_kg_m3": 1600,
+      "sieve_analysis": [
+       {
+        "sieve_mm": 19,
+        "passing_pct": 95
+       },
+       {
+        "sieve_mm": 25,
+        "passing_pct": 100
+       },
+       {
+        "sieve_mm": 12.5,
+        "passing_pct": 40
+       },
+       {
+        "sieve_mm": 9.5,
+        "passing_pct": 15
+       },
+       {
+        "sieve_mm": 4.75,
+        "passing_pct": 3
+       },
+       {
+        "sieve_mm": 2.36,
+        "passing_pct": 0
+       },
+       {
+        "sieve_mm": 0.075,
+        "passing_pct": 0
+       }
+      ]
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "8",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "c10",
+    "category": "coarse_agg",
+    "nameEn": "c10",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg_ssd": 2.66,
+      "chlorides_pct": 0.005,
+      "dry_rodded_unit_weight_kg_m3": 1550,
+      "sieve_analysis": [
+       {
+        "sieve_mm": 12.5,
+        "passing_pct": 100
+       },
+       {
+        "sieve_mm": 9.5,
+        "passing_pct": 90
+       },
+       {
+        "sieve_mm": 4.75,
+        "passing_pct": 15
+       },
+       {
+        "sieve_mm": 2.36,
+        "passing_pct": 3
+       },
+       {
+        "sieve_mm": 1.18,
+        "passing_pct": 0
+       },
+       {
+        "sieve_mm": 0.075,
+        "passing_pct": 0
+       }
+      ]
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "8.5",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "water",
+    "category": "water",
+    "nameEn": "water",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "sg": 1,
+      "sg_confirmed": true,
+      "chloride_mg_l": 200
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "0.8",
+     "unit": "JOD/ton",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   },
+   {
+    "id": "sp",
+    "category": "admixture",
+    "nameEn": "sp",
+    "nameAr": null,
+    "test": {
+     "id": "t",
+     "version": 1,
+     "source": "lab_report",
+     "fieldSources": {},
+     "testedAt": "2026-08-01",
+     "validUntil": null,
+     "freshness": "fresh",
+     "properties": {
+      "type": "F",
+      "sg": 1.08,
+      "solids_pct": 40,
+      "min_dosage_pct": 0.4,
+      "max_dosage_pct": 1.5,
+      "water_convention": "liquid_counts_as_water",
+      "chloride_pct": 0.05,
+      "water_reduction_table": [
+       {
+        "dosage_pct": 0.4,
+        "water_reduction_pct": 8
+       },
+       {
+        "dosage_pct": 0.8,
+        "water_reduction_pct": 14
+       },
+       {
+        "dosage_pct": 1.5,
+        "water_reduction_pct": 22
+       }
+      ]
+     }
+    },
+    "price": {
+     "status": "ok",
+     "priceId": "p",
+     "price": "1.2",
+     "unit": "JOD/kg",
+     "supplierId": "s1",
+     "includesDelivery": true,
+     "effectiveFrom": "2026-09-01",
+     "staleness": "fresh",
+     "ageDays": 31
+    }
+   }
+  ],
+  "settings": {
+   "nearLimitPct": null,
+   "safetyMarginMpa": null,
+   "yieldTolerance": 0.005,
+   "roundingTolerance": {
+    "sand_ratio_pct": 0.5,
+    "wcm": 0.005
+   }
+  },
+  "characteristics": [
+   {
+    "key": "wcm",
+    "sub": null,
+    "spec": {
+     "mode": "fixed",
+     "value": 0.5
+    },
+    "origin": "request"
+   }
+  ],
+  "strengthRecords": null,
+  "lines": [
+   {
+    "materialId": "cem-i",
+    "kgPerM3": "245.000"
+   },
+   {
+    "materialId": "fly",
+    "kgPerM3": "165.000"
+   },
+   {
+    "materialId": "water",
+    "kgPerM3": "205.000"
+   },
+   {
+    "materialId": "crusher",
+    "kgPerM3": "983.000"
+   },
+   {
+    "materialId": "c20",
+    "kgPerM3": "685.000"
+   }
+  ]
+ },
+ "report": {
+  "schema": 1,
+  "evaluatorVersion": "1.1.0",
+  "mode": "ACI",
+  "evaluationDate": "2026-10-02",
+  "figures": {
+   "strength.fc_cylinder": 30,
+   "fcr.ACI": 38.3,
+   "fcr.governing": 38.3,
+   "fcr.total": 38.3,
+   "mass.water": 205,
+   "mass.cement": 245,
+   "mass.scm": 165,
+   "mass.binder": 410,
+   "ratio.wcm": 0.5,
+   "mass.fresh_density": 2283,
+   "volume.cem-i": 0.077778,
+   "volume.fly": 0.075,
+   "volume.water": 0.205,
+   "volume.crusher": 0.366791,
+   "volume.c20": 0.255597,
+   "volume.air": 0.02,
+   "volume.total": 1.000166,
+   "yield.delta": 0.000166,
+   "scm.pct.total": 40.243902,
+   "scm.pct.fly_ash_pozzolan": 40.243902,
+   "scm.pct.slag": 0,
+   "scm.pct.silica_fume": 0,
+   "scm.pct.fly_ash_silica_fume": 40.243902,
+   "scm.pct.line.fly": 40.243902,
+   "agg.total_kg": 1668,
+   "agg.sand_ratio_mass_pct": 58.932854,
+   "agg.sand_ratio_volume_pct": 58.932854,
+   "agg.share_pct.crusher": 58.932854,
+   "agg.share_pct.c20": 41.067146,
+   "agg.paste_l": 377.61194,
+   "agg.fm_combined": 4.724844,
+   "chloride.kg": 0.1244,
+   "chloride.pct": 0.030341,
+   "baseline.wc": 0.437,
+   "baseline.water_kg": 205,
+   "cost.cem-i": "19.110",
+   "cost.fly": "6.600",
+   "cost.water": "0.164",
+   "cost.crusher": "6.881",
+   "cost.c20": "5.480",
+   "cost.total": "38.235",
+   "cost.subtotal": "38.235"
+  },
+  "trace": [
+   {
+    "key": "strength.fc_cylinder",
+    "value": 30,
+    "unit": "MPa",
+    "formula": "specified on the cylinder basis (no conversion)",
+    "inputs": {
+     "specified": 30,
+     "basis": "cylinder"
+    },
+    "evidence": []
+   },
+   {
+    "key": "fcr.ACI",
+    "value": 38.3,
+    "unit": "MPa",
+    "formula": "f'cr = f'c + add (lower threshold ≤ f'c ≤ upper threshold)",
+    "inputs": {
+     "fc": 30,
+     "add": 8.3,
+     "lower": 21,
+     "upper": 35
+    },
+    "ruleKey": "fcr.no_data.mid.add",
+    "clause": "ACI 301 §4.2.3.3",
+    "evidence": []
+   },
+   {
+    "key": "fcr.governing",
+    "value": 38.3,
+    "unit": "MPa",
+    "formula": "higher of the rulesets' f'cr governs",
+    "inputs": {
+     "ACI": 38.3
+    },
+    "evidence": []
+   },
+   {
+    "key": "fcr.total",
+    "value": 38.3,
+    "unit": "MPa",
+    "formula": "f'cr governing + safety margin + extra margin",
+    "inputs": {
+     "governing": 38.3,
+     "safetyMargin": 0,
+     "extraMargin": 0,
+     "fixed": null
+    },
+    "evidence": []
+   },
+   {
+    "key": "mass.water",
+    "value": 205,
+    "unit": "kg/m3",
+    "formula": "free water = water lines + admixture water where the product counts its liquid as water",
+    "inputs": {
+     "waterLines": 205
+    },
+    "evidence": []
+   },
+   {
+    "key": "mass.cement",
+    "value": 245,
+    "unit": "kg/m3",
+    "formula": "Σ cement lines",
+    "inputs": {},
+    "evidence": []
+   },
+   {
+    "key": "mass.scm",
+    "value": 165,
+    "unit": "kg/m3",
+    "formula": "Σ SCM lines",
+    "inputs": {},
+    "evidence": []
+   },
+   {
+    "key": "mass.binder",
+    "value": 410,
+    "unit": "kg/m3",
+    "formula": "cement + SCM",
+    "inputs": {
+     "cement": 245,
+     "scm": 165
+    },
+    "evidence": []
+   },
+   {
+    "key": "ratio.wcm",
+    "value": 0.5,
+    "unit": "ratio",
+    "formula": "w/cm = free water ÷ (cement + SCM)",
+    "inputs": {
+     "water": 205,
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "mass.fresh_density",
+    "value": 2283,
+    "unit": "kg/m3",
+    "formula": "Σ all lines (air has no mass)",
+    "inputs": {},
+    "evidence": []
+   },
+   {
+    "key": "volume.cem-i",
+    "value": 0.077778,
+    "unit": "m3",
+    "formula": "volume = kg ÷ (SG × 1000)",
+    "inputs": {
+     "kg": 245,
+     "sg": 3.15
+    },
+    "evidence": []
+   },
+   {
+    "key": "volume.fly",
+    "value": 0.075,
+    "unit": "m3",
+    "formula": "volume = kg ÷ (SG × 1000)",
+    "inputs": {
+     "kg": 165,
+     "sg": 2.2
+    },
+    "evidence": []
+   },
+   {
+    "key": "volume.water",
+    "value": 0.205,
+    "unit": "m3",
+    "formula": "volume = kg ÷ (SG × 1000)",
+    "inputs": {
+     "kg": 205,
+     "sg": 1
+    },
+    "evidence": []
+   },
+   {
+    "key": "volume.crusher",
+    "value": 0.366791,
+    "unit": "m3",
+    "formula": "volume = kg ÷ (SG × 1000)",
+    "inputs": {
+     "kg": 983,
+     "sg": 2.68
+    },
+    "evidence": []
+   },
+   {
+    "key": "volume.c20",
+    "value": 0.255597,
+    "unit": "m3",
+    "formula": "volume = kg ÷ (SG × 1000)",
+    "inputs": {
+     "kg": 685,
+     "sg": 2.68
+    },
+    "evidence": []
+   },
+   {
+    "key": "volume.air",
+    "value": 0.02,
+    "unit": "m3",
+    "formula": "air volume = air % ÷ 100",
+    "inputs": {
+     "airPct": 2
+    },
+    "ruleKey": "prop.air_entrapped.non_ae",
+    "evidence": [
+     "MODEL_BASELINE"
+    ]
+   },
+   {
+    "key": "volume.total",
+    "value": 1.000166,
+    "unit": "m3",
+    "formula": "Σ absolute volumes + air",
+    "inputs": {
+     "lines": 5,
+     "air": 0.02
+    },
+    "evidence": []
+   },
+   {
+    "key": "yield.delta",
+    "value": 0.000166,
+    "unit": "m3",
+    "formula": "total volume − 1.000",
+    "inputs": {
+     "total": 1.0001658374792701
+    },
+    "evidence": []
+   },
+   {
+    "key": "scm.pct.total",
+    "value": 40.243902,
+    "unit": "%",
+    "formula": "SCM % of cementitious = (fly ash + pozzolan + slag + silica fume) ÷ (cement + SCM); limestone filler is not counted",
+    "inputs": {
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "scm.pct.fly_ash_pozzolan",
+    "value": 40.243902,
+    "unit": "%",
+    "formula": "(fly ash + natural pozzolan) ÷ (cement + SCM)",
+    "inputs": {
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "scm.pct.slag",
+    "value": 0,
+    "unit": "%",
+    "formula": "slag (GGBS) ÷ (cement + SCM)",
+    "inputs": {
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "scm.pct.silica_fume",
+    "value": 0,
+    "unit": "%",
+    "formula": "silica fume ÷ (cement + SCM)",
+    "inputs": {
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "scm.pct.fly_ash_silica_fume",
+    "value": 40.243902,
+    "unit": "%",
+    "formula": "(fly ash + natural pozzolan + silica fume) ÷ (cement + SCM)",
+    "inputs": {
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "scm.pct.line.fly",
+    "value": 40.243902,
+    "unit": "%",
+    "formula": "SCM line ÷ (cement + SCM) × 100",
+    "inputs": {
+     "kg": 165,
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "agg.total_kg",
+    "value": 1668,
+    "unit": "kg/m3",
+    "formula": "Σ aggregate lines",
+    "inputs": {},
+    "evidence": []
+   },
+   {
+    "key": "agg.sand_ratio_mass_pct",
+    "value": 58.932854,
+    "unit": "%",
+    "formula": "fine aggregate mass ÷ total aggregate mass × 100",
+    "inputs": {
+     "fine": 983,
+     "total": 1668
+    },
+    "evidence": []
+   },
+   {
+    "key": "agg.sand_ratio_volume_pct",
+    "value": 58.932854,
+    "unit": "%",
+    "formula": "fine aggregate volume ÷ total aggregate volume × 100",
+    "inputs": {
+     "fine": 0.3667910447761194,
+     "total": 0.6223880597014926
+    },
+    "evidence": []
+   },
+   {
+    "key": "agg.share_pct.crusher",
+    "value": 58.932854,
+    "unit": "%",
+    "formula": "aggregate mass ÷ total aggregate mass × 100",
+    "inputs": {
+     "kg": 983,
+     "total": 1668
+    },
+    "evidence": []
+   },
+   {
+    "key": "agg.share_pct.c20",
+    "value": 41.067146,
+    "unit": "%",
+    "formula": "aggregate mass ÷ total aggregate mass × 100",
+    "inputs": {
+     "kg": 685,
+     "total": 1668
+    },
+    "evidence": []
+   },
+   {
+    "key": "agg.paste_l",
+    "value": 377.61194,
+    "unit": "L/m3",
+    "formula": "paste (everything but aggregate) = 1000 × (1 − Σ aggregate volumes)",
+    "inputs": {
+     "aggregateVolume": 0.6223880597014926
+    },
+    "evidence": []
+   },
+   {
+    "key": "agg.fm_combined",
+    "value": 4.724844,
+    "unit": "none",
+    "formula": "FM of the combined (mass-weighted) gradation on the FM series",
+    "inputs": {
+     "aggregateKg": 1668
+    },
+    "evidence": []
+   },
+   {
+    "key": "chloride.kg",
+    "value": 0.1244,
+    "unit": "kg/m3",
+    "formula": "Σ water-soluble Cl⁻ from aggregates (mass × %), water (mg/L × L) and admixtures (mass × %)",
+    "inputs": {
+     "cl.water": 0.041,
+     "cl.crusher": 0.04915,
+     "cl.c20": 0.03425
+    },
+    "evidence": []
+   },
+   {
+    "key": "chloride.pct",
+    "value": 0.030341,
+    "unit": "%",
+    "formula": "Cl⁻ kg ÷ (cement + SCM) × 100",
+    "inputs": {
+     "chloride": 0.12440000000000001,
+     "binder": 410
+    },
+    "evidence": []
+   },
+   {
+    "key": "baseline.wc",
+    "value": 0.437,
+    "unit": "ratio",
+    "formula": "ACI 211.1 w/c for f'cr, interpolated linearly (baseline, not a plant model)",
+    "inputs": {
+     "fcr": 38.3
+    },
+    "ruleKey": "prop.wc_strength.non_ae",
+    "clause": "ACI 211.1 Table 6.3.4(a)",
+    "evidence": [
+     "MODEL_BASELINE",
+     "TRIAL_REQUIRED"
+    ]
+   },
+   {
+    "key": "baseline.water_kg",
+    "value": 205,
+    "unit": "kg/m3",
+    "formula": "ACI 211.1 mixing water for slump and NMAS × Π(1 − admixture water reduction)",
+    "inputs": {
+     "table": 205,
+     "reductionPct": 0
+    },
+    "ruleKey": "prop.water.non_ae",
+    "clause": "ACI 211.1 Table 6.3.3",
+    "evidence": [
+     "MODEL_BASELINE"
+    ]
+   },
+   {
+    "key": "cost.cem-i",
+    "value": "19.110",
+    "unit": "JOD/m3",
+    "formula": "kg × JOD per kg (exact decimal, rounded to 3 places)",
+    "inputs": {
+     "kg": "245.000",
+     "jodPerKg": "0.078000000",
+     "priceUnit": "JOD/ton",
+     "price": "78"
+    },
+    "evidence": []
+   },
+   {
+    "key": "cost.fly",
+    "value": "6.600",
+    "unit": "JOD/m3",
+    "formula": "kg × JOD per kg (exact decimal, rounded to 3 places)",
+    "inputs": {
+     "kg": "165.000",
+     "jodPerKg": "0.040000000",
+     "priceUnit": "JOD/ton",
+     "price": "40"
+    },
+    "evidence": []
+   },
+   {
+    "key": "cost.water",
+    "value": "0.164",
+    "unit": "JOD/m3",
+    "formula": "kg × JOD per kg (exact decimal, rounded to 3 places)",
+    "inputs": {
+     "kg": "205.000",
+     "jodPerKg": "0.000800000",
+     "priceUnit": "JOD/ton",
+     "price": "0.8"
+    },
+    "evidence": []
+   },
+   {
+    "key": "cost.crusher",
+    "value": "6.881",
+    "unit": "JOD/m3",
+    "formula": "kg × JOD per kg (exact decimal, rounded to 3 places)",
+    "inputs": {
+     "kg": "983.000",
+     "jodPerKg": "0.007000000",
+     "priceUnit": "JOD/ton",
+     "price": "7"
+    },
+    "evidence": []
+   },
+   {
+    "key": "cost.c20",
+    "value": "5.480",
+    "unit": "JOD/m3",
+    "formula": "kg × JOD per kg (exact decimal, rounded to 3 places)",
+    "inputs": {
+     "kg": "685.000",
+     "jodPerKg": "0.008000000",
+     "priceUnit": "JOD/ton",
+     "price": "8"
+    },
+    "evidence": []
+   },
+   {
+    "key": "cost.total",
+    "value": "38.235",
+    "unit": "JOD/m3",
+    "formula": "Σ exact line costs, rounded once to 3 places (lines are rounded separately for display)",
+    "inputs": {
+     "lines": 5,
+     "missing": 0
+    },
+    "evidence": []
+   },
+   {
+    "key": "cost.subtotal",
+    "value": "38.235",
+    "unit": "JOD/m3",
+    "formula": "Σ exact costs of the priced lines only",
+    "inputs": {
+     "priced": 5
+    },
+    "evidence": []
+   }
+  ],
+  "strength": {
+   "specifiedMpa": 30,
+   "basis": "cylinder",
+   "cylinderMpa": 30,
+   "branches": [
+    {
+     "ruleset": "ACI",
+     "value": 38.3,
+     "branch": "no_data",
+     "blocker": null,
+     "clause": "ACI 301 §4.2.3.3"
+    }
+   ],
+   "safetyMarginMpa": 0,
+   "marginConfigured": false,
+   "fcrMpa": 38.3,
+   "governingRuleset": "ACI",
+   "blocker": null
+  },
+  "checks": [
+   {
+    "id": "cl.nonprestressed",
+    "requirement": "max_cl_nonprestressed",
+    "status": "pass",
+    "value": 0.030341463414634152,
+    "limit": 0.3,
+    "op": "<=",
+    "units": "%",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "durability.C1.max_cl_nonprestressed",
+     "clause": "ACI 318-19 Table 19.3.2.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "provisional": true,
+    "evidence": [
+     "RULE_UNVERIFIED"
+    ],
+    "blocker": null,
+    "warning": null,
+    "traceKey": "chloride.pct",
+    "note": "cement and SCM chloride are not in the test schema and are not counted",
+    "noteReason": {
+     "key": "note_chloride_scope",
+     "params": {}
+    }
+   },
+   {
+    "id": "cl.prestressed",
+    "requirement": "max_cl_prestressed",
+    "status": "pass",
+    "value": 0.030341463414634152,
+    "limit": 0.06,
+    "op": "<=",
+    "units": "%",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "durability.C1.max_cl_prestressed",
+     "clause": "ACI 318-19 Table 19.3.2.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "provisional": true,
+    "evidence": [
+     "RULE_UNVERIFIED"
+    ],
+    "blocker": null,
+    "warning": null,
+    "traceKey": "chloride.pct",
+    "note": "cement and SCM chloride are not in the test schema and are not counted",
+    "noteReason": {
+     "key": "note_chloride_scope",
+     "params": {}
+    }
+   },
+   {
+    "id": "min_fc",
+    "requirement": "min_fc",
+    "status": "pass",
+    "value": 30,
+    "limit": 17,
+    "op": ">=",
+    "units": "MPa",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "durability.F0.min_fc",
+     "clause": "ACI 318-19 Table 19.3.2.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "provisional": true,
+    "evidence": [
+     "RULE_UNVERIFIED"
+    ],
+    "blocker": null,
+    "warning": null,
+    "traceKey": "strength.fc_cylinder",
+    "note": "specified f'c on the cylinder basis against the exposure minimum",
+    "noteReason": {
+     "key": "note_min_fc",
+     "params": {}
+    }
+   },
+   {
+    "id": "yield",
+    "requirement": "yield",
+    "status": "pass",
+    "value": 0.0001658374792701256,
+    "limit": 0.005,
+    "op": "abs<=",
+    "units": "m3",
+    "governing": null,
+    "provisional": false,
+    "evidence": [],
+    "blocker": null,
+    "warning": null,
+    "traceKey": "yield.delta"
+   }
+  ],
+  "requirements": [
+   {
+    "requirement": "accept.avg3.min_ratio_fc",
+    "kind": "limit_min",
+    "units": "ratio",
+    "value": 1,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "accept.avg3.min_ratio_fc",
+     "clause": "ACI 318-19 §26.12.3.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "field_acceptance"
+   },
+   {
+    "requirement": "accept.single.max_deficit_mpa",
+    "kind": "limit_max",
+    "units": "MPa",
+    "value": 3.5,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "accept.single.max_deficit_mpa",
+     "clause": "ACI 318-19 §26.12.3.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "field_acceptance"
+   },
+   {
+    "requirement": "grading.coarse.limits",
+    "kind": "range",
+    "units": "%",
+    "value": {
+     "0": {},
+     "1": {}
+    },
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "grading.coarse.limits",
+     "clause": "ASTM C33",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "grading_envelope_not_evaluated"
+   },
+   {
+    "requirement": "grading.fine.limits",
+    "kind": "range",
+    "units": "%",
+    "value": {
+     "0": {},
+     "1": {},
+     "2": {},
+     "3": {},
+     "4": {},
+     "5": {},
+     "6": {}
+    },
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "grading.fine.limits",
+     "clause": "ASTM C33",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "grading_envelope_not_evaluated"
+   },
+   {
+    "requirement": "hot.max_concrete_temp_c",
+    "kind": "limit_max",
+    "units": "degC",
+    "value": 35,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "hot.max_concrete_temp_c",
+     "clause": "ACI 305.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "placement_conditions_not_provided"
+   },
+   {
+    "requirement": "max_cl_nonprestressed",
+    "kind": "limit_max",
+    "units": "%",
+    "value": 0.3,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "durability.C1.max_cl_nonprestressed",
+     "clause": "ACI 318-19 Table 19.3.2.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": true
+   },
+   {
+    "requirement": "max_cl_prestressed",
+    "kind": "limit_max",
+    "units": "%",
+    "value": 0.06,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "durability.C1.max_cl_prestressed",
+     "clause": "ACI 318-19 Table 19.3.2.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": true
+   },
+   {
+    "requirement": "min_fc",
+    "kind": "limit_min",
+    "units": "MPa",
+    "value": 17,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "durability.F0.min_fc",
+     "clause": "ACI 318-19 Table 19.3.2.1",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": true
+   },
+   {
+    "requirement": "nmas.max_fraction.min_clear_bar_spacing",
+    "kind": "limit_max",
+    "units": "fraction",
+    "value": 0.75,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "nmas.max_fraction.min_clear_bar_spacing",
+     "clause": "ACI 318-19 §26.4.2.1(a)(4)",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "geometry_not_provided"
+   },
+   {
+    "requirement": "nmas.max_fraction.narrowest_form_dimension",
+    "kind": "limit_max",
+    "units": "fraction",
+    "value": 0.2,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "nmas.max_fraction.narrowest_form_dimension",
+     "clause": "ACI 318-19 §26.4.2.1(a)(4)",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "geometry_not_provided"
+   },
+   {
+    "requirement": "nmas.max_fraction.slab_depth",
+    "kind": "limit_max",
+    "units": "fraction",
+    "value": 0.3333333333333333,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "nmas.max_fraction.slab_depth",
+     "clause": "ACI 318-19 §26.4.2.1(a)(4)",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "geometry_not_provided"
+   },
+   {
+    "requirement": "slump_tolerance_mm",
+    "kind": "tolerance",
+    "units": "mm",
+    "value": 25,
+    "status": "resolved",
+    "governing": {
+     "source": "ACI",
+     "ruleKey": "tolerance.slump.band2",
+     "clause": "ASTM C94",
+     "requirementClass": "CODE_HARD",
+     "verified": false
+    },
+    "verified": false,
+    "issues": [],
+    "checked": false,
+    "skippedReason": "field_tolerance"
+   }
+  ],
+  "verdict": "pass",
+  "provisional": true,
+  "strengthAdequacy": {
+   "label": "not_a_compliance_result",
+   "model": "none",
+   "fcrMpa": 38.3,
+   "baselineWc": 0.437,
+   "designWcm": 0.5,
+   "comparison": "design_above_baseline",
+   "evidence": [
+    "MODEL_BASELINE",
+    "TRIAL_REQUIRED",
+    "MODEL_PREDICTS_SHORTFALL"
+   ],
+   "blocker": null,
+   "clause": "ACI 211.1 Table 6.3.4(a)"
+  },
+  "waterBaseline": {
+   "label": "does_not_predict_plant_water_demand",
+   "baseWaterKg": 205,
+   "admixtureReductionPct": 0,
+   "baselineWaterKg": 205,
+   "designWaterKg": 205,
+   "evidence": [
+    "MODEL_BASELINE"
+   ],
+   "blocker": null,
+   "clause": "ACI 211.1 Table 6.3.3"
+  },
+  "cost": {
+   "state": "complete",
+   "totalJodPerM3": "38.235",
+   "subtotalJodPerM3": "38.235",
+   "lines": [
+    {
+     "materialId": "cem-i",
+     "kgPerM3": "245.000",
+     "stale": false,
+     "jodPerKg": "0.078000000",
+     "jod": "19.110",
+     "state": "priced"
+    },
+    {
+     "materialId": "fly",
+     "kgPerM3": "165.000",
+     "stale": false,
+     "jodPerKg": "0.040000000",
+     "jod": "6.600",
+     "state": "priced"
+    },
+    {
+     "materialId": "water",
+     "kgPerM3": "205.000",
+     "stale": false,
+     "jodPerKg": "0.000800000",
+     "jod": "0.164",
+     "state": "priced"
+    },
+    {
+     "materialId": "crusher",
+     "kgPerM3": "983.000",
+     "stale": false,
+     "jodPerKg": "0.007000000",
+     "jod": "6.881",
+     "state": "priced"
+    },
+    {
+     "materialId": "c20",
+     "kgPerM3": "685.000",
+     "stale": false,
+     "jodPerKg": "0.008000000",
+     "jod": "5.480",
+     "state": "priced"
+    }
+   ],
+   "missing": [],
+   "basis": {
+    "kind": "live",
+    "date": "2026-10-02",
+    "snapshotId": null
+   }
+  },
+  "dataQuality": [
+   {
+    "code": "rules_unverified",
+    "severity": "warning",
+    "detail": "36 rule value(s) used by this evaluation are not yet verified by a QC manager",
+    "evidence": [
+     "RULE_UNVERIFIED"
+    ],
+    "reason": {
+     "key": "rules_unverified",
+     "params": {
+      "count": "36"
+     }
+    }
+   },
+   {
+    "code": "safety_margin_not_configured",
+    "severity": "info",
+    "detail": "no f'cr safety margin is configured; 0 MPa was added",
+    "reason": {
+     "key": "margin_not_configured",
+     "params": {}
+    }
+   },
+   {
+    "code": "near_limit_not_configured",
+    "severity": "info",
+    "detail": "no near-limit warning percentage is configured; near-limit warnings are off",
+    "reason": {
+     "key": "near_limit_not_configured",
+     "params": {}
+    }
+   },
+   {
+    "code": "no_strength_records",
+    "severity": "info",
+    "detail": "no strength records exist, so the f'cr no-data equations were used",
+    "reason": {
+     "key": "no_strength_records",
+     "params": {}
+    }
+   }
+  ],
+  "characteristics": {
+   "rows": [
+    {
+     "key": "wcm",
+     "requested": "= 0.5",
+     "achieved": 0.5,
+     "unit": "ratio",
+     "delta": 0,
+     "status": "met",
+     "origin": "request",
+     "klass": "USER_SPECIFIED",
+     "blocker": null,
+     "evidence": []
+    }
+   ]
+  },
+  "evidence": [
+   "MODEL_BASELINE",
+   "MODEL_PREDICTS_SHORTFALL",
+   "RULE_UNVERIFIED",
+   "TRIAL_REQUIRED"
+  ],
+  "assumptions": [
+   "Air content 2 % is the ACI 211.1 entrapped-air value for the NMAS (MODEL_BASELINE), not a measured value."
+  ],
+  "minimumData": {
+   "ok": true,
+   "missing": []
+  },
+  "assumptionReasons": [
+   {
+    "key": "air_baseline_used",
+    "params": {
+     "value": "2"
+    }
+   }
+  ]
+ },
+ "configuration": {
+  "cementId": "cem-i",
+  "scmId": "fly",
+  "scmPct": 40,
+  "admixtureId": null,
+  "dosagePct": 0,
+  "nmasMm": 19,
+  "airPct": 2
+ },
+ "guardrails": {
+  "dmaxMm": 25,
+  "gradingSieves": [
+   {
+    "sieve_mm": 0.15,
+    "passing_pct": 7.071942446043166,
+    "target_pct": 10.003870534905884,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 0.3,
+    "passing_pct": 11.786570743405276,
+    "target_pct": 13.665689874040565,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 0.6,
+    "passing_pct": 17.679856115107913,
+    "target_pct": 18.66788250426032,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 1.18,
+    "passing_pct": 28.287769784172664,
+    "target_pct": 25.308936687360383,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 2.36,
+    "passing_pct": 42.431654676258994,
+    "target_pct": 34.57302637058252,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 4.75,
+    "passing_pct": 57.21822541966427,
+    "target_pct": 47.36299098938845,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 9.5,
+    "passing_pct": 65.09292565947243,
+    "target_pct": 64.69975237180033,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 12.5,
+    "passing_pct": 75.35971223021583,
+    "target_pct": 73.20428479728128,
+    "band_pct": 12
+   },
+   {
+    "sieve_mm": 19,
+    "passing_pct": 97.94664268585132,
+    "target_pct": 88.38246634191992,
+    "band_pct": 12
+   }
+  ],
+  "coarsenessFactor": 60.63588269599266,
+  "workabilityFactor": 42.431654676258994,
+  "workabilityFactorAdjusted": 39.08344039054471,
+  "finesPct": 2.946642685851319,
+  "passing03Pct": 11.786570743405276,
+  "fmCombined": 4.7248441247002395,
+  "limits": {
+   "cf": {
+    "min": 45,
+    "max": 75
+   },
+   "wf": {
+    "min": 28,
+    "max": 45
+   },
+   "finesMax": 6,
+   "pumpableMin": null
+  }
+ },
+ "characteristics": [
+  {
+   "key": "wcm",
+   "requested": "= 0.5",
+   "achieved": 0.5,
+   "unit": "ratio",
+   "delta": 0,
+   "status": "met",
+   "origin": "request",
+   "klass": "USER_SPECIFIED",
+   "blocker": null,
+   "evidence": []
+  }
+ ],
+ "costJodPerM3": "38.235",
+ "evidence": [
+  "MODEL_BASELINE",
+  "MODEL_PREDICTS_SHORTFALL",
+  "RULE_UNVERIFIED",
+  "TRIAL_REQUIRED"
+ ],
+ "requiresAuthorization": true,
+ "materials": {}
+}

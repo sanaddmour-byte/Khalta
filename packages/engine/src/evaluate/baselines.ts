@@ -156,28 +156,17 @@ export function waterReduction(
   };
 }
 
-export function waterBaseline(
+/** ACI 211.1 base mixing water for slump and NMAS (before admixture reduction), or why it cannot be read. */
+export function tableWater(
   req: DesignRequestInput,
-  blend: Blend,
   rules: RuleIndex,
   ctx: Context,
-  tr: Tracer,
-): { block: WaterBaseline; assumptions: string[] } {
+):
+  | { ok: true; base: number; clause: string | null; key: string; assumptions: string[] }
+  | { ok: false; blocker: EvalBlocker; clause: string | null } {
   const assumptions: string[] = [];
-  const block: WaterBaseline = {
-    label: 'does_not_predict_plant_water_demand',
-    baseWaterKg: null,
-    admixtureReductionPct: null,
-    baselineWaterKg: null,
-    designWaterKg: blend.freeWaterKg,
-    evidence: ['MODEL_BASELINE'],
-    blocker: null,
-    clause: null,
-  };
-  const stop = (blocker: EvalBlocker, clause: string | null = null) => ({
-    block: { ...block, blocker, clause },
-    assumptions,
-  });
+  const stop = (blocker: EvalBlocker, clause: string | null = null) =>
+    ({ ok: false, blocker, clause }) as const;
   if (req.slumpMm === null) return stop({ code: 'input_missing', detail: 'slump is not stated' });
   if (req.nmasMm === null) return stop({ code: 'input_missing', detail: 'NMAS is not stated' });
   const t = findTable(rules, 'prop.water.', ctx);
@@ -214,6 +203,35 @@ export function waterBaseline(
       { code: 'rule_not_on_file', detail: `${t.table.key} has no value for this slump and NMAS` },
       t.table.clause,
     );
+  return { ok: true, base, clause: t.table.clause, key: t.table.key, assumptions };
+}
+
+export function waterBaseline(
+  req: DesignRequestInput,
+  blend: Blend,
+  rules: RuleIndex,
+  ctx: Context,
+  tr: Tracer,
+): { block: WaterBaseline; assumptions: string[] } {
+  const block: WaterBaseline = {
+    label: 'does_not_predict_plant_water_demand',
+    baseWaterKg: null,
+    admixtureReductionPct: null,
+    baselineWaterKg: null,
+    designWaterKg: blend.freeWaterKg,
+    evidence: ['MODEL_BASELINE'],
+    blocker: null,
+    clause: null,
+  };
+  const tw = tableWater(req, rules, ctx);
+  const assumptions = tw.ok ? tw.assumptions : [];
+  const stop = (blocker: EvalBlocker, clause: string | null = null) => ({
+    block: { ...block, blocker, clause },
+    assumptions,
+  });
+  if (!tw.ok) return stop(tw.blocker, tw.clause);
+  const base = tw.base;
+  const t = { table: { key: tw.key, clause: tw.clause } };
 
   // Admixture water reduction at the design's own dosage (multiplicative across products).
   let remaining = 1;

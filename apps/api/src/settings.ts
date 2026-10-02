@@ -20,6 +20,34 @@ export const settingsSchema = z.strictObject({
   sanityRanges: z
     .record(z.string(), z.strictObject({ min: z.number().optional(), max: z.number().optional() }))
     .default(DEFAULT_SANITY),
+  // Optimizer (M3.1). Search and rounding settings; none is a code value or an engineering recommendation.
+  optimizer: z
+    .strictObject({
+      scmStepPct: z.number().positive().max(20).default(5),
+      waterOverrideWarnPct: z.number().positive().max(50).default(5),
+      maxConfigurations: z.number().int().min(1).max(1000).default(200),
+      candidatesTopN: z.number().int().min(1).max(10).default(5),
+      targetWeightJodPerUnit: z.number().nonnegative().default(0.05),
+      scmSearchCapPct: z.number().positive().max(100).default(40),
+      timeBudgetSeconds: z.number().positive().max(60).default(20),
+      guardrailGuard: z.number().min(0).max(5).default(0.25),
+      minAggregateVolume: z.number().min(0.1).max(0.9).default(0.45),
+      sandRatioTolerancePts: z.number().nonnegative().default(0.5),
+      wcmTolerance: z.number().nonnegative().default(0.005),
+    })
+    .default({
+      scmStepPct: 5,
+      waterOverrideWarnPct: 5,
+      maxConfigurations: 200,
+      candidatesTopN: 5,
+      targetWeightJodPerUnit: 0.05,
+      scmSearchCapPct: 40,
+      timeBudgetSeconds: 20,
+      guardrailGuard: 0.25,
+      minAggregateVolume: 0.45,
+      sandRatioTolerancePts: 0.5,
+      wcmTolerance: 0.005,
+    }),
   // When on, designs that rely on user-declared key properties cannot be approved (enforced from M4.1).
   approvalRequiresLabSource: z.boolean().default(false),
 });

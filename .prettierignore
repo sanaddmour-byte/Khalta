@@ -8,3 +8,4 @@ docs/screens
 dist
 docs/spec
 CLAUDE.md
+packages/validator/test/fixtures

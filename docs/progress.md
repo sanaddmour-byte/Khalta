@@ -248,3 +248,41 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Arabic strings are drafts (engineering wording first); `e2e` plant-switcher spec was made race-tolerant (a parallel spec can add a plant); JS values and rule verification pending; Railway staging awaits your go-ahead; real attested designs and volumes still wanted.
 
 **Next:** M3.1 (controlled optimizer) — write `docs/plans/M3.1.md`.
+
+## 2026-10-02 — M3.1 Controlled optimizer (F-017, F-014, F-015, F-016)
+
+**Changed**
+
+- `packages/engine/src/optimizer` (pure; the solver and the validator are injected): required-parameter reader that **blocks and names every missing value**; preparation (usable materials with a stated reason for every exclusion, governing limits, ACI 211.1 baselines per NMAS); enumeration (cement × SCM × SCM % × admixture × dosage level × NMAS × air, cap 200, coarsened and reported above it, deterministic order); one LP per configuration (binder, water, one volume per aggregate; fixed-point loop on the binder-dependent workability adjustment); HiGHS (`highs` 1.15.3, WASM, MIT) behind a `Solver` interface; characteristic rows for every Appendix E key and mode (Fixed → equality, Range → inequalities, Target → deviation variables); objective modes `cheapest` and `closest_to_targets` (two-stage lexicographic); degrees-of-freedom report; conflict diagnostics (slack on user-specified rows only; hard rows are named with no saving); rounding (cement/SCM up to 5 kg, water 1 kg, admixture 0.01, aggregates 5 kg, volume rebalanced on the largest fine aggregate, other roundings and up to three +5 kg cement top-ups tried, otherwise rejected with the reason); finalization that **re-evaluates from scratch**, re-measures every guardrail on the rounded numbers and calls the independent validator; the ACI 211.1 baseline proportioning path (golden test).
+- `packages/validator`: `validateCandidate` with its own arithmetic (availability, rounding grid, combined grading against the 0.45-power band, Shilstone CF/WF, fines cap, pumpability, individual aggregate limits, the w/cm ceiling, the characteristics the evaluator cannot read, cost and evidence labels) and a corruption suite over stored optimizer records; dependency rules still keep the validator away from the optimizer.
+- `packages/engine`: lifecycle edges `draft/evaluated → trial_candidate` turned on (evidence `validated_candidate`; `ACTIVE_MILESTONE` = M3.1); candidate types in `evaluate/types.ts`; `tableWater` extracted from the water baseline (behaviour unchanged).
+- `packages/db`: migrations 0014–0015: `design_requests`, `design_candidates` (append-only by trigger; only validator-passed candidates can be stored), `mix_designs.source_candidate_id` (set once).
+- `packages/rbac`: capability `candidate.authorize` (QC manager).
+- `apps/api`: `POST /api/design-requests`, `GET /api/design-requests[/:id]`, `POST /api/design-requests/:id/candidates/:cid/trial-candidate` (re-runs evaluator and validator at that moment; creates the design, evaluates it, moves it to `trial_candidate`; `MODEL_PREDICTS_SHORTFALL` needs a QC manager and a reason); cost, shadow prices and weighted deviations stripped without `cost.view`; optimizer settings (`settings.optimizer`).
+- Docs: ADR 0009, `docs/formulation-m3.1.md` (every row, why it is linear, and the interpretations to confirm).
+
+**Commands run (all green):** `typecheck`, `lint` (incl. boundaries and formatting), `test` (engine 291, validator 164, api 204, web 26, rbac 175, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (83), `screens` (119; M3.1 has no UI, so the existing screens were re-run as a regression check and no new images were kept), `db:drift`. Engine coverage 98.0 % statements / 90.4 % branches; validator 98.3 % / 92.2 %.
+
+**Gates:** the golden ACI 211.1 example (f′c 30 MPa, 100 mm slump, 19 mm, f′cr 38.3 MPa → w/c 0.437, water 205, cement 469.1, coarse 998.4, sand 664.3 kg/m³) reproduces the hand-worked numbers through the seeded tables. Every candidate in 12 request kinds (both codes, sulfate class, targets, fixed SCM/admixture, exclusions…) passes the independent validator; tampering with the proportions or the claimed guardrails is refused. A 200-configuration search runs in about 0.5 s on the synthetic world. Same request → identical candidates (tested). A user conflict is reported with the characteristic and the distance to a value that works; with the user rows released, the hard rows are named and no saving is offered.
+
+**Missing parameters (the optimizer blocks on real requests until these are entered; tests use a labelled SYNTHETIC set)**
+
+- `eng.grading.target.band_pct`, `eng.shilstone.wf.min`, `eng.shilstone.wf.max`, `eng.fines.max_pct_75um`, `eng.pumpable.min_passing_0_3mm_pct` (pumpable requests only).
+- `grading.fine.limits` and `grading.coarse.limits` for ACI and JS (ASTM C33 individual limits; format described in `docs/formulation-m3.1.md`).
+- All Jordanian (JS) rule values, as before: JS and Both requests are blocked and the missing rules are named.
+
+**Deviations from the plan (and why)**
+
+- **No worker thread.** HiGHS' WASM `solve()` is synchronous (about 3 ms per configuration here). The request is bounded by a time budget (20 s) and the event loop is yielded between configurations; a worker thread can follow if a real plant's load needs it.
+- **Combined grading** is held to the 0.45-power curve ± (`eng.grading.target.band_pct` − `eng.margin.grading_pct_points`) (spec C5); the ASTM C33 limits act per aggregate (an aggregate that fails them is excluded with its reason), because the limits are per material, not per blend.
+- **SCM search cap.** Where no governing SCM maximum is on file the search stops at a tenant setting (40 %) and says so; ACI's SCM limits exist only for F3 (air-entrained, unsupported).
+- Two guards that are not engineering recommendations, both tenant settings and stated in the formulation note: `guardrailGuard` (0.25 points kept inside each guardrail so rounding cannot break it) and `minAggregateVolume` (0.45 m³/m³, to exclude a degenerate all-paste point).
+- The ACI 211.1 w/c table ends at f′cr 40 MPa (f′c ≈ 31.7 MPa), so stronger requests are **blocked, not extrapolated**.
+
+**Verification note:** tests prove the formulation is solved exactly for the synthetic world, constraints and characteristics hold after rounding, the evaluator and the independent validator agree on every candidate, and nothing can reach `approved` from here. They do **not** prove that a candidate will reach strength or slump in your plant (ACI baselines only, trial required), that any rule value is right, that the synthetic parameters resemble yours, or that the SCM-rich cheapest mixes are acceptable early-age. Evaluator, validator and optimizer were written by the same author from the same spec; real approved designs as fixtures matter.
+
+**Decisions to confirm (not blocking)** — the six interpretations at the end of `docs/formulation-m3.1.md` (D_max and grading sieves, one-sided workability adjustment, fines cap definition, individual-limit format, per-NMAS WF bounds, table domain).
+
+**Open items:** Studio, characteristics panel, DoF meter and conflict panel are M3.2; Arabic strings are drafts (no new UI strings here); Railway staging still awaits your go-ahead; JS values and rule verification pending; real attested designs and volumes still wanted.
+
+**Next:** M3.2 (Design Studio) — write `docs/plans/M3.2.md`.

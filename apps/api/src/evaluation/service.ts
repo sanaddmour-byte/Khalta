@@ -58,43 +58,18 @@ const slimRule = (r: RuleRecord): RuleRecord => {
   return { ...rest, prerequisites: [] };
 };
 
-export async function buildSnapshot(
+/** The materials (current test + price at the plant and date) a snapshot carries. Shared with the optimizer. */
+export async function loadSnapshotMaterials(
   db: Executor,
   tenantId: string,
-  design: DesignRow,
-  opts: BuildOptions,
-): Promise<EvaluationSnapshot> {
-  const now = opts.now ?? new Date();
-  const date = opts.evaluationDate ?? todayAmman(now);
+  plantId: string,
+  materialIds: string[],
+  date: string,
+  opts: Pick<BuildOptions, 'priceSnapshotId' | 'now'>,
+  now: Date,
+): Promise<SnapshotMaterial[]> {
   const settings = await loadSettings(db, tenantId);
   const params = await loadMaterialParams(db, tenantId);
-  const req = design.requirements as RequirementsJson;
-
-  const request: EvaluationSnapshot['request'] = {
-    fcMpa: req.fcMpa ?? null,
-    basis: req.basis ?? null,
-    testAgeDays: req.testAgeDays ?? null,
-    exposure: req.exposure ?? [],
-    s3Option: opts.s3Option ?? req.s3Option ?? null,
-    slumpMm: req.slumpMm ?? null,
-    nmasMm: req.nmasMm ?? null,
-    pumpable: req.pumpable ?? null,
-    airPct: opts.airPct ?? req.airPct ?? null,
-  };
-
-  const lines = opts.linesOverride
-    ? opts.linesOverride.map((l, i) => ({ ...l, sourceLine: i + 1 }))
-    : await db
-        .select({
-          materialId: schema.mixDesignLines.materialId,
-          quantity: schema.mixDesignLines.quantityKgM3,
-          sourceLine: schema.mixDesignLines.sourceLine,
-        })
-        .from(schema.mixDesignLines)
-        .where(eq(schema.mixDesignLines.designId, design.id))
-        .orderBy(schema.mixDesignLines.sourceLine, schema.mixDesignLines.id);
-  const materialIds = [...new Set(lines.map((l) => l.materialId))];
-
   const mats = materialIds.length
     ? await db
         .select()
@@ -120,10 +95,10 @@ export async function buildSnapshot(
   const prices = await loadPrices(
     db,
     tenantId,
-    design.plantId,
+    plantId,
     materialIds,
     date,
-    opts,
+    opts as BuildOptions,
     settings.stalePriceDays,
   );
 
@@ -154,6 +129,55 @@ export async function buildSnapshot(
       price: prices.get(id) ?? { status: 'unavailable' },
     };
   });
+
+  return snapshotMaterials;
+}
+
+export async function buildSnapshot(
+  db: Executor,
+  tenantId: string,
+  design: DesignRow,
+  opts: BuildOptions,
+): Promise<EvaluationSnapshot> {
+  const now = opts.now ?? new Date();
+  const date = opts.evaluationDate ?? todayAmman(now);
+  const settings = await loadSettings(db, tenantId);
+  const req = design.requirements as RequirementsJson;
+
+  const request: EvaluationSnapshot['request'] = {
+    fcMpa: req.fcMpa ?? null,
+    basis: req.basis ?? null,
+    testAgeDays: req.testAgeDays ?? null,
+    exposure: req.exposure ?? [],
+    s3Option: opts.s3Option ?? req.s3Option ?? null,
+    slumpMm: req.slumpMm ?? null,
+    nmasMm: req.nmasMm ?? null,
+    pumpable: req.pumpable ?? null,
+    airPct: opts.airPct ?? req.airPct ?? null,
+  };
+
+  const lines = opts.linesOverride
+    ? opts.linesOverride.map((l, i) => ({ ...l, sourceLine: i + 1 }))
+    : await db
+        .select({
+          materialId: schema.mixDesignLines.materialId,
+          quantity: schema.mixDesignLines.quantityKgM3,
+          sourceLine: schema.mixDesignLines.sourceLine,
+        })
+        .from(schema.mixDesignLines)
+        .where(eq(schema.mixDesignLines.designId, design.id))
+        .orderBy(schema.mixDesignLines.sourceLine, schema.mixDesignLines.id);
+  const materialIds = [...new Set(lines.map((l) => l.materialId))];
+
+  const snapshotMaterials = await loadSnapshotMaterials(
+    db,
+    tenantId,
+    design.plantId,
+    materialIds,
+    date,
+    opts,
+    now,
+  );
 
   const all = await loadCurrentRecords(db, tenantId);
   const rules = selectRules(all, opts.mode, request).map(slimRule);

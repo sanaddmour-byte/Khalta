@@ -365,3 +365,76 @@ export interface ValidatorResult {
   mismatches: ValidatorMismatch[];
   checked: { figures: number; checks: number; trace: number };
 }
+
+// ---------------------------------------------------------------- optimizer candidates (M3.1)
+
+export interface Band {
+  min: number | null;
+  max: number | null;
+}
+
+export interface CandidateGuardrails {
+  dmaxMm: number;
+  gradingSieves: { sieve_mm: number; passing_pct: number; target_pct: number; band_pct: number }[];
+  coarsenessFactor: number;
+  workabilityFactor: number;
+  workabilityFactorAdjusted: number;
+  finesPct: number;
+  passing03Pct: number | null;
+  fmCombined: number;
+  limits: { cf: Band; wf: Band; finesMax: number; pumpableMin: number | null };
+}
+
+export interface CandidateConfiguration {
+  cementId: string;
+  scmId: string | null;
+  scmPct: number;
+  admixtureId: string | null;
+  /** Dosage, % of cementitious mass. */
+  dosagePct: number;
+  nmasMm: number;
+  airPct: number;
+}
+
+/**
+ * Everything the independent candidate validator needs, as plain data: the snapshot and report the
+ * evaluator produced for the ROUNDED proportions, the configuration, and the guardrail figures the
+ * optimizer claims. The validator recomputes all of it and never sees optimizer code.
+ */
+export interface CandidateRecord {
+  schema: 1;
+  snapshot: EvaluationSnapshot;
+  report: EvaluationReport;
+  configuration: CandidateConfiguration;
+  guardrails: CandidateGuardrails;
+  characteristics: CharacteristicRow[];
+  costJodPerM3: string | null;
+  evidence: EvidenceStatus[];
+  requiresAuthorization: boolean;
+  /** The request's include/exclude lists, for the availability check. */
+  materials: { include?: string[]; exclude?: string[] };
+}
+
+export interface CandidateMismatch {
+  key: string;
+  kind:
+    | 'evaluation'
+    | 'availability'
+    | 'rounding'
+    | 'guardrail'
+    | 'characteristic'
+    | 'cost'
+    | 'evidence'
+    | 'configuration'
+    | 'parameter_missing';
+  reported: unknown;
+  recomputed: unknown;
+  detail?: string;
+}
+
+export interface CandidateValidatorResult {
+  validatorVersion: string;
+  status: 'pass' | 'fail';
+  mismatches: CandidateMismatch[];
+  evaluation: ValidatorResult;
+}
