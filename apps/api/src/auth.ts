@@ -43,6 +43,9 @@ export function createAuth(db: Db, config: Config) {
     },
     session: { expiresIn: SESSION_SECONDS, updateAge: 60 * 60 * 24 },
     rateLimit: { enabled: config.NODE_ENV !== 'test', window: 60, max: 100 },
+    ...(config.TRUST_PROXY === '1' && {
+      advanced: { ipAddress: { ipAddressHeaders: ['x-forwarded-for'] } },
+    }),
     databaseHooks: {
       session: {
         create: {

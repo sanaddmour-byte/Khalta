@@ -2,6 +2,8 @@ import { createDb, type Db } from '@khalta/db';
 import { toNodeHandler } from 'better-auth/node';
 import express from 'express';
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import type { Logger } from 'pino';
 import { pinoHttp } from 'pino-http';
 import { createAuth, type Auth } from './auth';
@@ -42,6 +44,7 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   const log = logger ?? createLogger(config);
   const app = express();
   app.disable('x-powered-by');
+  if (config.TRUST_PROXY === '1') app.set('trust proxy', 1);
   app.use(pinoHttp({ logger: log, genReqId: () => randomUUID() }));
 
   app.get('/health', (_req, res) => {
@@ -75,6 +78,32 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {
     res.json(api.openApiDocument());
   });
+  // Built web app, same origin (ADR 0006). Registered before the authenticated API router, but it only answers existing files and non-API GET paths.
+  const webDir = config.WEB_DIST_DIR ? resolve(config.WEB_DIST_DIR) : null;
+  if (webDir && existsSync(join(webDir, 'index.html'))) {
+    app.use(
+      express.static(webDir, {
+        index: false,
+        setHeaders: (res, file) => {
+          res.setHeader('X-Content-Type-Options', 'nosniff');
+          res.setHeader(
+            'Cache-Control',
+            file.includes(`${join(webDir, 'assets')}`)
+              ? 'public, max-age=31536000, immutable'
+              : 'no-cache',
+          );
+        },
+      }),
+    );
+    app.use((req, res, next) => {
+      if ((req.method !== 'GET' && req.method !== 'HEAD') || /^\/(api|health)(\/|$)/.test(req.path))
+        return next();
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.sendFile(join(webDir, 'index.html'));
+    });
+  }
+
   app.use(api.router);
 
   app.use((_req, _res, next) => next(notFound()));

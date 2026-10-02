@@ -21,7 +21,15 @@ export const LEGACY_COLUMNS = [
   'avg_monthly_volume_m3',
 ] as const;
 export type LegacyColumn = (typeof LEGACY_COLUMNS)[number];
-export const REQUIRED_COLUMNS: readonly LegacyColumn[] = ['design_code', 'plant_code', 'fc_mpa', 'material_name', 'material_category', 'quantity', 'unit'];
+export const REQUIRED_COLUMNS: readonly LegacyColumn[] = [
+  'design_code',
+  'plant_code',
+  'fc_mpa',
+  'material_name',
+  'material_category',
+  'quantity',
+  'unit',
+];
 
 const ALIASES: Record<LegacyColumn, string[]> = {
   design_code: ['design code', 'code', 'رمز التصميم', 'رمز الخلطة', 'كود'],
@@ -40,7 +48,12 @@ const ALIASES: Record<LegacyColumn, string[]> = {
   unit: ['unit', 'الوحدة'],
   approval_reference: ['approval reference', 'approval ref', 'مرجع الاعتماد'],
   currently_in_production: ['currently in production', 'in production', 'قيد الإنتاج'],
-  avg_monthly_volume_m3: ['avg monthly volume m3', 'monthly volume', 'average monthly volume', 'متوسط الإنتاج الشهري'],
+  avg_monthly_volume_m3: [
+    'avg monthly volume m3',
+    'monthly volume',
+    'average monthly volume',
+    'متوسط الإنتاج الشهري',
+  ],
 };
 
 const key = (s: string) => normalizeName(s.replace(/[_/]+/g, ' '));
@@ -48,7 +61,10 @@ const key = (s: string) => normalizeName(s.replace(/[_/]+/g, ' '));
 export type Mapping = Partial<Record<LegacyColumn, number>>;
 
 /** Detects which file column holds which Appendix D field (header names in English or Arabic). */
-export function detectMapping(header: readonly string[]): { mapping: Mapping; missing: LegacyColumn[] } {
+export function detectMapping(header: readonly string[]): {
+  mapping: Mapping;
+  missing: LegacyColumn[];
+} {
   const mapping: Mapping = {};
   header.forEach((h, i) => {
     const k = key(h);
@@ -60,7 +76,14 @@ export function detectMapping(header: readonly string[]): { mapping: Mapping; mi
   return { mapping, missing: REQUIRED_COLUMNS.filter((c) => mapping[c] === undefined) };
 }
 
-export const CATEGORIES_IMPORT = ['cement', 'scm', 'fine_agg', 'coarse_agg', 'water', 'admixture'] as const;
+export const CATEGORIES_IMPORT = [
+  'cement',
+  'scm',
+  'fine_agg',
+  'coarse_agg',
+  'water',
+  'admixture',
+] as const;
 export type ImportCategory = (typeof CATEGORIES_IMPORT)[number];
 export const EXPOSURE_PATTERN = /^(F[0-3]|S[0-3]|W[0-2]|C[0-2])$/;
 export const STRENGTH_BASES = ['cylinder', 'cube', 'b_grade'] as const;
@@ -95,7 +118,11 @@ export interface LegacyDesign {
   warnings: { code: string; line?: number; detail?: string }[];
 }
 
-const latin = (s: string) => s.replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 0x0660)).replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 0x06f0)).replace(/٫/g, '.');
+const latin = (s: string) =>
+  s
+    .replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 0x06f0))
+    .replace(/٫/g, '.');
 const num = (s: string): number | null => {
   const t = latin(s).trim().replace(',', '.');
   return /^\d+(\.\d+)?$/.test(t) ? Number(t) : null;
@@ -107,21 +134,39 @@ const bool = (s: string): boolean | null => {
   return null;
 };
 const basisOf = (s: string): StrengthBasis | null => {
-  const k = s.trim().toLowerCase().replace(/[\s_-]+/g, '');
+  const k = s
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
   if (['cylinder', 'cyl', 'اسطوانة', 'أسطوانة'].includes(k)) return 'cylinder';
   if (['cube', 'مكعب'].includes(k)) return 'cube';
   if (['bgrade', 'b', 'bgr'].includes(k)) return 'b_grade';
   return null;
 };
 const categoryOf = (s: string): ImportCategory | null => {
-  const k = s.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const k = s
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
   const map: Record<string, ImportCategory> = {
-    cement: 'cement', إسمنت: 'cement', اسمنت: 'cement',
-    scm: 'scm', pozzolan: 'scm',
-    fine_agg: 'fine_agg', fine_aggregate: 'fine_agg', fine: 'fine_agg', ركام_ناعم: 'fine_agg',
-    coarse_agg: 'coarse_agg', coarse_aggregate: 'coarse_agg', coarse: 'coarse_agg', ركام_خشن: 'coarse_agg',
-    water: 'water', ماء: 'water',
-    admixture: 'admixture', إضافة: 'admixture', اضافة: 'admixture',
+    cement: 'cement',
+    إسمنت: 'cement',
+    اسمنت: 'cement',
+    scm: 'scm',
+    pozzolan: 'scm',
+    fine_agg: 'fine_agg',
+    fine_aggregate: 'fine_agg',
+    fine: 'fine_agg',
+    ركام_ناعم: 'fine_agg',
+    coarse_agg: 'coarse_agg',
+    coarse_aggregate: 'coarse_agg',
+    coarse: 'coarse_agg',
+    ركام_خشن: 'coarse_agg',
+    water: 'water',
+    ماء: 'water',
+    admixture: 'admixture',
+    إضافة: 'admixture',
+    اضافة: 'admixture',
   };
   return map[k] ?? null;
 };
@@ -138,11 +183,15 @@ export interface ParseOutput {
 }
 
 /** Groups the long-format rows into designs and validates everything that needs no code rules. */
-export function parseLegacyRows(rows: readonly (readonly string[])[], mapping: Mapping): ParseOutput {
+export function parseLegacyRows(
+  rows: readonly (readonly string[])[],
+  mapping: Mapping,
+): ParseOutput {
   const fileErrors: string[] = [];
   const missing = REQUIRED_COLUMNS.filter((c) => mapping[c] === undefined);
   if (missing.length) return { designs: [], fileErrors: missing.map((c) => `missing_column:${c}`) };
-  const get = (r: readonly string[], c: LegacyColumn) => (mapping[c] === undefined ? '' : (r[mapping[c]!] ?? '').trim());
+  const get = (r: readonly string[], c: LegacyColumn) =>
+    mapping[c] === undefined ? '' : (r[mapping[c]!] ?? '').trim();
   const byCode = new Map<string, LegacyDesign>();
   rows.forEach((r, idx) => {
     if (r.every((c) => !String(c ?? '').trim())) return;
@@ -155,30 +204,106 @@ export function parseLegacyRows(rows: readonly (readonly string[])[], mapping: M
     let d = byCode.get(code);
     if (!d) {
       d = {
-        code, plantCode: '', name: '', fcMpa: null, basis: null, testAgeDays: null, exposure: [], slumpMm: null, nmasMm: null,
-        pumpable: null, approvalReference: null, inProduction: null, avgMonthlyVolumeM3: null, lines: [], firstLine: line, errors: [], warnings: [],
+        code,
+        plantCode: '',
+        name: '',
+        fcMpa: null,
+        basis: null,
+        testAgeDays: null,
+        exposure: [],
+        slumpMm: null,
+        nmasMm: null,
+        pumpable: null,
+        approvalReference: null,
+        inProduction: null,
+        avgMonthlyVolumeM3: null,
+        lines: [],
+        firstLine: line,
+        errors: [],
+        warnings: [],
       };
       byCode.set(code, d);
     }
-    const err = (c: string, detail?: string) => d!.errors.push({ code: c, line, ...(detail && { detail }) });
+    const err = (c: string, detail?: string) =>
+      d!.errors.push({ code: c, line, ...(detail && { detail }) });
     // header fields: first non-empty value wins; a later conflicting value is an error
-    const head = <T,>(name: string, raw: string, parse: (s: string) => T | null, current: T | null, set: (v: T) => void, bad: string) => {
+    const head = <T>(
+      name: string,
+      raw: string,
+      parse: (s: string) => T | null,
+      current: T | null,
+      set: (v: T) => void,
+      bad: string,
+    ) => {
       if (!raw) return;
       const v = parse(raw);
       if (v === null) return err(bad, raw);
       if (current === null || current === '') set(v);
-      else if (current !== v && !(Array.isArray(v) && JSON.stringify(v) === JSON.stringify(current))) err('conflicting_header', name);
+      else if (
+        current !== v &&
+        !(Array.isArray(v) && JSON.stringify(v) === JSON.stringify(current))
+      )
+        err('conflicting_header', name);
     };
-    head('plant_code', get(r, 'plant_code'), (s) => s, d.plantCode || null, (v) => (d!.plantCode = v), 'bad_plant');
-    head('design_name', get(r, 'design_name'), (s) => s, d.name || null, (v) => (d!.name = v), 'bad_name');
+    head(
+      'plant_code',
+      get(r, 'plant_code'),
+      (s) => s,
+      d.plantCode || null,
+      (v) => (d!.plantCode = v),
+      'bad_plant',
+    );
+    head(
+      'design_name',
+      get(r, 'design_name'),
+      (s) => s,
+      d.name || null,
+      (v) => (d!.name = v),
+      'bad_name',
+    );
     head('fc_mpa', get(r, 'fc_mpa'), num, d.fcMpa, (v) => (d!.fcMpa = v), 'bad_fc');
-    head('strength_basis', get(r, 'strength_basis'), basisOf, d.basis, (v) => (d!.basis = v), 'bad_basis');
-    head('test_age_days', get(r, 'test_age_days'), num, d.testAgeDays, (v) => (d!.testAgeDays = v), 'bad_test_age');
+    head(
+      'strength_basis',
+      get(r, 'strength_basis'),
+      basisOf,
+      d.basis,
+      (v) => (d!.basis = v),
+      'bad_basis',
+    );
+    head(
+      'test_age_days',
+      get(r, 'test_age_days'),
+      num,
+      d.testAgeDays,
+      (v) => (d!.testAgeDays = v),
+      'bad_test_age',
+    );
     head('slump_mm', get(r, 'slump_mm'), num, d.slumpMm, (v) => (d!.slumpMm = v), 'bad_slump');
     head('nmas_mm', get(r, 'nmas_mm'), num, d.nmasMm, (v) => (d!.nmasMm = v), 'bad_nmas');
-    head('pumpable', get(r, 'pumpable'), bool, d.pumpable, (v) => (d!.pumpable = v), 'bad_pumpable');
-    head('approval_reference', get(r, 'approval_reference'), (s) => s, d.approvalReference, (v) => (d!.approvalReference = v), 'bad_reference');
-    head('currently_in_production', get(r, 'currently_in_production'), bool, d.inProduction, (v) => (d!.inProduction = v), 'bad_in_production');
+    head(
+      'pumpable',
+      get(r, 'pumpable'),
+      bool,
+      d.pumpable,
+      (v) => (d!.pumpable = v),
+      'bad_pumpable',
+    );
+    head(
+      'approval_reference',
+      get(r, 'approval_reference'),
+      (s) => s,
+      d.approvalReference,
+      (v) => (d!.approvalReference = v),
+      'bad_reference',
+    );
+    head(
+      'currently_in_production',
+      get(r, 'currently_in_production'),
+      bool,
+      d.inProduction,
+      (v) => (d!.inProduction = v),
+      'bad_in_production',
+    );
     head(
       'avg_monthly_volume_m3',
       get(r, 'avg_monthly_volume_m3'),
@@ -192,11 +317,15 @@ export function parseLegacyRows(rows: readonly (readonly string[])[], mapping: M
     );
     const ex = get(r, 'exposure_classes');
     if (ex) {
-      const classes = ex.split(/[;,\s]+/).map((x) => x.trim().toUpperCase()).filter(Boolean);
+      const classes = ex
+        .split(/[;,\s]+/)
+        .map((x) => x.trim().toUpperCase())
+        .filter(Boolean);
       const bad = classes.filter((c) => !EXPOSURE_PATTERN.test(c));
       if (bad.length) err('bad_exposure', bad.join(';'));
       else if (d.exposure.length === 0) d.exposure = classes;
-      else if (JSON.stringify(d.exposure) !== JSON.stringify(classes)) err('conflicting_header', 'exposure_classes');
+      else if (JSON.stringify(d.exposure) !== JSON.stringify(classes))
+        err('conflicting_header', 'exposure_classes');
     }
     // the line itself
     const name = get(r, 'material_name');
@@ -209,7 +338,12 @@ export function parseLegacyRows(rows: readonly (readonly string[])[], mapping: M
     const q = /^\d{1,9}(\.\d{1,6})?$/.test(qRaw) ? qRaw : null;
     if (q === null || Number(q) <= 0) err('bad_quantity', get(r, 'quantity'));
     if (name && cat && unit && q !== null && Number(q) > 0) {
-      if (d.lines.some((l) => normalizeName(l.materialName) === normalizeName(name) && l.category === cat)) err('duplicate_material', name);
+      if (
+        d.lines.some(
+          (l) => normalizeName(l.materialName) === normalizeName(name) && l.category === cat,
+        )
+      )
+        err('duplicate_material', name);
       d.lines.push({ line, materialName: name, category: cat, quantity: q, unit });
     }
   });

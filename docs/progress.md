@@ -165,3 +165,32 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** `JOD/m3` prices stay "not convertible" until you provide bulk densities; the haul cost is not added to ex-works prices; the 15-minute "affects N approved designs" banner arrives with M5.1; Arabic strings are drafts in `docs/i18n-review.md`; the grid supports click/shift-click selection (no drag-select yet).
 
 **Next:** M1.3 (demo data, legacy import, staging) — write `docs/plans/M1.3.md` and list questions.
+
+## 2026-10-02 — M1.3 Demo data, legacy import, staging prep (F-009)
+
+**Changed**
+
+- `packages/engine` (pure): Arabic-first name normalization (diacritics, tatweel, alef/ya/ta-marbuta, digits) and Dice similarity used only to **order** suggestions; `matchMaterial` pre-selects only an exact normalized same-category match; Appendix D long-format parser/validator with header aliases (EN/AR); litres→kg through SG with exact decimals.
+- `packages/db`: migrations 0008–0009: `mix_designs` (inputs immutable by trigger, status/approval bookkeeping only), `mix_design_lines` and `design_transitions` (append-only), `production_volumes`, `legacy_import_batches`; check constraints: legacy-attested needs reference + approver + date, approved/in-production needs an approval source.
+- `apps/api`: legacy import (upload → re-runnable mapping/matching/validation preview → all-or-nothing, single-use commit; created materials flagged and test-less), `/api/designs` (list, detail, attestation queue), `POST /api/designs/:id/attest` (QC Manager, **four-eyes**, typed note; approved or in production, transitions recorded). Demo generator `pnpm db:seed:demo` is an **HTTP client of the app's own API** (deterministic PRNG; two QC managers; idempotent; refuses production unless `KHALTA_ALLOW_DEMO_SEED=1`). Web app served from the API (ADR 0006); `TRUST_PROXY`, `KHALTA_DEMO` flag in `/api/me`.
+- `apps/web`: Imports wizard (columns → materials → review → import), Library (list, attestation queue, detail sheet with original and kg quantities, warnings, history, attest dialog), demo banner.
+- Ops: `Dockerfile`, `.dockerignore`, `railway.json`, `docs/runbooks/staging.md`, `pnpm smoke:staging`, `templates/legacy-mix-designs.csv`, ADR 0006.
+
+**Commands run (all green):** `typecheck`, `lint`, `test` (engine 65, api 145, web 25, rbac 161, ui 120, rules 159, …), `test:rules` (143), `features:check`, `e2e` (72, incl. 4 new: wizard with exact/unresolved/create decisions, importer refused then second QC manager attests with the legacy label, viewer read-only, Arabic RTL + axe), `screens` (`docs/screens/M1.3/`), `db:drift`.
+
+**Verified locally:** a production-mode server (`NODE_ENV=production`, built web app via `WEB_DIST_DIR`) passed `pnpm smoke:staging` (health, app, client-route fallback, anonymous API guard, sign-in, `/api/me`, rules, materials); the demo seed ran against it (19 materials, two price waves, two snapshots, 6 legacy designs, 4 attested, 36 volume rows). Round trip: designs read back from the library equal the source file's lines.
+
+**Not done: the Railway deploy.** Per your default I will not create or change anything on Railway without your yes, and I need the project/workspace and the domain. The Docker image was **not built here** (no Docker daemon in this sandbox); the first Railway build will be its first test, and any failure gets fixed before the milestone is closed. `docs/runbooks/staging.md` lists the variables and steps.
+
+**Defects found by tests/review and fixed:** the authenticated router was catching static/SPA paths (static hosting moved before it); zod 4 `record` with an enum key requires every key (`partialRecord`); Better Auth rate limiting would treat all users behind Railway's proxy as one client (`TRUST_PROXY`); step headings like "1." reversed in Arabic; a rules axe check measured mid-fade colours (wait for the dialog animation); the screens needed a design created in their fresh database.
+
+**Verification note:** tests prove parsing, matching rules, unit conversion, workflow states, four-eyes, immutability and deployment mechanics as implemented. They do **not** prove the legacy designs are correct or compliant, that a matched material is the physical material the plant uses, or that the demo numbers resemble real production. Imported designs show no compliance, cost or strength figure because none has been calculated; they are labelled "Legacy attested · not yet evaluated by Khalta".
+
+**Open items / notes**
+
+- Matching is plant-agnostic: the same Arabic name used by two plants maps to one library material per decision (the demo gives Aqaba's aggregates a place suffix). Plant-aware matching is a candidate for M2.x.
+- The runtime image runs TypeScript through tsx and keeps the whole workspace (large); compilation is a M6.2 item.
+- The demo seeds synthetic test-age (365 d) and stale-price (30 d) limits in the demo tenant only; the real seeds stay null.
+- Arabic strings are drafts in `docs/i18n-review.md` (attestation wording first).
+
+**Next:** your go-ahead and Railway details to deploy staging; then M2.1 (evaluator, compliance kernel, validator) — write `docs/plans/M2.1.md` and list questions.

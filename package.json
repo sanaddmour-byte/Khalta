@@ -22,7 +22,8 @@
     "db:drift": "pnpm --filter @khalta/db drift",
     "features:check": "pnpm --filter @khalta/features-check check",
     "rules:sync": "pnpm --filter @khalta/api rules:sync",
-    "rules:export-seed": "pnpm --filter @khalta/api rules:export-seed"
+    "rules:export-seed": "pnpm --filter @khalta/api rules:export-seed",
+    "smoke:staging": "node scripts/smoke-staging.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",

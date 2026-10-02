@@ -8,11 +8,7 @@ let env: TestEnv;
 let p1: { id: string }, p2: { id: string };
 let mgr: Agent, mgr2: Agent, eng: Agent, admin: Agent, pm: Agent, viewer: Agent;
 let mgrUser: { id: string };
-let cement: { id: string },
-  water: { id: string },
-  foulieh: { id: string },
-  hummus: { id: string },
-  adm: { id: string };
+let cement: { id: string }, foulieh: { id: string }, hummus: { id: string }, adm: { id: string };
 
 const HEAD =
   'design_code,plant_code,design_name,fc_mpa,strength_basis,test_age_days,exposure_classes,slump_mm,nmas_mm,pumpable,material_name,material_category,quantity,unit,approval_reference,currently_in_production,avg_monthly_volume_m3';
@@ -58,7 +54,7 @@ beforeAll(async () => {
     (await mgr.post('/api/materials').send({ category, marketNameAr: ar, marketNameEn: en }))
       .body as { id: string };
   cement = await mk('cement', 'إسمنت', 'Cement');
-  water = await mk('water', 'ماء', 'Water');
+  await mk('water', 'ماء', 'Water');
   foulieh = await mk('coarse_agg', 'فولية', 'Fouliyeh');
   hummus = await mk('coarse_agg', 'حمصية', 'Hummusiyeh');
   adm = await mk('admixture', 'ملدن', 'Plasticizer');

@@ -111,12 +111,8 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -210,12 +206,8 @@
           "name": "attachments_tenant_id_tenants_id_fk",
           "tableFrom": "attachments",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -223,12 +215,8 @@
           "name": "attachments_created_by_users_id_fk",
           "tableFrom": "attachments",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -366,12 +354,8 @@
           "name": "audit_log_tenant_id_tenants_id_fk",
           "tableFrom": "audit_log",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -459,12 +443,8 @@
           "name": "design_transitions_tenant_id_tenants_id_fk",
           "tableFrom": "design_transitions",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -472,12 +452,8 @@
           "name": "design_transitions_design_id_mix_designs_id_fk",
           "tableFrom": "design_transitions",
           "tableTo": "mix_designs",
-          "columnsFrom": [
-            "design_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["design_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -485,12 +461,8 @@
           "name": "design_transitions_actor_id_users_id_fk",
           "tableFrom": "design_transitions",
           "tableTo": "users",
-          "columnsFrom": [
-            "actor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -574,12 +546,8 @@
           "name": "legacy_import_batches_tenant_id_tenants_id_fk",
           "tableFrom": "legacy_import_batches",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -587,12 +555,8 @@
           "name": "legacy_import_batches_created_by_users_id_fk",
           "tableFrom": "legacy_import_batches",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -756,12 +720,8 @@
           "name": "material_prices_tenant_id_tenants_id_fk",
           "tableFrom": "material_prices",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -769,12 +729,8 @@
           "name": "material_prices_material_id_materials_id_fk",
           "tableFrom": "material_prices",
           "tableTo": "materials",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -782,12 +738,8 @@
           "name": "material_prices_plant_id_plants_id_fk",
           "tableFrom": "material_prices",
           "tableTo": "plants",
-          "columnsFrom": [
-            "plant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -795,12 +747,8 @@
           "name": "material_prices_supplier_id_suppliers_id_fk",
           "tableFrom": "material_prices",
           "tableTo": "suppliers",
-          "columnsFrom": [
-            "supplier_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supplier_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -808,12 +756,8 @@
           "name": "material_prices_entered_by_users_id_fk",
           "tableFrom": "material_prices",
           "tableTo": "users",
-          "columnsFrom": [
-            "entered_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entered_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1012,12 +956,8 @@
           "name": "material_tests_tenant_id_tenants_id_fk",
           "tableFrom": "material_tests",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1025,12 +965,8 @@
           "name": "material_tests_material_id_materials_id_fk",
           "tableFrom": "material_tests",
           "tableTo": "materials",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1038,12 +974,8 @@
           "name": "material_tests_attachment_id_attachments_id_fk",
           "tableFrom": "material_tests",
           "tableTo": "attachments",
-          "columnsFrom": [
-            "attachment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["attachment_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1051,12 +983,8 @@
           "name": "material_tests_declared_by_users_id_fk",
           "tableFrom": "material_tests",
           "tableTo": "users",
-          "columnsFrom": [
-            "declared_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["declared_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1064,12 +992,8 @@
           "name": "material_tests_created_by_users_id_fk",
           "tableFrom": "material_tests",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1241,12 +1165,8 @@
           "name": "materials_tenant_id_tenants_id_fk",
           "tableFrom": "materials",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1254,12 +1174,8 @@
           "name": "materials_plant_id_plants_id_fk",
           "tableFrom": "materials",
           "tableTo": "plants",
-          "columnsFrom": [
-            "plant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1267,12 +1183,8 @@
           "name": "materials_supplier_id_suppliers_id_fk",
           "tableFrom": "materials",
           "tableTo": "suppliers",
-          "columnsFrom": [
-            "supplier_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supplier_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1280,12 +1192,8 @@
           "name": "materials_created_by_users_id_fk",
           "tableFrom": "materials",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1384,12 +1292,8 @@
           "name": "mix_design_lines_tenant_id_tenants_id_fk",
           "tableFrom": "mix_design_lines",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1397,12 +1301,8 @@
           "name": "mix_design_lines_design_id_mix_designs_id_fk",
           "tableFrom": "mix_design_lines",
           "tableTo": "mix_designs",
-          "columnsFrom": [
-            "design_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["design_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1410,12 +1310,8 @@
           "name": "mix_design_lines_material_id_materials_id_fk",
           "tableFrom": "mix_design_lines",
           "tableTo": "materials",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1657,12 +1553,8 @@
           "name": "mix_designs_tenant_id_tenants_id_fk",
           "tableFrom": "mix_designs",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1670,12 +1562,8 @@
           "name": "mix_designs_plant_id_plants_id_fk",
           "tableFrom": "mix_designs",
           "tableTo": "plants",
-          "columnsFrom": [
-            "plant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1683,12 +1571,8 @@
           "name": "mix_designs_approved_by_users_id_fk",
           "tableFrom": "mix_designs",
           "tableTo": "users",
-          "columnsFrom": [
-            "approved_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["approved_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1696,12 +1580,8 @@
           "name": "mix_designs_import_batch_id_legacy_import_batches_id_fk",
           "tableFrom": "mix_designs",
           "tableTo": "legacy_import_batches",
-          "columnsFrom": [
-            "import_batch_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["import_batch_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1709,12 +1589,8 @@
           "name": "mix_designs_created_by_users_id_fk",
           "tableFrom": "mix_designs",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1848,12 +1724,8 @@
           "name": "plants_tenant_id_tenants_id_fk",
           "tableFrom": "plants",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1861,12 +1733,8 @@
           "name": "plants_created_by_users_id_fk",
           "tableFrom": "plants",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1944,12 +1812,8 @@
           "name": "price_import_batches_tenant_id_tenants_id_fk",
           "tableFrom": "price_import_batches",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1957,12 +1821,8 @@
           "name": "price_import_batches_created_by_users_id_fk",
           "tableFrom": "price_import_batches",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2050,12 +1910,8 @@
           "name": "price_preferences_tenant_id_tenants_id_fk",
           "tableFrom": "price_preferences",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2063,12 +1919,8 @@
           "name": "price_preferences_material_id_materials_id_fk",
           "tableFrom": "price_preferences",
           "tableTo": "materials",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2076,12 +1928,8 @@
           "name": "price_preferences_plant_id_plants_id_fk",
           "tableFrom": "price_preferences",
           "tableTo": "plants",
-          "columnsFrom": [
-            "plant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2089,12 +1937,8 @@
           "name": "price_preferences_supplier_id_suppliers_id_fk",
           "tableFrom": "price_preferences",
           "tableTo": "suppliers",
-          "columnsFrom": [
-            "supplier_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["supplier_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2102,12 +1946,8 @@
           "name": "price_preferences_updated_by_users_id_fk",
           "tableFrom": "price_preferences",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2224,12 +2064,8 @@
           "name": "price_snapshot_lines_snapshot_id_price_snapshots_id_fk",
           "tableFrom": "price_snapshot_lines",
           "tableTo": "price_snapshots",
-          "columnsFrom": [
-            "snapshot_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["snapshot_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2307,12 +2143,8 @@
           "name": "price_snapshots_tenant_id_tenants_id_fk",
           "tableFrom": "price_snapshots",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2320,12 +2152,8 @@
           "name": "price_snapshots_created_by_users_id_fk",
           "tableFrom": "price_snapshots",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2412,12 +2240,8 @@
           "name": "production_volumes_tenant_id_tenants_id_fk",
           "tableFrom": "production_volumes",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2425,12 +2249,8 @@
           "name": "production_volumes_design_id_mix_designs_id_fk",
           "tableFrom": "production_volumes",
           "tableTo": "mix_designs",
-          "columnsFrom": [
-            "design_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["design_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2438,12 +2258,8 @@
           "name": "production_volumes_plant_id_plants_id_fk",
           "tableFrom": "production_volumes",
           "tableTo": "plants",
-          "columnsFrom": [
-            "plant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2527,12 +2343,8 @@
           "name": "rule_import_batches_tenant_id_tenants_id_fk",
           "tableFrom": "rule_import_batches",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2540,12 +2352,8 @@
           "name": "rule_import_batches_created_by_users_id_fk",
           "tableFrom": "rule_import_batches",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2621,12 +2429,8 @@
           "name": "rule_verifications_tenant_id_tenants_id_fk",
           "tableFrom": "rule_verifications",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2634,12 +2438,8 @@
           "name": "rule_verifications_rule_id_rules_id_fk",
           "tableFrom": "rule_verifications",
           "tableTo": "rules",
-          "columnsFrom": [
-            "rule_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["rule_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2647,12 +2447,8 @@
           "name": "rule_verifications_verified_by_users_id_fk",
           "tableFrom": "rule_verifications",
           "tableTo": "users",
-          "columnsFrom": [
-            "verified_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["verified_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2943,12 +2739,8 @@
           "name": "rules_tenant_id_tenants_id_fk",
           "tableFrom": "rules",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2956,12 +2748,8 @@
           "name": "rules_ruleset_id_rulesets_id_fk",
           "tableFrom": "rules",
           "tableTo": "rulesets",
-          "columnsFrom": [
-            "ruleset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ruleset_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2969,12 +2757,8 @@
           "name": "rules_verified_by_users_id_fk",
           "tableFrom": "rules",
           "tableTo": "users",
-          "columnsFrom": [
-            "verified_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["verified_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2982,12 +2766,8 @@
           "name": "rules_created_by_users_id_fk",
           "tableFrom": "rules",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3069,12 +2849,8 @@
           "name": "rulesets_tenant_id_tenants_id_fk",
           "tableFrom": "rulesets",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3168,12 +2944,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3183,9 +2955,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -3285,12 +3055,8 @@
           "name": "suppliers_tenant_id_tenants_id_fk",
           "tableFrom": "suppliers",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3298,12 +3064,8 @@
           "name": "suppliers_created_by_users_id_fk",
           "tableFrom": "suppliers",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3351,12 +3113,8 @@
           "name": "tenant_settings_tenant_id_tenants_id_fk",
           "tableFrom": "tenant_settings",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3364,12 +3122,8 @@
           "name": "tenant_settings_updated_by_users_id_fk",
           "tableFrom": "tenant_settings",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3418,9 +3172,7 @@
         "tenants_slug_unique": {
           "name": "tenants_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -3505,12 +3257,8 @@
           "name": "user_plants_tenant_id_tenants_id_fk",
           "tableFrom": "user_plants",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3518,12 +3266,8 @@
           "name": "user_plants_user_id_users_id_fk",
           "tableFrom": "user_plants",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3531,12 +3275,8 @@
           "name": "user_plants_plant_id_plants_id_fk",
           "tableFrom": "user_plants",
           "tableTo": "plants",
-          "columnsFrom": [
-            "plant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["plant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3544,12 +3284,8 @@
           "name": "user_plants_created_by_users_id_fk",
           "tableFrom": "user_plants",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3676,12 +3412,8 @@
           "name": "users_tenant_id_tenants_id_fk",
           "tableFrom": "users",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3691,9 +3423,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},

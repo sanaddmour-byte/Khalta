@@ -12,6 +12,8 @@ import { meQuery } from './lib/api';
 import { NAV } from './lib/nav';
 import { PlantsPage } from './admin/PlantsPage';
 import { SettingsPage } from './admin/SettingsPage';
+import { ImportsPage } from './imports/ImportsPage';
+import { LibraryPage } from './library/LibraryPage';
 import { MaterialsPage } from './materials/MaterialsPage';
 import { PricesPage } from './prices/PricesPage';
 import { LoginPage } from './pages/Login';
@@ -58,6 +60,8 @@ const SCREENS: Record<string, () => React.JSX.Element> = {
   rules: RulesPage,
   materials: MaterialsPage,
   prices: PricesPage,
+  library: LibraryPage,
+  imports: ImportsPage,
   plants: PlantsPage,
   settings: SettingsPage,
 };

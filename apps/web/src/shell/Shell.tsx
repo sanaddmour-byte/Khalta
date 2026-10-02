@@ -68,6 +68,15 @@ export function Shell() {
           </aside>
 
           <div className="flex min-w-0 flex-1 flex-col">
+            {me.instance.demo && (
+              <p
+                role="status"
+                data-testid="demo-banner"
+                className="bg-warn-bg px-4 py-1.5 text-center text-sm font-medium text-warn-text"
+              >
+                {t('shell.demoBanner')}
+              </p>
+            )}
             <header
               className="flex h-14 items-center gap-2 border-b border-line bg-surface px-3 md:px-6"
               data-testid="topbar"

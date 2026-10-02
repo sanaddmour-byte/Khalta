@@ -8,11 +8,11 @@ Status: accepted (2026-10-02, approved with the M1.3 plan defaults)
 
 ## Options
 
-| Option | For | Against |
-| --- | --- | --- |
-| A. API serves `apps/web/dist` (same origin) | One service, no CORS, cookies stay first-party, one deploy, trivial smoke test | API process serves static files (fine at this scale); no CDN |
-| B. Separate static service + proxy `/api` | Matches the domain spec; CDN possible | Second service, proxy config, cookie/origin settings to get right |
-| C. Separate origin with CORS and `SameSite=None` cookies | Independent deploys | Weakens the cookie and origin protections for no current benefit |
+| Option                                                   | For                                                                            | Against                                                           |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| A. API serves `apps/web/dist` (same origin)              | One service, no CORS, cookies stay first-party, one deploy, trivial smoke test | API process serves static files (fine at this scale); no CDN      |
+| B. Separate static service + proxy `/api`                | Matches the domain spec; CDN possible                                          | Second service, proxy config, cookie/origin settings to get right |
+| C. Separate origin with CORS and `SameSite=None` cookies | Independent deploys                                                            | Weakens the cookie and origin protections for no current benefit  |
 
 ## Decision
 

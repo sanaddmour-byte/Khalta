@@ -88,7 +88,8 @@
     "noNotificationsHint": "Critical alerts about strength results and expired tests will appear here.",
     "account": "Account",
     "signOut": "Sign out",
-    "toggleLanguage": "العربية"
+    "toggleLanguage": "العربية",
+    "demoBanner": "SYNTHETIC demo data: nothing here is real"
   },
   "auth": {
     "title": "Sign in",
@@ -737,6 +738,175 @@
     "format": {
       "xlsx": "Excel (.xlsx)",
       "csv": "CSV file"
+    }
+  },
+  "library": {
+    "intro": "Your mix designs. Nothing here has been calculated by Khalta yet: designs brought in from your files show exactly what the file said, and compliance and cost appear once the evaluator is available.",
+    "import": "Import designs",
+    "tabs": {
+      "all": "All designs",
+      "queue": "Awaiting attestation"
+    },
+    "queueHint": "Imported designs nobody has attested yet. Attesting records that the design was approved outside Khalta; a second QC manager (not the person who imported) must do it.",
+    "search": "Search by code or name",
+    "allStatuses": "All statuses",
+    "col": {
+      "code": "Code",
+      "name": "Name",
+      "plant": "Plant",
+      "status": "Status",
+      "volume": "Average monthly volume"
+    },
+    "empty": {
+      "title": "No designs yet",
+      "description": "Import your existing mix designs from Excel or CSV to start."
+    },
+    "emptyQueue": {
+      "title": "Nothing awaiting attestation",
+      "description": "Every imported design has been attested."
+    },
+    "status": {
+      "draft": "Draft",
+      "evaluated": "Evaluated",
+      "trial_candidate": "Trial candidate",
+      "trial_in_progress": "Trial in progress",
+      "trial_passed": "Trial passed",
+      "approved": "Approved",
+      "in_production": "In production",
+      "suspended": "Suspended",
+      "superseded": "Superseded",
+      "retired": "Retired",
+      "none": "New"
+    },
+    "legacyNotEvaluated": "Legacy attested · not yet evaluated by Khalta",
+    "legacyAttested": "Legacy attested",
+    "synthetic": "SYNTHETIC demo data",
+    "evaluationPending": "Evaluation pending: this design has not been checked by Khalta. No compliance, cost or strength figure is shown because none has been calculated.",
+    "field": {
+      "source": "Source file",
+      "strength": "Specified strength",
+      "ageDays": "at {n} days",
+      "exposure": "Exposure classes",
+      "slump": "Slump",
+      "nmas": "Max aggregate size",
+      "pumpable": "Pumpable",
+      "importedRef": "Approval reference in the file",
+      "attestedRef": "Approval reference attested"
+    },
+    "basis": {
+      "cylinder": "cylinder",
+      "cube": "cube",
+      "b_grade": "B-grade"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "month": "month",
+    "warnings": "Warnings from the import",
+    "lines": "Material lines",
+    "line": {
+      "material": "Material",
+      "original": "As in the file",
+      "kg": "Per m³ in kg"
+    },
+    "match": {
+      "exact": "matched by name",
+      "confirmed": "confirmed by a person",
+      "created": "created during import"
+    },
+    "history": "History",
+    "created": "Created by import",
+    "warn": {
+      "material_without_tests": "Material has no tests yet",
+      "material_not_priced": "Material is not priced at this plant",
+      "test_age_missing": "Test age is missing in the file"
+    },
+    "attest": {
+      "open": "Attest as approved outside Khalta",
+      "title": "Attest {code}",
+      "hint": "Record that this design was approved outside Khalta. Your name, the reference and your note are kept permanently.",
+      "fourEyes": "You imported this file, so you cannot attest it. Another QC manager must.",
+      "reference": "External approval reference",
+      "date": "Date it was approved (optional)",
+      "inProduction": "This design is currently produced",
+      "note": "Signed note",
+      "notePlaceholder": "For example: checked against the signed submittal 2025-14",
+      "scope": "Attesting says this mix was approved outside Khalta. It does not say Khalta checked it; Khalta will evaluate it later and flag anything that needs revalidation.",
+      "submit": "Attest",
+      "done": "Design attested"
+    },
+    "unit": {
+      "mpa": "{n} MPa",
+      "mm": "{n} mm",
+      "m3": "{n} m³",
+      "m3month": "{n} m³/month",
+      "kgm3": "{n} kg/m³",
+      "lm3": "{n} L/m³"
+    }
+  },
+  "imports": {
+    "intro": "Bring in existing mix designs from Excel or CSV. The file is checked before anything is saved; nothing is half-imported.",
+    "step1": "Step 1: choose the file",
+    "fileHint": "One row per material line (see templates/legacy-mix-designs.csv). Headers in English or Arabic are recognised.",
+    "uploaded": "{lines} lines read",
+    "step2": "Step 2: check the columns",
+    "mapHint": "Each field is matched to a column by its header. Correct any that are wrong.",
+    "required": "required",
+    "notInFile": "Not in the file",
+    "step3": "Step 3: match the materials",
+    "matchHint": "A name is linked automatically only when it is exactly your library name (ignoring spelling variants). Everything else needs your choice.",
+    "col": {
+      "name": "Name in the file",
+      "link": "Library material"
+    },
+    "lines": "{n, plural, one {# line} other {# lines}}",
+    "lineNo": "line {n}",
+    "linkFor": "Library material for {name}",
+    "choose": "Choose",
+    "exactAuto": "Use the exact match",
+    "unresolved": "Not linked yet",
+    "suggestion": "Link to: {name}",
+    "createNew": "Create as a new material",
+    "decision": {
+      "exact": "matched by name",
+      "confirmed": "linked by you",
+      "create": "will be created",
+      "unresolved": "needs your choice"
+    },
+    "step4": "Step 4: review and import",
+    "summary": "{designs} designs: {ok} ready, {errors} with errors; {unresolved} materials still need a choice",
+    "commit": "Import designs",
+    "commitHint": "Designs are created as drafts, awaiting evaluation and attestation.",
+    "done": "Imported {count} designs",
+    "openLibrary": "Open the Library",
+    "err": {
+      "unknown_plant": "Unknown plant",
+      "code_exists_in_library": "A design with this code already exists",
+      "duplicate_code_in_file": "The code appears twice in the file",
+      "unresolved_material": "Material not linked",
+      "category_mismatch": "The material’s category differs from the file",
+      "litres_need_sg": "Litres need the material’s specific gravity",
+      "bad_quantity": "Quantity is not a positive number",
+      "bad_unit": "Unit must be kg/m3 or L/m3",
+      "bad_category": "Unknown material category",
+      "bad_exposure": "Unknown exposure class",
+      "bad_fc": "Strength is not a number",
+      "bad_basis": "Unknown strength basis",
+      "bad_test_age": "Test age is not a number",
+      "bad_slump": "Slump is not a number",
+      "bad_nmas": "Maximum aggregate size is not a number",
+      "bad_pumpable": "Pumpable must be true or false",
+      "bad_volume": "Volume is not a number",
+      "bad_in_production": "In production must be true or false",
+      "conflicting_header": "Lines of the same design disagree on this field",
+      "duplicate_material": "The material appears twice in this design",
+      "material_name_empty": "Material name is empty",
+      "plant_required": "Plant is missing",
+      "fc_required": "Strength is missing",
+      "no_cement": "The design has no cement line",
+      "no_water": "The design has no water line",
+      "bad_plant": "Plant is not valid",
+      "bad_name": "Name is not valid",
+      "bad_reference": "Reference is not valid"
     }
   }
 }

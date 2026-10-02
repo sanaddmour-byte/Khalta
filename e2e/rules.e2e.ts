@@ -195,6 +195,8 @@ for (const [lang, theme] of [
     await settled(page);
     await expectNoSeriousAxe(page, 'rule sheet');
     await page.getByTestId('verify-open').click();
+    await expect(page.getByTestId('verify-dialog')).toBeVisible();
+    await page.waitForTimeout(400); // let the open animation finish: axe measures mid-fade colours otherwise
     await expectNoSeriousAxe(page, 'verify dialog');
   });
 }

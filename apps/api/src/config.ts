@@ -11,6 +11,12 @@ const schema = z.object({
   BOOTSTRAP_ADMIN_EMAIL: z.email().optional(),
   BOOTSTRAP_ADMIN_PASSWORD: z.string().min(12).optional(),
   TENANT_NAME: z.string().default('Khalta'),
+  /** `1` marks the database as synthetic demo data (UI banner). */
+  KHALTA_DEMO: z.enum(['0', '1']).default('0'),
+  /** `1` behind a reverse proxy (Railway): trust X-Forwarded-For for client IPs (rate limiting, logs). */
+  TRUST_PROXY: z.enum(['0', '1']).default('0'),
+  /** Built web app to serve from the API (same origin); unset = API only. */
+  WEB_DIST_DIR: z.string().optional(),
 });
 
 export type Config = z.infer<typeof schema>;

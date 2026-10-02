@@ -6,6 +6,7 @@ export function meRoutes(api: ApiRoutes) {
     '/api/me',
     { summary: 'Current user, role, capabilities and plant scope', capability: null },
     async ({ auth }) => ({
+      instance: { demo: process.env['KHALTA_DEMO'] === '1' },
       user: auth.user,
       role: auth.role,
       capabilities: capabilitiesOf(auth.role, auth.settings),

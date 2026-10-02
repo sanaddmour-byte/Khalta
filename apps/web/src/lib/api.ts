@@ -40,6 +40,7 @@ export interface Me {
   role: Role;
   capabilities: Capability[];
   scope: PlantScope;
+  instance: { demo: boolean };
   settings: {
     numberFormat: 'latin' | 'arabic-indic';
     sanityRanges: Record<string, { min?: number; max?: number }>;

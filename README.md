@@ -9,7 +9,7 @@ Node 22 (`.nvmrc`), pnpm 10 (`corepack enable`), Docker (Postgres, from M0.2).
 ## Commands
 
 `pnpm install`, then `pnpm dev | typecheck | lint | test | test:rules | e2e | screens`.
-`pnpm db:migrate` applies migrations to `$DATABASE_URL`; `pnpm db:drift` fails if the schema and committed migrations disagree. `db:seed:demo` and `fixtures:export` are placeholders until M1.3 / M2.2.
+`pnpm db:migrate` applies migrations to `$DATABASE_URL`; `pnpm db:drift` fails if the schema and committed migrations disagree. `pnpm db:seed:demo` loads the SYNTHETIC demo dataset (needs `DEMO_PASSWORD`, and `KHALTA_ALLOW_DEMO_SEED=1` when `NODE_ENV=production`); `fixtures:export` is a placeholder until M2.2. Staging: see `docs/runbooks/staging.md` and `pnpm smoke:staging`.
 
 ### Database
 
