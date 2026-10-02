@@ -336,3 +336,28 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Railway staging still awaits your go-ahead; real engineering parameters (grading band, WF bounds, fines cap, pumpable minimum, ASTM C33 limits) and JS values still to be entered by a QC manager; Arabic review; real attested designs and volumes.
 
 **Next:** M4.1 (Library and lifecycle) — write `docs/plans/M4.1.md` when you say "Proceed".
+
+## 2026-10-02 — M4.1 Library and lifecycle (F-022)
+
+**Changed**
+
+- `packages/engine`: `approval/` — `evaluateTrialAcceptance` (§14.4, per criterion pass / fail / missing; missing parameters named), `checkApprovalGates` (every unmet gate listed), `classifyChange` (§14.3, information only; proportion and admixture changes require a trial). `ACTIVE_MILESTONE` is now M4.1 (the M5.1 suspension edges stay off).
+- `packages/db` (migrations 0018–0019): `trial_batches` (shape only; entry is M4.2), `design_acceptances`, e-signature on `design_transitions`; trigger `khalta_design_status_guard` (a status change must be an edge of the §14.1 graph), CHECK `mix_designs_khalta_approval_four_eyes`, append-only triggers.
+- `apps/api`: `start-trial`, `pass-trial`, `approve`, `release`, `retire`, `accept-declared`, `GET gates?to=`; the M2.2 diff now carries the change class; library list filters `stage=trial|awaiting`. Approval re-evaluates on current inputs and refuses with the whole checklist; approving a new version supersedes its parent. Legacy attestation now walks `approved → in_production` one edge at a time (the new trigger). `approvalRequiresLabSource` defaults to **on** (07 §2.5). Two trial parameters seeded unset: slump tolerance, maximum temperature.
+- `apps/web`: Lifecycle section on the design sheet (gate checklist, e-signed dialogs, accept declared values), e-signature lines in the history, change class on the version diff, Library tabs "In trial" and "Awaiting approval".
+- ADR 0011; EN/AR strings (Arabic drafts in `docs/i18n-review.md`); validator fixtures regenerated (the SYNTHETIC rule set gained two seeds).
+
+**Commands run (green):** `typecheck`, `lint`, `test` (engine 318, validator 164, api 229, web 38, rbac 182, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (98 of 99 on the full run; the one failure, a keyboard-direction test on the Prices screen, passes alone and in earlier full runs, so I read it as load flakiness, not this change), `screens` (`docs/screens/M4.1/`: awaiting list, gates, sign dialog; EN/AR × 1440/1024/390; one reviewed), `db:drift` after commit.
+
+**Deviations from the plan (and why)**
+
+- Separate verb endpoints (`/approve`, `/release`, …) instead of one `/transitions`, so RBAC and OpenAPI stay per-capability. Versions and diff reuse the M2.2 endpoints rather than new ones.
+- A typed new version still cannot become a trial candidate (the graph needs validator evidence from an optimizer candidate): it can be saved, evaluated and diffed, not trialled, as in M3.2.
+- Trial batches have no entry screen; tests and e2e write one SYNTHETIC batch directly into their databases, and the e2e marks rules verified for the approval case, then restores them.
+- "Retire" is allowed from any non-terminal state by a QC manager, as planned; suspension remains M5.1.
+
+**Verification note:** tests prove every state pair outside the graph is refused (engine, API and database), that no legal sequence reaches `approved` without `trial_passed` or legacy attestation, that approval is blocked by an author, unverified rules, a stale evaluation, a failing check and unaccepted declared values (each named), and that an approved design cannot be edited in place. They do **not** prove any design is safe to produce, that the SYNTHETIC trial criteria are right for your plant, or that a typed e-signature is legally binding.
+
+**Open items:** Railway staging still awaits your go-ahead; QC must enter the trial criteria, the real engineering parameters and JS values; Arabic review; trial batch entry and the PDF are M4.2.
+
+**Next:** M4.2 (Lab loop and PDF) — write `docs/plans/M4.2.md` when you say "Proceed".

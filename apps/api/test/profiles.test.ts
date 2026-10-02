@@ -323,7 +323,9 @@ describe('use in a request', () => {
       scope: 'plant',
       plantId: plantA,
     });
-    const wrong = await (await as('qc_manager'))
+    const wrong = await (
+      await as('qc_manager')
+    )
       .post('/api/design-requests/preflight')
       .send({ plantId: plantB, requirements: REQUIREMENTS, profileIds: [mine.body.id] });
     expect(wrong.status).toBe(409);

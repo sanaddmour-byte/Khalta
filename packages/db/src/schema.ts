@@ -695,9 +695,62 @@ export const designTransitions = pgTable(
     toStatus: text('to_status').notNull(),
     actorId: text('actor_id').references(() => users.id),
     evidence: jsonb('evidence').notNull(),
+    /** Typed e-signature (M4.1): signer, role, meaning, reason, and the hash of the design version it was applied to. */
+    esignature: jsonb('esignature'),
     at: ts('at').notNull().defaultNow(),
   },
   (t) => [index('design_transitions_design_idx').on(t.designId)],
+);
+
+/**
+ * Trial batches (M4.1 stores the shape the gates read; entry screens and strength results arrive with M4.2).
+ * Append-only: a correction is a new batch.
+ */
+export const trialBatches = pgTable(
+  'trial_batches',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    batchedOn: date('batched_on', { mode: 'string' }).notNull(),
+    slumpMm: numeric('slump_mm', { precision: 8, scale: 1 }),
+    airPct: numeric('air_pct', { precision: 5, scale: 2 }),
+    temperatureC: numeric('temperature_c', { precision: 5, scale: 1 }),
+    freshDensityKgM3: numeric('fresh_density_kg_m3', { precision: 8, scale: 1 }),
+    yieldM3: numeric('yield_m3', { precision: 6, scale: 3 }),
+    /** Individual specimen strengths (MPa) at the design's test age. */
+    strengthMpa: jsonb('strength_mpa').notNull().default([]),
+    notes: text('notes'),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index('trial_batches_design_idx').on(t.designId, t.batchedOn)],
+);
+
+/** A QC manager's e-signed acceptance of user-declared key values for one design version (07 §2.5). Append-only. */
+export const designAcceptances = pgTable(
+  'design_acceptances',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    /** Materials whose declared key properties were accepted, with the fields accepted. */
+    materials: jsonb('materials').notNull(),
+    esignature: jsonb('esignature').notNull(),
+    acceptedBy: text('accepted_by')
+      .notNull()
+      .references(() => users.id),
+    at: ts('at').notNull().defaultNow(),
+  },
+  (t) => [index('design_acceptances_design_idx').on(t.designId)],
 );
 
 export const productionVolumes = pgTable(

@@ -142,6 +142,12 @@ export function VersionsSection({
           <p className="mb-2 text-sm font-medium">
             {t('versions.diffTitle', { from: diff.data.from.version, to: diff.data.to.version })}
           </p>
+          <p className="mb-2 text-sm" data-testid="change-class">
+            {t('lifecycle.changeClass', {
+              classes: diff.data.classes.map((c) => t(`lifecycle.class.${c}`)).join(', '),
+            })}
+            {diff.data.requiresTrial ? ` ${t('lifecycle.requiresTrial')}` : ''}
+          </p>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-muted">

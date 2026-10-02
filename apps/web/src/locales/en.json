@@ -760,7 +760,9 @@
     "tabs": {
       "all": "All designs",
       "queue": "Awaiting attestation",
-      "revalidation": "Needs revalidation"
+      "revalidation": "Needs revalidation",
+      "trial": "In trial",
+      "awaiting": "Awaiting approval"
     },
     "queueHint": "Imported designs nobody has attested yet. Attesting records that the design was approved outside Khalta; a second QC manager (not the person who imported) must do it.",
     "search": "Search by code or name",
@@ -861,6 +863,16 @@
     "emptyRevalidation": {
       "title": "Nothing needs revalidation",
       "description": "No attested design has a failing evaluation."
+    },
+    "trialHint": "Trial candidates and designs in a trial. A trial is required before approval.",
+    "awaitingHint": "Trial passed; waiting for a QC manager other than the author to approve.",
+    "emptyTrial": {
+      "title": "No designs in trial",
+      "description": "Trial candidates from the Studio appear here."
+    },
+    "emptyAwaiting": {
+      "title": "Nothing awaiting approval",
+      "description": "Designs that passed their trial appear here."
     }
   },
   "imports": {
@@ -1782,6 +1794,98 @@
       "note": "What changed",
       "saveDraft": "Save as draft",
       "cancel": "Cancel"
+    }
+  },
+  "lifecycle": {
+    "title": "Lifecycle",
+    "done": "Done.",
+    "trialBatchesLater": "Trial batches can be logged from M4.2 (lab loop); until then a design cannot enter a trial from here.",
+    "step": {
+      "start-trial": "Start the trial",
+      "pass-trial": "Pass the trial",
+      "approve": "Approve for production use",
+      "release": "Release to production",
+      "retire": "Retire this design"
+    },
+    "do": {
+      "start-trial": "Start trial",
+      "pass-trial": "Pass trial…",
+      "approve": "Approve…",
+      "release": "Release…",
+      "retire": "Retire…",
+      "accept": "Accept declared values…"
+    },
+    "gate": {
+      "trial_batch": "At least one trial batch is logged",
+      "trial_passed": "The trial has passed",
+      "four_eyes": "Approved by someone other than the author",
+      "validator": "The independent validator agrees",
+      "compliance": "Every compliance check passes",
+      "rules_verified": "Every governing rule is verified",
+      "evidence_current": "The evidence is current (rules and tests unchanged since the last evaluation)",
+      "declared_values": "Key material values come from a lab report or datasheet, or QC accepted them",
+      "criterion_slump": "Slump within tolerance",
+      "criterion_air": "Air content within tolerance",
+      "criterion_density": "Fresh density within the band",
+      "criterion_yield": "Yield within the band",
+      "criterion_temperature": "Concrete temperature within the limit",
+      "criterion_strength": "Average strength at least f′cr"
+    },
+    "code": {
+      "ok": "Met",
+      "accepted": "Accepted by QC",
+      "pass": "Met",
+      "fail": "Not met",
+      "missing": "Not available",
+      "not_applicable": "Not applicable",
+      "no_trial_batch": "No trial batch is logged",
+      "not_trial_passed": "The design is not in the trial-passed state",
+      "author_cannot_approve": "The author cannot approve their own design",
+      "no_evaluation": "There is no evaluation",
+      "validator_disagrees": "The validator disagrees with the evaluator",
+      "verdict_fail": "A compliance check fails",
+      "verdict_incomplete": "Some checks could not be evaluated",
+      "rules_unverified": "A rule used by this evaluation is not verified by a QC manager",
+      "evidence_stale": "Re-evaluate this design on current inputs first",
+      "declared_not_accepted": "User-declared key values need a lab source or QC acceptance"
+    },
+    "sign": {
+      "title": {
+        "pass-trial": "Pass the trial of {code}",
+        "approve": "Approve {code}",
+        "release": "Release {code} to production",
+        "retire": "Retire {code}",
+        "accept": "Accept declared values of {code}"
+      },
+      "meaning": {
+        "pass-trial": "You confirm that the trial criteria are met and you have reviewed the results.",
+        "approve": "You approve this design for production use. A trial passed, the rules are verified and the evidence is current.",
+        "release": "You release this approved design to production at its plant.",
+        "retire": "You retire this design. It cannot be used again; a new version is needed.",
+        "accept": "You accept that some key values are user-declared and not from a lab report or datasheet."
+      },
+      "reason": "Reason (at least 5 characters)",
+      "scope": "A typed e-signature records who signed, in what role, what it means, why, when, and the exact version of the design. It does not claim legal validity.",
+      "submit": "Sign and continue"
+    },
+    "meaning": {
+      "trial_reviewed": "Trial reviewed",
+      "approved": "Approved",
+      "released": "Released",
+      "retired": "Retired",
+      "declared_values_accepted": "Declared values accepted"
+    },
+    "signedLine": "{meaning} by {name}: {reason}",
+    "changeClass": "Change class: {classes}.",
+    "requiresTrial": "This change needs a new trial.",
+    "class": {
+      "none": "no change",
+      "price_only": "price only",
+      "proportion_change": "proportions",
+      "admixture_change": "admixture product",
+      "requirements_change": "requirements",
+      "rule_change": "rules",
+      "test_change": "material tests"
     }
   }
 }

@@ -48,8 +48,8 @@ export const settingsSchema = z.strictObject({
       sandRatioTolerancePts: 0.5,
       wcmTolerance: 0.005,
     }),
-  // When on, designs that rely on user-declared key properties cannot be approved (enforced from M4.1).
-  approvalRequiresLabSource: z.boolean().default(false),
+  // When on, designs that rely on user-declared key properties cannot be approved (enforced from M4.1; on by default, 07 §2.5).
+  approvalRequiresLabSource: z.boolean().default(true),
 });
 export type Settings = z.infer<typeof settingsSchema>;
 export const settingsPatchSchema = settingsSchema.partial();

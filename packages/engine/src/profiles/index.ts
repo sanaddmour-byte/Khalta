@@ -74,7 +74,10 @@ export interface Selection {
 }
 
 /** Picks the narrowest matching version per scope (ties are reported, never guessed). */
-export function selectProfiles(versions: readonly ProfileVersionView[], c: MatchContext): Selection {
+export function selectProfiles(
+  versions: readonly ProfileVersionView[],
+  c: MatchContext,
+): Selection {
   const out: Selection = { chosen: [], alsoMatched: [], ties: [] };
   for (const scope of PROFILE_SCOPES) {
     const m = versions.filter((v) => v.scope === scope && matches(v, c));
@@ -102,13 +105,20 @@ const LEVEL: Record<ProfileScope, LayerLevel> = {
 };
 
 /** Layers for `mergeLayers` / `checkCharacteristics`: profiles least specific first, the request last. */
-export function profileLayers(chosen: readonly ProfileVersionView[], requestCharacteristics: unknown): Layer[] {
+export function profileLayers(
+  chosen: readonly ProfileVersionView[],
+  requestCharacteristics: unknown,
+): Layer[] {
   const layers: Layer[] = chosen.map((v) => ({
     level: LEVEL[v.scope],
     origin: originOf(v),
     characteristics: v.characteristics ?? {},
   }));
-  layers.push({ level: 'request', origin: 'request', characteristics: requestCharacteristics ?? {} });
+  layers.push({
+    level: 'request',
+    origin: 'request',
+    characteristics: requestCharacteristics ?? {},
+  });
   return layers;
 }
 
@@ -165,7 +175,8 @@ export function diffVersions(
       const o = v as Record<string, unknown>;
       for (const [k, x] of Object.entries(o)) {
         if (p === 'chars' && keyed.includes(k) && x && typeof x === 'object')
-          for (const [s, y] of Object.entries(x as Record<string, unknown>)) out[`chars.${k}.${s}`] = y;
+          for (const [s, y] of Object.entries(x as Record<string, unknown>))
+            out[`chars.${k}.${s}`] = y;
         else out[`${p}.${k}`] = x;
       }
     }
@@ -188,7 +199,12 @@ export function diffVersions(
     if (same) continue;
     rows.push({
       key: k,
-      kind: x[k] === undefined || x[k] === null ? 'added' : y[k] === undefined || y[k] === null ? 'removed' : 'changed',
+      kind:
+        x[k] === undefined || x[k] === null
+          ? 'added'
+          : y[k] === undefined || y[k] === null
+            ? 'removed'
+            : 'changed',
       from: x[k] ?? null,
       to: y[k] ?? null,
     });

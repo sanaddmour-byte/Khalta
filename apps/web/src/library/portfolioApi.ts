@@ -65,6 +65,8 @@ export interface VersionRow {
 export interface Diff {
   from: { id: string; version: number };
   to: { id: string; version: number };
+  classes: string[];
+  requiresTrial: boolean;
   lines: {
     materialId: string;
     nameEn: string;

@@ -50,7 +50,7 @@ describe('lifecycle graph (01-domain §14.1)', () => {
   });
 
   it('turns on only the edges that exist in this milestone', () => {
-    expect(ACTIVE_MILESTONE).toBe('M3.1');
+    expect(ACTIVE_MILESTONE).toBe('M4.1');
     const v = canTransition('draft', 'evaluated', ['evaluation_verified']);
     expect(v.ok).toBe(true);
     expect(canTransition('evaluated', 'evaluated', ['evaluation_verified']).ok).toBe(true);
@@ -62,9 +62,16 @@ describe('lifecycle graph (01-domain §14.1)', () => {
     expect(canTransition('draft', 'trial_candidate', ['validated_candidate']).ok).toBe(true);
     expect(canTransition('evaluated', 'trial_candidate', []).ok).toBe(false);
     expect(canTransition('evaluated', 'draft', ['edit']).ok).toBe(true);
+    // M4.1: the trial path, approval, supersede and retire
+    expect(canTransition('trial_candidate', 'trial_in_progress', ['trial_batch']).ok).toBe(true);
+    expect(canTransition('trial_in_progress', 'trial_passed', ['trial_review']).ok).toBe(true);
+    expect(canTransition('trial_passed', 'approved', ['four_eyes_approval']).ok).toBe(true);
+    expect(canTransition('approved', 'superseded', ['new_version_approved']).ok).toBe(true);
+    expect(canTransition('approved', 'retired', ['qc_decision']).ok).toBe(true);
     for (const [from, to, ev, at] of [
-      ['trial_candidate', 'trial_in_progress', ['trial_batch'], 'M4.1'],
       ['approved', 'suspended', ['suspension_decision'], 'M5.1'],
+      ['in_production', 'suspended', ['suspension_decision'], 'M5.1'],
+      ['suspended', 'approved', ['reinstatement_decision'], 'M5.1'],
     ] as const) {
       const r = canTransition(from, to, ev);
       expect(r.ok).toBe(false);
@@ -108,5 +115,28 @@ describe('lifecycle graph (01-domain §14.1)', () => {
     expect(
       EDGES.every((e) => (MILESTONE_ORDER as readonly string[]).includes(e.availableFrom)),
     ).toBe(true);
+  });
+
+  it('no legal sequence reaches approved without trial_passed, except legacy attestation', () => {
+    // Breadth-first over every reachable (state, "has been trial_passed", "has been attested") triple.
+    type N = { s: string; trial: boolean; legacy: boolean };
+    const seen = new Set<string>();
+    const queue: N[] = [{ s: 'draft', trial: false, legacy: false }];
+    while (queue.length) {
+      const n = queue.shift()!;
+      const key = JSON.stringify(n);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (n.s === 'approved') expect(n.trial || n.legacy).toBe(true);
+      for (const e of EDGES) {
+        if (e.from !== n.s || !canTransition(e.from, e.to, e.evidence, LATEST).ok) continue;
+        queue.push({
+          s: e.to,
+          trial: n.trial || e.to === 'trial_passed',
+          legacy: n.legacy || e.evidence.includes('legacy_attestation'),
+        });
+      }
+    }
+    expect(seen.size).toBeGreaterThan(10);
   });
 });

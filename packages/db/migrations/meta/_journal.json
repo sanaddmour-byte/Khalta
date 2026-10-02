@@ -127,6 +127,20 @@
       "when": 1790949478296,
       "tag": "0017_profiles_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790953170458,
+      "tag": "0018_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790953179079,
+      "tag": "0019_lifecycle_integrity",
+      "breakpoints": true
     }
   ]
 }

@@ -89,7 +89,7 @@ export const MILESTONE_ORDER = [
   'M5.1',
 ] as const;
 /** The latest milestone whose lifecycle edges this build turns on. */
-export const ACTIVE_MILESTONE = 'M3.1';
+export const ACTIVE_MILESTONE = 'M4.1';
 
 export type TransitionVerdict =
   | { ok: true; edge: Edge }

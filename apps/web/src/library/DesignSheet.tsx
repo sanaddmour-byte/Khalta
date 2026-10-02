@@ -25,6 +25,7 @@ import { AttestDialog } from './AttestDialog';
 import { ApprovalChip, DesignStatusChip, RevalidationChip, VerdictChip } from './chips';
 import { EditorDialog } from './EditorDialog';
 import { EvaluationTab, MaterialNames } from './EvaluationTab';
+import { LifecycleSection } from './LifecycleSection';
 import { VersionsSection } from './VersionsSection';
 
 export function DesignSheet({
@@ -141,7 +142,8 @@ export function DesignSheet({
                       {t('library.attest.open')}
                     </Button>
                   )}
-                  <dl className="grid grid-cols-2 gap-4 text-sm">
+                  <LifecycleSection design={d} />
+                  <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
                     <Field label={t('library.col.plant')}>
                       {plant ? (lang === 'ar' ? plant.nameAr : plant.nameEn) : '–'}
                     </Field>
@@ -284,6 +286,15 @@ export function DesignSheet({
                           <span className="block text-xs text-muted">
                             {x.actor ?? '–'} · {f.dateTime(x.at)}
                           </span>
+                          {x.esignature && (
+                            <span className="mt-1 block text-xs" data-testid="esignature">
+                              {t('lifecycle.signedLine', {
+                                meaning: t(`lifecycle.meaning.${x.esignature.meaning}`),
+                                name: x.esignature.signerName,
+                                reason: x.esignature.reason,
+                              })}
+                            </span>
+                          )}
                           {typeof x.evidence['note'] === 'string' && (
                             <span className="mt-1 block text-xs">{String(x.evidence['note'])}</span>
                           )}

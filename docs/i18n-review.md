@@ -1024,3 +1024,11 @@ All Arabic strings under `profiles.*`, `studio.profiles.*`, `studio.chars.origin
 - **Governance wording**: `profiles.approveOwn` (an author cannot approve their own version), `profiles.inForce`, `profiles.dialog.hint`, `profiles.check.*` (a profile never loosens a code limit), `studio.profiles.draftBlocks` (a draft profile cannot generate trial candidates).
 - **Terms**: "ملف الخصائص" for characteristic profile, "عائلة المنتج" for product family, "موضع الصب" for placement, "مسودة" / "معتمد" for draft / approved.
 - **Origin lines** (`studio.chars.origin.*`): "قيمتك" (your value) and "قيمتك تتغلب على …" (overrides).
+
+## M4.1 — Lifecycle (drafts for Sanad to review)
+
+All Arabic strings under `lifecycle.*` and the new `library.tabs.trial|awaiting`, `library.*Hint`, `library.empty{Trial,Awaiting}` in `ar.json` are drafts. Priority:
+
+- **Gate wording** (`lifecycle.gate.*`, `lifecycle.code.*`): what must be true before approval, especially "الأدلة حديثة" (evidence is current), "القاعدة لم يوثقها مدير الجودة" (rule not verified) and the declared-values line.
+- **E-signature** (`lifecycle.sign.*`, `lifecycle.meaning.*`): what a typed signature means; the sentence that it claims no legal validity.
+- **Terms**: "إيقاف نهائي" for retire, "الإفراج" for release, "اجتياز التجربة" for pass the trial, "القيم المصرّح بها" for user-declared values.

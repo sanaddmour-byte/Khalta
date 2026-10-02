@@ -43,7 +43,9 @@ export function LibraryPage() {
   const { plants, selected } = usePlant();
   const caps = me?.capabilities ?? [];
   const canRead = caps.includes('library.read');
-  const [tab, setTab] = useState<'all' | 'portfolio' | 'quality' | 'queue' | 'revalidation'>('all');
+  const [tab, setTab] = useState<
+    'all' | 'portfolio' | 'quality' | 'queue' | 'revalidation' | 'trial' | 'awaiting'
+  >('all');
   const [status, setStatus] = useState(ALL);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);
@@ -51,6 +53,8 @@ export function LibraryPage() {
     ...designsQuery({
       ...(tab === 'queue' ? { queue: 'true' } : {}),
       ...(tab === 'revalidation' ? { revalidation: 'true' } : {}),
+      ...(tab === 'trial' ? { stage: 'trial' } : {}),
+      ...(tab === 'awaiting' ? { stage: 'awaiting' } : {}),
       ...(status !== ALL && tab === 'all' ? { status } : {}),
       ...(selected && selected !== ALL ? { plantId: selected } : {}),
       q: q.trim() || undefined,
@@ -95,6 +99,12 @@ export function LibraryPage() {
           </TabsTrigger>
           <TabsTrigger value="revalidation" data-testid="revalidation-tab">
             {t('library.tabs.revalidation')}
+          </TabsTrigger>
+          <TabsTrigger value="trial" data-testid="trial-tab">
+            {t('library.tabs.trial')}
+          </TabsTrigger>
+          <TabsTrigger value="awaiting" data-testid="awaiting-tab">
+            {t('library.tabs.awaiting')}
           </TabsTrigger>
           {caps.includes('design.attest') && (
             <TabsTrigger value="queue" data-testid="queue-tab">
@@ -142,6 +152,12 @@ export function LibraryPage() {
               {tab === 'queue' && (
                 <p className="max-w-3xl text-sm text-muted">{t('library.queueHint')}</p>
               )}
+              {tab === 'trial' && (
+                <p className="max-w-3xl text-sm text-muted">{t('library.trialHint')}</p>
+              )}
+              {tab === 'awaiting' && (
+                <p className="max-w-3xl text-sm text-muted">{t('library.awaitingHint')}</p>
+              )}
               {tab === 'revalidation' && (
                 <p className="max-w-3xl text-sm text-muted">{t('library.revalidationHint')}</p>
               )}
@@ -160,14 +176,22 @@ export function LibraryPage() {
                       ? 'library.emptyQueue.title'
                       : tab === 'revalidation'
                         ? 'library.emptyRevalidation.title'
-                        : 'library.empty.title',
+                        : tab === 'trial'
+                          ? 'library.emptyTrial.title'
+                          : tab === 'awaiting'
+                            ? 'library.emptyAwaiting.title'
+                            : 'library.empty.title',
                   )}
                   description={t(
                     tab === 'queue'
                       ? 'library.emptyQueue.description'
                       : tab === 'revalidation'
                         ? 'library.emptyRevalidation.description'
-                        : 'library.empty.description',
+                        : tab === 'trial'
+                          ? 'library.emptyTrial.description'
+                          : tab === 'awaiting'
+                            ? 'library.emptyAwaiting.description'
+                            : 'library.empty.description',
                   )}
                 />
               )}

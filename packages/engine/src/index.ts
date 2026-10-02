@@ -15,3 +15,6 @@ export * from './lifecycle';
 export * from './evaluate/types';
 export * from './characteristics';
 export * from './profiles';
+export * from './approval/trial';
+export * from './approval/gates';
+export * from './approval/classify';

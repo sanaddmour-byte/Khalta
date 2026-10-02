@@ -16,6 +16,8 @@ const listQuery = z.object({
   queue: bool.optional(),
   /** Attested designs whose latest evaluation failed a hard check. */
   revalidation: bool.optional(),
+  /** `awaiting`: trial passed, waiting for approval; `trial`: trial candidates and trials in progress. */
+  stage: z.enum(['awaiting', 'trial']).optional(),
 });
 const attestBody = z.strictObject({
   approvalReference: z.string().trim().min(2).max(200),
@@ -68,6 +70,9 @@ export function designRoutes(api: ApiRoutes) {
           isNull(schema.mixDesigns.approvalSource),
           isNotNull(schema.mixDesigns.importBatchId),
         );
+      if (query.stage === 'awaiting') where.push(eq(schema.mixDesigns.status, 'trial_passed'));
+      if (query.stage === 'trial')
+        where.push(inArray(schema.mixDesigns.status, ['trial_candidate', 'trial_in_progress']));
       if (query.revalidation) where.push(eq(schema.mixDesigns.needsRevalidation, true));
       if (query.q) {
         const like = `%${query.q.replace(/[%_\\]/g, '\\$&')}%`;
@@ -133,6 +138,7 @@ export function designRoutes(api: ApiRoutes) {
             fromStatus: schema.designTransitions.fromStatus,
             toStatus: schema.designTransitions.toStatus,
             evidence: schema.designTransitions.evidence,
+            esignature: schema.designTransitions.esignature,
             at: schema.designTransitions.at,
             actor: schema.users.name,
           })
@@ -196,10 +202,11 @@ export function designRoutes(api: ApiRoutes) {
       const now = new Date();
       const approvedAt = body.approvedOn ? new Date(`${body.approvedOn}T00:00:00Z`) : now;
       const target = body.inProduction ? 'in_production' : 'approved';
+      // One graph edge at a time (the database refuses anything else): approved, then in production.
       await tx
         .update(schema.mixDesigns)
         .set({
-          status: target,
+          status: 'approved',
           approvalSource: 'legacy_attested',
           externalApprovalRef: body.approvalReference,
           approvedBy: auth.user.id,
@@ -207,6 +214,11 @@ export function designRoutes(api: ApiRoutes) {
           updatedAt: now,
         })
         .where(eq(schema.mixDesigns.id, d.id));
+      if (target === 'in_production')
+        await tx
+          .update(schema.mixDesigns)
+          .set({ status: 'in_production', updatedAt: now })
+          .where(eq(schema.mixDesigns.id, d.id));
       const evidence = {
         kind: 'legacy_attestation',
         approvalReference: body.approvalReference,

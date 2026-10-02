@@ -1,3 +1,5 @@
+import { classifyChange } from '@khalta/engine';
+import { loadFacts } from '../lifecycle/service';
 import { schema } from '@khalta/db';
 import { roleCan } from '@khalta/rbac';
 import { and, asc, desc, eq, inArray, isNull, notInArray, sql } from 'drizzle-orm';
@@ -398,9 +400,19 @@ export function portfolioRoutes(api: ApiRoutes) {
       const ra = a.requirements as Record<string, unknown>;
       const rb = b.requirements as Record<string, unknown>;
       const keys = [...new Set([...Object.keys(ra), ...Object.keys(rb)])].sort();
+      // Change class (§14.3): information only. Rule/test versions are compared only when both sides were evaluated.
+      const [fa, fb] = [await loadFacts(db, a), await loadFacts(db, b)];
+      if (!a.lastEvaluationId || !b.lastEvaluationId) {
+        fa.ruleVersions = fb.ruleVersions = {};
+        fa.testVersions = fb.testVersions = {};
+        fa.priceBasis = fb.priceBasis = null;
+      }
+      const cls = classifyChange(fa, fb);
       return {
         from: { id: a.id, version: a.version },
         to: { id: b.id, version: b.version },
+        classes: cls.classes,
+        requiresTrial: cls.requiresTrial,
         lines: rows,
         requirements: keys
           .filter((k) => JSON.stringify(ra[k]) !== JSON.stringify(rb[k]))

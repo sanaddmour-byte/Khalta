@@ -15,6 +15,7 @@ import { ApiRoutes } from './route';
 import { auditRoutes } from './routes/audit';
 import { attachmentRoutes } from './routes/attachments';
 import { designRoutes } from './routes/designs';
+import { lifecycleRoutes } from './routes/lifecycle';
 import { evaluationRoutes } from './routes/evaluations';
 import { portfolioRoutes } from './routes/portfolio';
 import { baselineRoutes } from './routes/baselines';
@@ -80,6 +81,7 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   priceRoutes(api);
   legacyRoutes(api);
   designRoutes(api);
+  lifecycleRoutes(api);
   evaluationRoutes(api);
   portfolioRoutes(api);
   baselineRoutes(api);

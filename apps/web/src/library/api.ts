@@ -69,6 +69,7 @@ export interface DesignDetail {
     fromStatus: string;
     toStatus: string;
     evidence: Record<string, unknown>;
+    esignature: { meaning: string; signerName: string; reason: string } | null;
     at: string;
     actor: string | null;
   }[];

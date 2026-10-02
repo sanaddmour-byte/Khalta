@@ -1,0 +1,158 @@
+// SYNTHETIC lifecycle fixtures for the e2e database only. Trial batches have no entry screen until M4.2, so the
+// spec writes one straight into the e2e database (a labelled fixture), and marks the rules with values verified
+// (what a QC manager's sign-off on the licensed documents would do).
+import { expect, request as pwRequest, type APIRequestContext } from '@playwright/test';
+import pg from 'pg';
+import { E2E_DATABASE_URL } from './env';
+import { seedStudioWorld } from './studio-world';
+import { emailFor, PASSWORD } from './support';
+
+const BASE = 'http://localhost:5173';
+export const SECOND_MANAGER = 'qc.manager2@khalta.test';
+const CRITERIA: Record<string, number> = {
+  'eng.trial.slump_tolerance_mm': 25,
+  'eng.trial.air_tolerance_pct': 1.5,
+  'eng.trial.density_band_kg_m3': 40,
+  'eng.trial.yield_band_m3': 0.01,
+  'eng.trial.temperature_max_c': 32,
+};
+
+async function as(email: string): Promise<APIRequestContext> {
+  const ctx = await pwRequest.newContext({ baseURL: BASE });
+  const res = await ctx.post('/api/auth/sign-in/email', { data: { email, password: PASSWORD } });
+  expect(res.ok(), `sign in as ${email}`).toBe(true);
+  return ctx;
+}
+
+let ready: Promise<string> | null = null;
+/** SYNTHETIC trial criteria in the rules, and a second QC manager so four-eyes can be exercised. Returns plant A's id. */
+export function seedLifecycleWorld() {
+  return (ready ??= (async () => {
+    const { plantA } = await seedStudioWorld();
+    const admin = await as(emailFor('admin'));
+    const rules = (await (await admin.get('/api/rules?ruleset=ENGINEERING')).json()).rules as {
+      id: string;
+      key: string;
+      value: unknown;
+    }[];
+    for (const [key, value] of Object.entries(CRITERIA)) {
+      const r = rules.find((x) => x.key === key);
+      expect(r, key).toBeDefined();
+      if (r!.value !== value) {
+        const res = await admin.patch(`/api/rules/${r!.id}/value`, {
+          data: { value, reason: 'SYNTHETIC trial criterion' },
+        });
+        expect(res.ok(), await res.text()).toBe(true);
+      }
+    }
+    const made = await admin.post('/api/users', {
+      data: {
+        email: SECOND_MANAGER,
+        name: 'QC Manager Two',
+        role: 'qc_manager',
+        password: PASSWORD,
+      },
+    });
+    expect([201, 409]).toContain(made.status());
+    return plantA;
+  })());
+}
+
+/** A trial-candidate design authored by the first QC manager (the optimizer path, then Request trial). */
+export async function trialCandidate(code: string): Promise<string> {
+  const plantId = await seedLifecycleWorld();
+  const mgr = await as(emailFor('qc_manager'));
+  const run = await mgr.post('/api/design-requests', {
+    data: {
+      plantId,
+      mode: 'ACI',
+      requirements: {
+        fcMpa: 30,
+        basis: 'cylinder',
+        testAgeDays: 28,
+        exposure: ['F0', 'S0', 'W0', 'C1'],
+        slumpMm: 100,
+        nmasMm: 19,
+        pumpable: false,
+        s3Option: null,
+        airPct: null,
+      },
+    },
+  });
+  expect(run.ok(), await run.text()).toBe(true);
+  const body = (await run.json()) as { id: string; candidates: { id: string }[] };
+  const res = await mgr.post(
+    `/api/design-requests/${body.id}/candidates/${body.candidates[0]!.id}/trial-candidate`,
+    { data: { code, name: `Lifecycle ${code}` } },
+  );
+  expect(res.ok(), await res.text()).toBe(true);
+  return ((await res.json()) as { design: { id: string } }).design.id;
+}
+
+async function withDb<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
+  const c = new pg.Client({ connectionString: E2E_DATABASE_URL });
+  await c.connect();
+  try {
+    return await fn(c);
+  } finally {
+    await c.end();
+  }
+}
+
+/** SYNTHETIC fixture: one passing trial batch built from the design's own stored evaluation. */
+export async function addPassingBatch(designId: string) {
+  await withDb(async (c) => {
+    const { rows } = await c.query(
+      `SELECT d.tenant_id, e.report FROM mix_designs d JOIN design_evaluations e ON e.id = d.last_evaluation_id WHERE d.id = $1`,
+      [designId],
+    );
+    const rep = rows[0].report as {
+      trace: { key: string; value: number }[];
+      strengthAdequacy: { fcrMpa: number };
+    };
+    const density = rep.trace.find((t) => t.key === 'mass.fresh_density')!.value;
+    const fcr = rep.strengthAdequacy.fcrMpa;
+    await c.query(
+      `INSERT INTO trial_batches (tenant_id, design_id, batched_on, slump_mm, air_pct, temperature_c,
+         fresh_density_kg_m3, yield_m3, strength_mpa, notes)
+       VALUES ($1, $2, '2026-10-01', 105, 2, 28, $3, 1.002, $4::jsonb, 'SYNTHETIC trial batch (fixture)')`,
+      [rows[0].tenant_id, designId, density, JSON.stringify([fcr + 3, fcr + 4])],
+    );
+  });
+}
+
+let flipped: string[] = [];
+/** SYNTHETIC: mark every current unverified rule that has a value as verified (undone by `restoreRules`). */
+export async function verifyRules() {
+  await withDb(async (c) => {
+    const { rows } = await c.query(
+      `UPDATE rules SET verified = true, verified_at = now()
+       WHERE is_current AND NOT verified AND (value IS NOT NULL OR definition IS NOT NULL OR inherits IS NOT NULL)
+       RETURNING id`,
+    );
+    flipped = [...flipped, ...rows.map((r) => r.id as string)];
+  });
+}
+
+/** Other specs (the Rules screen) expect unverified rules: put back exactly what `verifyRules` flipped. */
+export async function restoreRules() {
+  if (flipped.length === 0) return;
+  await withDb((c) =>
+    c.query(`UPDATE rules SET verified = false, verified_at = NULL WHERE id = ANY($1::uuid[])`, [
+      flipped,
+    ]),
+  );
+  flipped = [];
+}
+
+/** SYNTHETIC: walk a trial-candidate through the real endpoints to `trial_passed` (batch fixture, start, pass). */
+export async function advanceToTrialPassed(designId: string) {
+  await addPassingBatch(designId);
+  const mgr = await as(emailFor('qc_manager'));
+  const a = await mgr.post(`/api/designs/${designId}/start-trial`);
+  expect(a.ok(), await a.text()).toBe(true);
+  const b = await mgr.post(`/api/designs/${designId}/pass-trial`, {
+    data: { reason: 'SYNTHETIC trial reviewed' },
+  });
+  expect(b.ok(), await b.text()).toBe(true);
+}
