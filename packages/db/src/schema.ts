@@ -13,6 +13,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 // Conventions (CLAUDE.md rule 6): no hard deletes. Business rows carry deleted_at (soft delete);
@@ -589,6 +590,14 @@ export const mixDesigns = pgTable(
     avgMonthlyVolumeM3: numeric('avg_monthly_volume_m3', { precision: 12, scale: 2 }),
     evaluationPending: boolean('evaluation_pending').notNull().default(true),
     warnings: jsonb('warnings').notNull().default([]),
+    /** Raised when an evaluation of an already-attested design fails a hard check (bookkeeping, not an input). */
+    needsRevalidation: boolean('needs_revalidation').notNull().default(false),
+    /** The latest stored evaluation (denormalized for the Library list). */
+    lastEvaluationId: uuid('last_evaluation_id').references(
+      (): AnyPgColumn => designEvaluations.id,
+    ),
+    lastVerdict: text('last_verdict', { enum: ['fail', 'incomplete', 'pass'] }),
+    lastEvaluatedAt: ts('last_evaluated_at'),
     importBatchId: uuid('import_batch_id').references(() => legacyImportBatches.id),
     synthetic: boolean('synthetic').notNull().default(false),
     parentDesignId: uuid('parent_design_id'),
@@ -630,6 +639,40 @@ export const mixDesignLines = pgTable(
 );
 
 /** Append-only history of every state change, with the evidence named (trigger, migration 0009). */
+/**
+ * Every evaluation of a design, stored whole and never changed: the exact snapshot it was computed from,
+ * the report, and the independent validator's result. A newer evaluation never overwrites an older one.
+ */
+export const designEvaluations = pgTable(
+  'design_evaluations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    mode: text('mode', { enum: ['ACI', 'JS', 'BOTH'] }).notNull(),
+    snapshot: jsonb('snapshot').notNull(),
+    report: jsonb('report').notNull(),
+    validator: jsonb('validator').notNull(),
+    validatorStatus: text('validator_status', { enum: ['pass', 'fail'] }).notNull(),
+    verdict: text('verdict', { enum: ['fail', 'incomplete', 'pass'] }).notNull(),
+    provisional: boolean('provisional').notNull(),
+    minimumDataOk: boolean('minimum_data_ok').notNull(),
+    costJodPerM3: numeric('cost_jod_per_m3', { precision: 12, scale: 3 }),
+    priceBasis: jsonb('price_basis').notNull(),
+    /** [{ id, version }] of every rule the evaluation used. */
+    ruleVersions: jsonb('rule_versions').notNull(),
+    evaluatorVersion: text('evaluator_version').notNull(),
+    validatorVersion: text('validator_version').notNull(),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index('design_evaluations_design_idx').on(t.designId, t.createdAt)],
+);
+
 export const designTransitions = pgTable(
   'design_transitions',
   {

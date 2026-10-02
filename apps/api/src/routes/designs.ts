@@ -1,6 +1,7 @@
 import { schema } from '@khalta/db';
+import { canTransition } from '@khalta/engine';
 import { assertNotAuthor, canAccessPlant } from '@khalta/rbac';
-import { and, asc, desc, eq, ilike, inArray, isNull, or } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError, notFound } from '../errors';
 import type { ApiRoutes } from '../route';
@@ -13,6 +14,8 @@ const listQuery = z.object({
   q: z.string().trim().max(100).optional(),
   /** The attestation queue: imported designs nobody has approved yet. */
   queue: bool.optional(),
+  /** Attested designs whose latest evaluation failed a hard check. */
+  revalidation: bool.optional(),
 });
 const attestBody = z.strictObject({
   approvalReference: z.string().trim().min(2).max(200),
@@ -32,6 +35,9 @@ const card = {
   externalApprovalRef: schema.mixDesigns.externalApprovalRef,
   approvedAt: schema.mixDesigns.approvedAt,
   evaluationPending: schema.mixDesigns.evaluationPending,
+  needsRevalidation: schema.mixDesigns.needsRevalidation,
+  lastVerdict: schema.mixDesigns.lastVerdict,
+  lastEvaluatedAt: schema.mixDesigns.lastEvaluatedAt,
   requirements: schema.mixDesigns.requirements,
   importedApprovalRef: schema.mixDesigns.importedApprovalRef,
   importedInProduction: schema.mixDesigns.importedInProduction,
@@ -45,7 +51,7 @@ export function designRoutes(api: ApiRoutes) {
   api.get(
     '/api/designs',
     {
-      summary: 'List designs (no computed figures until the evaluator exists)',
+      summary: 'List designs with their latest evaluation verdict (no cost figures)',
       capability: 'library.read',
       query: listQuery,
     },
@@ -57,7 +63,12 @@ export function designRoutes(api: ApiRoutes) {
       if (query.status) where.push(eq(schema.mixDesigns.status, query.status));
       if (query.plantId) where.push(eq(schema.mixDesigns.plantId, query.plantId));
       if (query.queue)
-        where.push(eq(schema.mixDesigns.status, 'draft'), isNull(schema.mixDesigns.approvalSource));
+        where.push(
+          inArray(schema.mixDesigns.status, ['draft', 'evaluated']),
+          isNull(schema.mixDesigns.approvalSource),
+          isNotNull(schema.mixDesigns.importBatchId),
+        );
+      if (query.revalidation) where.push(eq(schema.mixDesigns.needsRevalidation, true));
       if (query.q) {
         const like = `%${query.q.replace(/[%_\\]/g, '\\$&')}%`;
         where.push(or(ilike(schema.mixDesigns.code, like), ilike(schema.mixDesigns.name, like))!);
@@ -163,12 +174,24 @@ export function designRoutes(api: ApiRoutes) {
         )
         .for('update');
       if (!d || !canAccessPlant(auth.scope, d.plantId)) throw notFound('Design not found');
-      if (d.status !== 'draft' || d.approvalSource !== null || !d.importBatchId)
+      if (
+        !['draft', 'evaluated'].includes(d.status) ||
+        d.approvalSource !== null ||
+        !d.importBatchId
+      )
         throw new ApiError(
           409,
           'conflict',
           'Only an imported design awaiting attestation can be attested',
         );
+      // The lifecycle graph decides, and names its evidence (a legacy attestation is the one path
+      // to approved without a Khalta trial).
+      const steps0 = [
+        canTransition(d.status, 'approved', ['legacy_attestation']),
+        ...(body.inProduction ? [canTransition('approved', 'in_production', ['release'])] : []),
+      ];
+      const refused = steps0.find((v) => !v.ok);
+      if (refused && !refused.ok) throw new ApiError(409, 'conflict', refused.reason);
       assertNotAuthor(auth.user.id, d.createdBy); // the importer cannot attest their own import
       const now = new Date();
       const approvedAt = body.approvedOn ? new Date(`${body.approvedOn}T00:00:00Z`) : now;

@@ -5,7 +5,12 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./optimizer": "./src/optimizer/index.ts"
+    "./decimal": "./src/prices/decimal.ts",
+    "./evaluate": "./src/evaluate/index.ts",
+    "./optimizer": "./src/optimizer/index.ts",
+    "./testing": "./src/testing/synthetic.ts",
+    "./testing/fixtures": "./src/testing/fixtures.ts",
+    "./testing/scenarios": "./src/testing/scenarios.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -18,6 +23,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@khalta/rules": "workspace:*"
   }
 }

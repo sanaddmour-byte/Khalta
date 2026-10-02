@@ -25,6 +25,9 @@ export interface TenantSettings {
   salesCanViewCost: boolean;
   numberFormat: 'latin' | 'arabic-indic';
   stalePriceDays: number | null;
+  nearLimitPct: number | null;
+  safetyMarginMpa: number | null;
+  yieldTolerance: number;
   insightMinSavingJodPerM3: number;
   insightMinAnnualJod: number;
   sanityRanges: Record<string, { min?: number; max?: number }>;

@@ -59,6 +59,7 @@ const BASE: Record<Category, Omit<FieldDef, 'tier'>[]> = {
     sel('type', ['A', 'B', 'C', 'D', 'E', 'F', 'G']),
     num('sg', null),
     num('solids_pct', '%'),
+    num('chloride_pct', '%'),
     num('min_dosage_pct', '% cementitious'),
     num('max_dosage_pct', '% cementitious'),
     num('set_retardation_min', 'min'),

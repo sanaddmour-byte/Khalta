@@ -11,3 +11,6 @@ export type Trace = readonly TraceEntry[];
 export * from './materials';
 export * from './prices';
 export * from './legacy';
+export * from './lifecycle';
+export * from './evaluate/types';
+export * from './characteristics';

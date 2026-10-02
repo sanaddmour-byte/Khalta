@@ -12,6 +12,10 @@ export const settingsSchema = z.strictObject({
   stalePriceDays: z.number().int().positive().nullable().default(null), // null = not configured
   insightMinSavingJodPerM3: z.number().nonnegative().default(0.25),
   insightMinAnnualJod: z.number().nonnegative().default(1000),
+  // Evaluation (M2.1). Null = not configured: no near-limit warnings / no safety margin, both stated in reports.
+  nearLimitPct: z.number().positive().max(50).nullable().default(null),
+  safetyMarginMpa: z.number().min(0).max(20).nullable().default(null),
+  yieldTolerance: z.number().positive().max(0.05).default(0.005), // m³ either side of 1.000
   // Warn-only material sanity ranges (07 §2.3); keys are engine sanity keys, never block saving.
   sanityRanges: z
     .record(z.string(), z.strictObject({ min: z.number().optional(), max: z.number().optional() }))

@@ -10,6 +10,14 @@ module.exports = {
       from: { path: 'packages/validator/' },
       to: { path: 'packages/engine/src/optimizer/', reachable: true },
     },
+    {
+      name: 'validator-must-not-reach-evaluator',
+      severity: 'error',
+      comment:
+        'The validator is a second implementation: it may read the evaluation types, never the evaluator calculation modules (ADR 0007).',
+      from: { path: '^packages/validator/src' },
+      to: { path: '^packages/engine/src/evaluate/(?!types\\.ts$)', reachable: true },
+    },
   ],
   options: {
     doNotFollow: { path: 'node_modules' },

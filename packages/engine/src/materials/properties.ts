@@ -73,6 +73,8 @@ const admixture = z.strictObject({
   type: z.enum(ADMIXTURE_TYPES).optional(),
   sg: positive.optional(),
   solids_pct: pct.optional(),
+  /** Water-soluble chloride (Cl⁻) as % of the product mass; counted in the chloride check. */
+  chloride_pct: pct.optional(),
   min_dosage_pct: nonNeg.optional(), // % of cementitious mass
   max_dosage_pct: positive.optional(),
   water_reduction_table: z.array(waterReductionPointSchema).optional(),

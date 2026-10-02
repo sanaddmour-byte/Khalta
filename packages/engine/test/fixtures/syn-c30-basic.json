@@ -1,0 +1,118 @@
+{
+  "id": "syn-c30-basic",
+  "mode": "evaluate",
+  "source": "SYNTHETIC: hand-computed example, not a real plant design",
+  "synthetic": true,
+  "ruleset_mode": "ACI",
+  "request": {
+    "fc_mpa": 30,
+    "basis": "cylinder",
+    "exposure": ["F0", "S0", "W0", "C1"],
+    "slump_mm": 100,
+    "nmas_mm": 19,
+    "pumpable": true,
+    "air_pct": 2.0
+  },
+  "materials": [
+    {
+      "id": "cem",
+      "category": "cement",
+      "sg": 3.15,
+      "c3a_pct": 7.5,
+      "price_jod_per_kg": 0.075
+    },
+    {
+      "id": "sand",
+      "category": "fine_agg",
+      "sg_ssd": 2.6,
+      "absorption_pct": 1.5,
+      "chlorides_pct": 0.01,
+      "passing_pct": {
+        "9.5": 100,
+        "4.75": 98,
+        "2.36": 80,
+        "1.18": 55,
+        "0.6": 35,
+        "0.3": 15,
+        "0.15": 5
+      },
+      "price_jod_per_kg": 0.008
+    },
+    {
+      "id": "coarse",
+      "category": "coarse_agg",
+      "sg_ssd": 2.65,
+      "absorption_pct": 1.0,
+      "chlorides_pct": 0.005,
+      "passing_pct": {
+        "25": 100,
+        "19": 95,
+        "12.5": 40,
+        "9.5": 15,
+        "4.75": 3,
+        "2.36": 0
+      },
+      "price_jod_per_kg": 0.007
+    },
+    {
+      "id": "water",
+      "category": "water",
+      "sg": 1.0,
+      "sg_confirmed": true,
+      "chloride_mg_l": 200,
+      "price_jod_per_kg": 0.0005
+    },
+    {
+      "id": "sp",
+      "category": "admixture",
+      "type": "F",
+      "sg": 1.08,
+      "solids_pct": 40,
+      "min_dosage_pct": 0.4,
+      "max_dosage_pct": 1.5,
+      "water_convention": "liquid_counts_as_water",
+      "chloride_pct": 0.05,
+      "price_jod_per_kg": 1.2,
+      "water_reduction_table": [
+        {
+          "dosage_pct": 0.4,
+          "water_reduction_pct": 8
+        },
+        {
+          "dosage_pct": 0.8,
+          "water_reduction_pct": 14
+        },
+        {
+          "dosage_pct": 1.5,
+          "water_reduction_pct": 22
+        }
+      ]
+    }
+  ],
+  "proportions_kg_per_m3": {
+    "cem": 350,
+    "water": 175,
+    "sp": 3.5,
+    "sand": 780,
+    "coarse": 1035
+  },
+  "expected": {
+    "wcm": 0.506,
+    "volume_m3": 0.9999178895877009,
+    "cost_jod_per_m3": "44.023",
+    "compliance": {
+      "min_fc": "pass",
+      "cl.nonprestressed": "pass",
+      "cl.prestressed": "pass",
+      "yield": "pass",
+      "admixture_dosage.sp": "pass"
+    },
+    "verdict": "pass",
+    "fcr_mpa": 38.3,
+    "tolerance": {
+      "volume": 0.002,
+      "wcm": 0.001,
+      "cost": 0.001
+    }
+  }
+}

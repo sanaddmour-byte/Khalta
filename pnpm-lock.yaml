@@ -263,6 +263,9 @@ importers:
       '@khalta/rules':
         specifier: workspace:*
         version: link:../../packages/rules
+      '@khalta/validator':
+        specifier: workspace:*
+        version: link:../../packages/validator
       better-auth:
         specifier: 'catalog:'
         version: 1.7.7(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(@types/pg@8.23.1)(kysely@0.29.6)(pg@8.23.1))(pg@8.23.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vitest@5.0.3)
@@ -464,6 +467,9 @@ importers:
 
   packages/engine:
     dependencies:
+      '@khalta/rules':
+        specifier: workspace:*
+        version: link:../rules
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -590,6 +596,9 @@ importers:
       '@khalta/engine':
         specifier: workspace:*
         version: link:../engine
+      '@khalta/rules':
+        specifier: workspace:*
+        version: link:../rules
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 'catalog:'

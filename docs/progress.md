@@ -194,3 +194,30 @@ Also verified by temporarily adding violating files: lint reported all three cus
 - Arabic strings are drafts in `docs/i18n-review.md` (attestation wording first).
 
 **Next:** your go-ahead and Railway details to deploy staging; then M2.1 (evaluator, compliance kernel, validator) — write `docs/plans/M2.1.md` and list questions.
+
+## 2026-10-02 — M2.1 Evaluator, compliance kernel, independent validator (F-010, F-011)
+
+**Changed**
+
+- `packages/engine` (pure): `evaluate/` kernel (f′cr per ruleset with ACI 301 no-data equations, statistical branch built and tested but unreachable from stored data, higher governs, margin; basis conversion via `strength.basis_map`; absolute volume/yield with SSD SG and air; w/cm, binder, SCM shares, dosage; tri-state compliance checks with named blockers: max w/cm, min f′c, chlorides, SCM limits, cement C₃A class, S3 SCM, CaCl₂, air, yield, admixture range; strength adequacy and water baseline as `MODEL_BASELINE` information, never compliance; cost in exact decimals, incomplete (never zero) when a line cannot be priced; data quality; a trace entry for every figure). `characteristics/` (App. E schema, layer merge, unit normalization, rejection of loosening input with rule/clause/bound, requested vs achieved). `lifecycle.ts` (full §14.1 graph, evidence, milestone gating). Fixture format (App. B) + 5 SYNTHETIC hand-computed fixtures.
+- `packages/validator`: independent second implementation (exact rationals, own table interpolation and comparison code; shares only the rules resolver and decimal helpers); any difference is a hard failure. ADR 0007; dependency-cruiser rule so the validator cannot reach evaluator calculation code.
+- `packages/db`: migrations 0010–0011: `design_evaluations` (append-only by trigger), `mix_designs.needs_revalidation` and latest-evaluation columns.
+- `apps/api`: `POST /api/designs/:id/evaluate`, `GET /api/designs/:id/evaluations[/:evalId]`, `POST /api/characteristics/validate`; evaluation settings (`nearLimitPct`, `safetyMarginMpa`, `yieldTolerance`); cost stripped server-side without `cost.view`; attestation now allowed from `evaluated` and enforced through the lifecycle graph; Library list gains verdict and revalidation fields.
+- `apps/web`: Evaluation tab and Evaluate action in the design sheet, verdict/validator/evidence chips, revalidation chip and tab in the Library, new Settings fields, admixture `chloride_pct` field (counted in the chloride check); EN/AR strings (drafts in `docs/i18n-review.md`).
+
+**Commands run (all green):** `typecheck`, `lint` (incl. boundaries), `test` (engine 171, validator 146, api 167, web 25, rbac 161, ui 120, rules 159), `test:rules` (143), `features:check`, `e2e` (78, incl. 6 new with axe, EN/AR), `screens` (`docs/screens/M2.1/`; every screen shot and the evaluation pass/fail views reviewed), `db:drift`. Engine coverage 98.5 % statements / 94 % branches; validator 98 % / 92 %.
+
+**Gates:** 200 designs evaluated and validated in well under 5 s; the validator agrees with the evaluator on 111 branch-covering scenarios and 216 generated designs; its corruption suite catches altered volume, w/cm, binder, chloride, cost, a claimed pass, missing trace entries, changed limits/SG/prices and rounding without reading the evaluator's flags. Writing the validator found a real evaluator bug (a check pointing at a trace entry that did not exist), fixed.
+
+**Verification note:** tests prove the arithmetic, tri-state logic, traceability, lifecycle rules and validator independence as implemented. They do **not** prove any rule value matches ACI/JS (all unverified, so every result is provisional and says so), that the ACI 211.1 baseline predicts your plant, or that a design is acceptable to produce; nothing here approves a mix. Both implementations were written from the same spec by the same author: a misreading of the spec itself would pass both, so real approved designs as fixtures matter.
+
+**Decisions to confirm (not blocking)**
+
+- Chloride check counts aggregates, water and admixtures only (cement/SCM chloride is not in the test schema); a partial sum over the limit fails, otherwise missing data keep it "not evaluated". C-class designs therefore need admixture `chloride_pct` and water/aggregate chlorides to pass.
+- Slump between two ACI 211.1 slump ranges is interpolated between their nearest edges (stated in the report).
+- F1–F3 exposure implies air-entrained; the air-entrained ACI 211.1 tables are not on file, so baselines are unavailable there.
+- Water without a test uses SG 1.000 (flagged); every other line needs its SG for the design to become `evaluated`.
+
+**Open items:** the engine's blocker/assumption texts are English only (Arabic with the M2.2 compliance table); the checks table is cramped at 390 px (M2.2 polish); JS values and rule verification still pending; Railway staging awaits your go-ahead; real approved designs wanted as fixtures.
+
+**Next:** M2.2 (manual editor, cost baselines, compliance table) — write `docs/plans/M2.2.md`.

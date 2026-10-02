@@ -1,0 +1,89 @@
+{
+  "id": "syn-c2-chloride-unpriced",
+  "mode": "evaluate",
+  "source": "SYNTHETIC: hand-computed example, not a real plant design",
+  "synthetic": true,
+  "ruleset_mode": "ACI",
+  "request": {
+    "fc_mpa": 40,
+    "basis": "cylinder",
+    "exposure": ["C2"],
+    "slump_mm": 100,
+    "nmas_mm": 19,
+    "pumpable": true
+  },
+  "materials": [
+    {
+      "id": "cem",
+      "category": "cement",
+      "sg": 3.15,
+      "c3a_pct": 7.5,
+      "price_jod_per_kg": 0.075
+    },
+    {
+      "id": "sand",
+      "category": "fine_agg",
+      "sg_ssd": 2.6,
+      "absorption_pct": 1.5,
+      "chlorides_pct": 0.08,
+      "passing_pct": {
+        "9.5": 100,
+        "4.75": 98,
+        "2.36": 80,
+        "1.18": 55,
+        "0.6": 35,
+        "0.3": 15,
+        "0.15": 5
+      },
+      "price_jod_per_kg": 0.008
+    },
+    {
+      "id": "coarse",
+      "category": "coarse_agg",
+      "sg_ssd": 2.65,
+      "absorption_pct": 1.0,
+      "chlorides_pct": 0.08,
+      "passing_pct": {
+        "25": 100,
+        "19": 95,
+        "12.5": 40,
+        "9.5": 15,
+        "4.75": 3,
+        "2.36": 0
+      }
+    },
+    {
+      "id": "water",
+      "category": "water",
+      "sg": 1.0,
+      "sg_confirmed": true,
+      "chloride_mg_l": 200,
+      "price_jod_per_kg": 0.0005
+    }
+  ],
+  "proportions_kg_per_m3": {
+    "cem": 400,
+    "water": 152,
+    "sand": 760,
+    "coarse": 1083
+  },
+  "expected": {
+    "wcm": 0.38,
+    "volume_m3": 0.9999710645748382,
+    "cost_jod_per_m3": null,
+    "compliance": {
+      "max_wcm": "pass",
+      "min_fc": "pass",
+      "cl.nonprestressed": "fail",
+      "cl.prestressed": "fail",
+      "yield": "pass"
+    },
+    "verdict": "fail",
+    "fcr_mpa": 49.0,
+    "tolerance": {
+      "volume": 0.002,
+      "wcm": 0.001,
+      "cost": 0.001
+    }
+  }
+}

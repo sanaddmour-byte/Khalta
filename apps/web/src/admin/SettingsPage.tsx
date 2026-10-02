@@ -62,6 +62,9 @@ function GeneralTab() {
     setText({
       maxPlants: String(data.maxPlants),
       stalePriceDays: data.stalePriceDays === null ? '' : String(data.stalePriceDays),
+      nearLimitPct: data.nearLimitPct === null ? '' : String(data.nearLimitPct),
+      safetyMarginMpa: data.safetyMarginMpa === null ? '' : String(data.safetyMarginMpa),
+      yieldTolerance: String(data.yieldTolerance),
       insightMinSavingJodPerM3: String(data.insightMinSavingJodPerM3),
       insightMinAnnualJod: String(data.insightMinAnnualJod),
       sg_min: String(data.sanityRanges['aggregate_sg_ssd']?.min ?? ''),
@@ -94,6 +97,9 @@ function GeneralTab() {
       salesCanViewCost: s.salesCanViewCost,
       numberFormat: s.numberFormat,
       stalePriceDays: num(text['stalePriceDays'] ?? ''),
+      nearLimitPct: num(text['nearLimitPct'] ?? ''),
+      safetyMarginMpa: num(text['safetyMarginMpa'] ?? ''),
+      yieldTolerance: num(text['yieldTolerance'] ?? '') ?? s.yieldTolerance,
       insightMinSavingJodPerM3: num(text['insightMinSavingJodPerM3'] ?? '') ?? 0,
       insightMinAnnualJod: num(text['insightMinAnnualJod'] ?? '') ?? 0,
       approvalRequiresLabSource: s.approvalRequiresLabSource,
@@ -130,6 +136,9 @@ function GeneralTab() {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label={t('settings.general')}>
         {field('maxPlants', t('settings.maxPlants'))}
         {field('stalePriceDays', t('settings.stalePriceDays'), t('settings.days'))}
+        {field('nearLimitPct', t('settings.nearLimitPct'), t('settings.unit.pct'))}
+        {field('safetyMarginMpa', t('settings.safetyMarginMpa'), t('settings.unit.mpa'))}
+        {field('yieldTolerance', t('settings.yieldTolerance'), t('settings.unit.m3'))}
         {field('insightMinSavingJodPerM3', t('settings.insightMinSaving'), 'JOD/m³')}
         {field('insightMinAnnualJod', t('settings.insightMinAnnual'), 'JOD')}
         <div className="flex flex-col gap-1">

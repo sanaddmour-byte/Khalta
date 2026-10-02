@@ -13,20 +13,21 @@
     "seed:demo": "tsx src/demo/run.ts"
   },
   "dependencies": {
-    "express": "catalog:",
-    "pino": "catalog:",
-    "pino-http": "catalog:",
-    "better-auth": "catalog:",
-    "zod": "catalog:",
     "@asteasolutions/zod-to-openapi": "catalog:",
     "@khalta/db": "workspace:*",
     "@khalta/engine": "workspace:*",
     "@khalta/rbac": "workspace:*",
-    "drizzle-orm": "catalog:",
     "@khalta/rules": "workspace:*",
-    "papaparse": "catalog:",
+    "@khalta/validator": "workspace:*",
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
     "exceljs": "catalog:",
-    "yaml": "catalog:"
+    "express": "catalog:",
+    "papaparse": "catalog:",
+    "pino": "catalog:",
+    "pino-http": "catalog:",
+    "yaml": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/express": "catalog:",

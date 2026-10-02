@@ -1,4 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
+import type { EvaluationReport, ValidatorResult } from '@khalta/engine';
 import { api } from '../lib/api';
 
 export type DesignStatus =
@@ -28,6 +29,9 @@ export interface DesignCard {
   externalApprovalRef: string | null;
   approvedAt: string | null;
   evaluationPending: boolean;
+  needsRevalidation: boolean;
+  lastVerdict: 'fail' | 'incomplete' | 'pass' | null;
+  lastEvaluatedAt: string | null;
   requirements: {
     fcMpa?: number;
     basis?: string;
@@ -89,6 +93,59 @@ export const attestDesign = (
   body: { approvalReference: string; approvedOn?: string; inProduction: boolean; note: string },
 ) =>
   api<{ id: string; status: DesignStatus }>(`/api/designs/${id}/attest`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+
+// ---- evaluations (M2.1)
+export interface EvaluationListItem {
+  id: string;
+  createdAt: string;
+  mode: 'ACI' | 'JS' | 'BOTH';
+  verdict: 'fail' | 'incomplete' | 'pass';
+  provisional: boolean;
+  validatorStatus: 'pass' | 'fail';
+  minimumDataOk: boolean;
+  costJodPerM3: string | null;
+  actor: string | null;
+}
+export interface EvaluationDetail {
+  id: string;
+  createdAt: string;
+  mode: 'ACI' | 'JS' | 'BOTH';
+  verdict: 'fail' | 'incomplete' | 'pass';
+  provisional: boolean;
+  validatorStatus: 'pass' | 'fail';
+  report: EvaluationReport;
+  validator: ValidatorResult;
+  inputsChanged: {
+    materials: { materialId: string; evaluated: number; current: number | null }[];
+    rules: number;
+  };
+  priceBasis: unknown;
+}
+export interface EvaluateBody {
+  mode: 'ACI' | 'JS' | 'BOTH';
+  s3Option?: 1 | 2;
+  airPct?: number;
+}
+export interface EvaluateResult {
+  evaluation: { id: string; verdict: string; validatorStatus: 'pass' | 'fail' };
+  design: { id: string; status: DesignStatus; needsRevalidation: boolean };
+  transition: { moved: boolean; blocker: 'validator_failed' | 'minimum_data_missing' | null };
+}
+export const evaluationsQuery = (id: string) =>
+  queryOptions({
+    queryKey: ['designs', 'evaluations', id],
+    queryFn: () => api<EvaluationListItem[]>(`/api/designs/${id}/evaluations`),
+  });
+export const evaluationQuery = (id: string, evalId: string) =>
+  queryOptions({
+    queryKey: ['designs', 'evaluation', id, evalId],
+    queryFn: () => api<EvaluationDetail>(`/api/designs/${id}/evaluations/${evalId}`),
+  });
+export const evaluateDesign = (id: string, body: EvaluateBody) =>
+  api<EvaluateResult>(`/api/designs/${id}/evaluate`, {
     method: 'POST',
     body: JSON.stringify(body),
   });

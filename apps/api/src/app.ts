@@ -15,6 +15,7 @@ import { ApiRoutes } from './route';
 import { auditRoutes } from './routes/audit';
 import { attachmentRoutes } from './routes/attachments';
 import { designRoutes } from './routes/designs';
+import { evaluationRoutes } from './routes/evaluations';
 import { legacyRoutes } from './routes/legacy';
 import { materialRoutes } from './routes/materials';
 import { meRoutes } from './routes/me';
@@ -75,6 +76,7 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   priceRoutes(api);
   legacyRoutes(api);
   designRoutes(api);
+  evaluationRoutes(api);
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {
     res.json(api.openApiDocument());
   });

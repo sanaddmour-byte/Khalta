@@ -27,7 +27,7 @@ describe('locale resources', () => {
     const a = flat(resources.ar.translation as Tree);
     const same = Object.keys(e).filter((k) => e[k] === a[k]);
     const allowed =
-      /^(app\.nameAr|app\.nameEn|ui\.code\.(ACI|JS)|dev_materials\.cement|materials\.field\.c3a_pct)$/;
+      /^(app\.nameAr|app\.nameEn|ui\.code\.(ACI|JS)|evaluation\.options\.aci|dev_materials\.cement|materials\.field\.c3a_pct)$/;
     expect(same.filter((k) => !allowed.test(k))).toEqual([]);
   });
 });

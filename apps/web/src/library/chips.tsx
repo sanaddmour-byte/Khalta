@@ -1,5 +1,15 @@
 import { cn } from '@khalta/ui';
-import { BadgeCheck, CircleDashed, FileClock, Hourglass, PackageCheck } from 'lucide-react';
+import {
+  BadgeCheck,
+  CircleCheck,
+  CircleDashed,
+  CircleHelp,
+  CircleX,
+  FileClock,
+  Hourglass,
+  PackageCheck,
+  ShieldAlert,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { DesignCard } from './api';
 
@@ -47,6 +57,38 @@ export function ApprovalChip({
     >
       <Hourglass className="size-3.5" aria-hidden />
       {design.evaluationPending ? t('library.legacyNotEvaluated') : t('library.legacyAttested')}
+    </span>
+  );
+}
+
+/** Latest evaluation outcome: icon + text; never shown for a design that has not been evaluated. */
+export function VerdictChip({ verdict }: { verdict: DesignCard['lastVerdict'] }) {
+  const { t } = useTranslation();
+  if (!verdict) return null;
+  const cfg = {
+    pass: { Icon: CircleCheck, cls: 'border-pass bg-pass-bg text-pass-text' },
+    fail: { Icon: CircleX, cls: 'border-fail bg-fail-bg text-fail-text' },
+    incomplete: { Icon: CircleHelp, cls: 'border-warn bg-warn-bg text-warn-text' },
+  }[verdict];
+  return (
+    <span data-verdict={verdict} className={cn(chip, cfg.cls)}>
+      <cfg.Icon className="size-3.5" aria-hidden />
+      {t(`evaluation.verdict.${verdict}`)}
+    </span>
+  );
+}
+
+/** An attested design whose latest evaluation failed a hard check: kept in state, flagged. */
+export function RevalidationChip({ design }: { design: Pick<DesignCard, 'needsRevalidation'> }) {
+  const { t } = useTranslation();
+  if (!design.needsRevalidation) return null;
+  return (
+    <span
+      data-testid="revalidation-chip"
+      className={cn(chip, 'border-fail bg-fail-bg text-fail-text')}
+    >
+      <ShieldAlert className="size-3.5" aria-hidden />
+      {t('evaluation.revalidation')}
     </span>
   );
 }

@@ -468,6 +468,7 @@
       "scm_type": "SCM type",
       "type": "Admixture type (ASTM C494)",
       "solids_pct": "Solids content",
+      "chloride_pct": "Chloride content (Cl⁻)",
       "min_dosage_pct": "Minimum dosage",
       "max_dosage_pct": "Maximum dosage",
       "set_retardation_min": "Set retardation",
@@ -553,6 +554,14 @@
     "maxPlants": "Maximum plants",
     "stalePriceDays": "Price age limit (empty = not set)",
     "days": "days",
+    "nearLimitPct": "Near-limit warning (% of the limit; empty = no warnings)",
+    "safetyMarginMpa": "f′cr safety margin (empty = none)",
+    "yieldTolerance": "Yield tolerance (± around 1.000)",
+    "unit": {
+      "pct": "%",
+      "mpa": "MPa",
+      "m3": "m³"
+    },
     "insightMinSaving": "Minimum saving worth an insight",
     "insightMinAnnual": "Minimum annual saving worth an insight",
     "numberFormat": "Digits",
@@ -741,11 +750,12 @@
     }
   },
   "library": {
-    "intro": "Your mix designs. Nothing here has been calculated by Khalta yet: designs brought in from your files show exactly what the file said, and compliance and cost appear once the evaluator is available.",
+    "intro": "Your mix designs. Open one and press Evaluate to calculate compliance, cost and data quality; every result is rechecked by an independent validator. Until then a design shows exactly what your file said.",
     "import": "Import designs",
     "tabs": {
       "all": "All designs",
-      "queue": "Awaiting attestation"
+      "queue": "Awaiting attestation",
+      "revalidation": "Needs revalidation"
     },
     "queueHint": "Imported designs nobody has attested yet. Attesting records that the design was approved outside Khalta; a second QC manager (not the person who imported) must do it.",
     "search": "Search by code or name",
@@ -781,7 +791,7 @@
     "legacyNotEvaluated": "Legacy attested · not yet evaluated by Khalta",
     "legacyAttested": "Legacy attested",
     "synthetic": "SYNTHETIC demo data",
-    "evaluationPending": "Evaluation pending: this design has not been checked by Khalta. No compliance, cost or strength figure is shown because none has been calculated.",
+    "evaluationPending": "Not evaluated yet: open the Evaluation tab and press Evaluate. No compliance, cost or strength figure is shown until Khalta has calculated it.",
     "field": {
       "source": "Source file",
       "strength": "Specified strength",
@@ -841,6 +851,11 @@
       "m3month": "{n} m³/month",
       "kgm3": "{n} kg/m³",
       "lm3": "{n} L/m³"
+    },
+    "revalidationHint": "Attested designs whose latest evaluation failed a hard check. They keep their state; nothing is suspended automatically.",
+    "emptyRevalidation": {
+      "title": "Nothing needs revalidation",
+      "description": "No attested design has a failing evaluation."
     }
   },
   "imports": {
@@ -908,5 +923,197 @@
       "bad_name": "Name is not valid",
       "bad_reference": "Reference is not valid"
     }
+  },
+  "evaluation": {
+    "tab": "Evaluation",
+    "detailsTab": "Details",
+    "run": "Evaluate",
+    "runAgain": "Evaluate again",
+    "running": "Evaluating…",
+    "done": "Evaluation saved and independently validated.",
+    "none": "This design has not been evaluated yet. Evaluating calculates compliance, cost and data quality from the design's proportions; nothing is approved by it.",
+    "history": "Earlier evaluations",
+    "summary": "Evaluation summary",
+    "options": {
+      "mode": "Ruleset",
+      "both": "Both (strictest of each)",
+      "aci": "ACI",
+      "js": "JS (Jordanian)",
+      "s3": "Sulfate option (S3)",
+      "s3None": "Not stated",
+      "s3Opt1": "Option 1 (SCM)",
+      "s3Opt2": "Option 2 (lower w/cm)",
+      "air": "Air content in the design (%)",
+      "airHint": "Leave the air content empty to use the ACI 211.1 entrapped-air estimate for the aggregate size (a published estimate, not a measurement)."
+    },
+    "transition": {
+      "validator_failed": "The independent validator disagreed with the evaluator, so the design stays a draft.",
+      "minimum_data_missing": "Specific gravity is missing for at least one material, so the design stays a draft."
+    },
+    "verdict": {
+      "pass": "Every evaluated check passes",
+      "fail": "At least one check fails",
+      "incomplete": "Some checks could not be evaluated"
+    },
+    "provisional": "Provisional: rules in use are not yet verified by a QC manager",
+    "provisionalRow": "Provisional",
+    "validator": {
+      "pass": "Independently verified",
+      "fail": "Validator disagrees: do not rely on these numbers"
+    },
+    "validatorFailedHint": "An independent recalculation did not match this evaluation. The figures below are shown for diagnosis only.",
+    "minimumMissing": "Specific gravity (or the material record) is missing for at least one line, so the design cannot be called evaluated.",
+    "revalidation": "Needs revalidation",
+    "inputsChanged": "Inputs changed since this evaluation",
+    "priceDate": "price date",
+    "figures": "Key figures",
+    "fig": {
+      "volume": "Absolute volume incl. air",
+      "yield": "Yield difference from 1.000 m³",
+      "wcm": "w/cm",
+      "binder": "Cementitious content",
+      "scm": "SCM share of cementitious",
+      "water": "Free water",
+      "density": "Fresh density",
+      "fcr": "Required average strength f′cr"
+    },
+    "unit": {
+      "m3": "{n} m³",
+      "kgm3": "{n} kg/m³",
+      "mpa": "{n} MPa",
+      "pct": "{n} %",
+      "jodm3": "{n} JOD/m³"
+    },
+    "checks": "Compliance checks",
+    "col": {
+      "check": "Check",
+      "status": "Result",
+      "value": "Value",
+      "limit": "Limit",
+      "source": "Source",
+      "characteristic": "Characteristic",
+      "requested": "Requested",
+      "achieved": "Achieved",
+      "result": "Result",
+      "origin": "Origin"
+    },
+    "status": {
+      "pass": "Pass",
+      "fail": "Fail",
+      "not_evaluated": "Not evaluated"
+    },
+    "check": {
+      "max_wcm": "Maximum w/cm",
+      "min_fc": "Minimum f′c for the exposure",
+      "cl_nonprestressed": "Chlorides (non-prestressed)",
+      "cl_prestressed": "Chlorides (prestressed)",
+      "scm_max_total_pct": "SCM, total",
+      "scm_max_fly_ash_pozzolan_pct": "Fly ash and pozzolan",
+      "scm_max_slag_pct": "Slag",
+      "scm_max_silica_fume_pct": "Silica fume",
+      "scm_max_fly_ash_silica_fume_pct": "Fly ash, pozzolan and silica fume",
+      "sulfate_cement": "Cement for sulfate exposure (by C₃A)",
+      "scm_required": "Required SCM",
+      "cacl2_prohibited": "Calcium chloride prohibited",
+      "air": "Air content",
+      "yield": "Yield (volume = 1.000 m³)",
+      "admixture_dosage": "Admixture dosage"
+    },
+    "klass": {
+      "none": "none",
+      "moderate": "moderate",
+      "high": "high",
+      "pozzolan": "pozzolan",
+      "slag": "slag"
+    },
+    "engineering": "Engineering check",
+    "nearLimit": "Close to the limit",
+    "blocker": {
+      "rule_not_on_file": "Rule value not on file",
+      "rule_blocked": "Rule cannot be applied",
+      "input_missing": "Input missing",
+      "context_missing": "Request detail missing",
+      "out_of_domain": "Outside the table range",
+      "not_applicable_here": "Not applicable at design stage",
+      "needs_trial": "Needs a trial"
+    },
+    "strength": {
+      "title": "Required average strength",
+      "cylinder": "Specified f′c (cylinder basis)",
+      "branch": "f′cr by",
+      "margin": "Safety margin",
+      "noMargin": "None configured",
+      "notOnFile": "Rule values not on file"
+    },
+    "adequacy": {
+      "title": "Strength adequacy",
+      "notCompliance": "Not a compliance result",
+      "noModel": "No plant strength model exists yet. This compares the design with a published ACI 211.1 relationship; a trial batch is required before any approval.",
+      "baseline": "ACI 211.1 baseline w/c for f′cr",
+      "design_above_baseline": "The design w/cm is above the baseline: strength may fall short.",
+      "design_at_or_below_baseline": "The design w/cm is at or below the baseline."
+    },
+    "water": {
+      "title": "Water demand baseline",
+      "notPlant": "A published estimate; it does not predict this plant's water demand.",
+      "table": "ACI 211.1 table value",
+      "reduction": "Admixture water reduction",
+      "baseline": "Baseline water",
+      "design": "Design water"
+    },
+    "cost": {
+      "title": "Cost",
+      "basisLive": "Live prices in force on {date}",
+      "basisSnapshot": "A saved price snapshot",
+      "total": "Material cost per m³",
+      "subtotal": "Priced lines only",
+      "incomplete": "{count, plural, one {Incomplete: 1 line has no usable price} other {Incomplete: # lines have no usable price}}",
+      "line": "Cost per m³",
+      "stale": "Price is older than the configured limit",
+      "state": {
+        "unavailable": "No price in force",
+        "ambiguous": "Several suppliers: choose a preferred one",
+        "not_convertible": "Price cannot be converted to JOD/kg",
+        "priced": "Priced",
+        "no_price_needed": "No price needed"
+      }
+    },
+    "quality": "Data quality",
+    "qualityNone": "No data-quality findings.",
+    "severity": {
+      "info": "Note",
+      "warning": "Warning",
+      "blocker": "Blocks"
+    },
+    "dq": {
+      "test_missing": "No test data on file",
+      "test_expired": "Test is past its validity",
+      "test_age_limit_not_configured": "No test-age limit configured",
+      "declared_values": "Values typed by a user, not from a lab report or datasheet",
+      "material_missing": "Material record not found",
+      "water_sg_defaulted": "Water specific gravity defaulted to 1.000",
+      "admixture_water_convention_missing": "Admixture water convention not set",
+      "limestone_not_counted": "Limestone filler is not counted as an SCM",
+      "price_missing": "No price in force",
+      "price_ambiguous": "Several suppliers have a price",
+      "price_not_convertible": "Price cannot be converted",
+      "price_stale": "Price is stale",
+      "price_age_limit_not_configured": "No price-age limit configured",
+      "rules_unverified": "Rule values in use are unverified",
+      "rules_missing": "Applicable rule values are not on file",
+      "override_rejected": "A project value would loosen a code limit and was not applied",
+      "safety_margin_not_configured": "No f′cr safety margin configured",
+      "near_limit_not_configured": "No near-limit warning configured",
+      "no_strength_records": "No strength records: the no-data f′cr equations were used",
+      "context_missing": "A request detail needed to select the rules is missing"
+    },
+    "characteristics": "Your characteristics: requested vs achieved",
+    "characteristicsHint": "These are your own choices, shown separately from code compliance.",
+    "charStatus": {
+      "met": "Met",
+      "deviated": "Deviated",
+      "not_evaluated": "Not evaluated"
+    },
+    "assumptions": "Assumptions made"
   }
 }
