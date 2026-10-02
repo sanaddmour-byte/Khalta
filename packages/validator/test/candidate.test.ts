@@ -131,9 +131,7 @@ describe('corruption: every promise the optimizer makes is re-derived and refuse
     rule(pump, 'eng.pumpable.min_passing_0_3mm_pct').value = 60;
     expect(has(pump, 'guardrail:pumpable')).toBe(true);
     const ind = base();
-    rule(ind, 'grading.coarse.limits', 'ACI').value = [
-      { sieve_mm: 9.5, min_pct: 90, max_pct: 100 },
-    ];
+    rule(ind, 'grading.coarse.limits', 'ACI').value = { '9.5': { min: 90, max: 100 } };
     expect(has(ind, 'guardrail:grading.individual.')).toBe(true);
   });
 

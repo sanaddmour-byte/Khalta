@@ -1329,5 +1329,345 @@
       "validator_failed": "The independent validator disagreed.",
       "cost_incomplete": "A material has no usable price in the snapshot."
     }
+  },
+  "studio": {
+    "banner": "Candidates are trial proposals, not approved mixes. Every one needs a trial and QC approval.",
+    "cancel": "Cancel",
+    "generate": "Generate trial candidates",
+    "generating": "Generating…",
+    "evaluate": "Evaluate this mix",
+    "path": {
+      "label": "Entry path",
+      "evaluate": "Evaluate existing mix",
+      "generate": "Generate trial recommendation"
+    },
+    "stages": {
+      "label": "Studio stages"
+    },
+    "stage": {
+      "requirements": "Requirements",
+      "candidates": "Candidates",
+      "inspect": "Inspect & Validate",
+      "save": "Save / Request trial"
+    },
+    "req": {
+      "plant": "Plant",
+      "mode": "Code",
+      "strength": "Specified strength (MPa)",
+      "basisLabel": "Strength basis",
+      "basis": {
+        "cylinder": "Cylinder",
+        "cube": "Cube",
+        "b_grade": "B-grade"
+      },
+      "slump": "Slump (mm)",
+      "nmas": "Nominal maximum aggregate size",
+      "pumpable": "Must be pumpable",
+      "objectiveLabel": "Objective",
+      "objective": {
+        "cheapest": "Cheapest",
+        "closest": "Closest to my targets"
+      }
+    },
+    "exposure": {
+      "title": "Where will this concrete be?",
+      "hint": "Pick one card in each row; the classes are the code exposure classes.",
+      "group": {
+        "F": "Freezing and thawing",
+        "S": "Sulfates in soil or water",
+        "W": "Contact with water",
+        "C": "Chlorides and reinforcement"
+      },
+      "F0": "No freezing",
+      "F1": "Occasional freezing",
+      "F2": "Frequent freezing, wet",
+      "F3": "Freezing with de-icing salts",
+      "S0": "No sulfate exposure",
+      "S1": "Moderate sulfate",
+      "S2": "Severe sulfate",
+      "S3": "Very severe sulfate",
+      "W0": "Dry, no water contact",
+      "W1": "In contact with water, low permeability not required",
+      "W2": "Low permeability required",
+      "C0": "Dry or protected",
+      "C1": "Moist, no chlorides",
+      "C2": "Moisture with chlorides",
+      "airEntrained": "Air-entrained designs (exposure F1–F3) are not supported by the optimizer yet, so Generate is off. You can still evaluate a mix you type."
+    },
+    "pool": {
+      "title": "Material pool",
+      "hint": "Materials usable at this plant (tested, priced, in date). Click a chip to leave it out of this request.",
+      "addAdHoc": "Add a what-if material",
+      "whatIf": "what-if",
+      "removeAdHoc": "Remove {name}",
+      "cat": {
+        "cement": "Cement",
+        "scm": "Supplementary cementitious",
+        "fine_agg": "Fine aggregate",
+        "coarse_agg": "Coarse aggregate",
+        "admixture": "Admixtures",
+        "water": "Water"
+      }
+    },
+    "mix": {
+      "title": "Proportions",
+      "hint": "Type the mix in kg/m³ (SSD). Nothing is stored until you save it as a draft.",
+      "material": "Material",
+      "kg": "Quantity in kg per m³",
+      "add": "Add a line",
+      "remove": "Remove line"
+    },
+    "chars": {
+      "title": "Mix characteristics",
+      "hint": "Leave a row on Auto to let the optimizer decide. Fixed, Range and Target values you set are shown as yours and never loosen a code limit.",
+      "section": {
+        "strength": "Strength & durability",
+        "binder": "Binder & water",
+        "aggregates": "Aggregates",
+        "fresh": "Fresh properties",
+        "economics": "Economics"
+      },
+      "mode": {
+        "auto": "Auto",
+        "fixed": "Fixed",
+        "range": "Range",
+        "target": "Target"
+      },
+      "value": "Value",
+      "target": "Target value",
+      "min": "Minimum",
+      "max": "Maximum",
+      "product": "Product",
+      "level": "Dosage level",
+      "bound": "Limit: ≤ {value} · {source} {clause}",
+      "rejected": "Not accepted: {value} would loosen the limit ({allowed}).",
+      "extra_margin_mpa": "Extra strength margin",
+      "fcr_mpa": "Required average strength f′cr",
+      "wcm": "Water/cementitious ratio",
+      "binder_kg": "Binder content",
+      "cement_kg": "Cement content",
+      "water_kg": "Free water",
+      "scm": "SCM replacement",
+      "admixture": "Admixture",
+      "air_pct": "Air content",
+      "sand_ratio_pct": "Sand ratio",
+      "agg_share_pct": "Aggregate share",
+      "agg_kg": "Aggregate quantity",
+      "fm_combined": "Combined fineness modulus",
+      "passing_pct": "Combined % passing",
+      "shilstone": {
+        "cf": "Coarseness factor",
+        "wf": "Workability factor"
+      },
+      "fines_max_pct": "Fines (75 µm)",
+      "paste_l": "Paste volume",
+      "fresh_density_kg_m3": "Fresh density",
+      "max_cost_jod_m3": "Maximum cost"
+    },
+    "dof": {
+      "free": "{n, plural, one {1 quantity left for the optimizer} other {# quantities left for the optimizer}}",
+      "fixed": "Fully specified — evaluate only",
+      "over": "Over-specified by {n}"
+    },
+    "blocked": {
+      "title": "The optimizer cannot run yet",
+      "intro": "These values are not on file. The optimizer will not guess them. Enter them in Rules (QC manager), or change the request.",
+      "rules": "Open the Rules screen"
+    },
+    "conflict": {
+      "title": "These values cannot all be met",
+      "hardTitle": "A code or engineering limit blocks this request",
+      "intro": "Release one of the values you set. Code and engineering limits are never relaxed.",
+      "hardIntro": "Even with every value you set released, these limits cannot be met together. Nothing can be released here, and no saving is offered.",
+      "none": "No single limit could be named.",
+      "relax": "would have to move by {n} {unit}",
+      "binding": "binding",
+      "release": "Release"
+    },
+    "cand": {
+      "empty": "Generate candidates from the Requirements stage.",
+      "stale": "The requirements changed after these candidates were generated. Generate again before requesting a trial.",
+      "stats": "{solved} of {enumerated} configurations solved",
+      "noValid": "No candidate passed every check after rounding.",
+      "aria": "Candidate {rank}",
+      "rank": "Candidate {n}",
+      "perM3": "JOD/m³",
+      "delta": "{n} vs best",
+      "pin": "Compare",
+      "binder": "Binder",
+      "wcm": "w/cm",
+      "cement": "Cement",
+      "scm": "SCM",
+      "admixture": "Admixture",
+      "none": "none",
+      "margins": "Margins to the governing limits",
+      "m": {
+        "wcm": "w/cm headroom",
+        "cf": "Coarseness factor",
+        "wf": "Workability factor",
+        "fines": "Fines",
+        "grading": "Grading band"
+      },
+      "pts": "pts",
+      "charsMet": "{met} of {total} characteristics met",
+      "inspect": "Inspect"
+    },
+    "note": {
+      "slump_at_risk": "The free water is well below the model estimate; the slump is at risk.",
+      "water_below_model": "The free water is below the model estimate."
+    },
+    "cmp": {
+      "title": "Comparison of pinned candidates",
+      "row": "Quantity",
+      "cost": "Cost (JOD/m³)",
+      "water": "Free water",
+      "paste": "Paste (L/m³)",
+      "sand": "Sand ratio (%)",
+      "density": "Fresh density",
+      "cf": "Coarseness factor",
+      "wf": "Workability factor"
+    },
+    "inspect": {
+      "none": "Choose a candidate to inspect, or evaluate a mix.",
+      "tabs": "Inspection tabs",
+      "tab": {
+        "proportions": "Proportions",
+        "compliance": "Compliance",
+        "strength": "Strength evidence",
+        "gradation": "Gradation",
+        "cost": "Cost",
+        "trace": "Traceability",
+        "validator": "Validator report"
+      },
+      "col": {
+        "material": "Material",
+        "kg": "kg/m³ SSD",
+        "litres": "L/m³",
+        "volume": "Abs. volume m³",
+        "jodKg": "JOD/kg",
+        "jodM3": "JOD/m³",
+        "share": "% of cost"
+      },
+      "totals": "Totals",
+      "volumeOk": "volume closes to 1 m³",
+      "strength": {
+        "notModel": "Khalta has no plant strength model yet. The figures below are published ACI 211.1 baselines for information; they are not a prediction for this plant and not a compliance result. A trial is required.",
+        "fcr": "Required average strength f′cr",
+        "baselineWc": "ACI 211.1 baseline w/c",
+        "designWcm": "Design w/cm",
+        "compare": "Against the baseline",
+        "design_above_baseline": "Above the baseline (the model predicts a shortfall)",
+        "design_at_or_below_baseline": "At or below the baseline"
+      },
+      "noGuardrails": "Gradation figures are available for generated candidates.",
+      "chart": {
+        "aria": "Combined grading against the target curve and band at {count} sieves",
+        "shilstoneAria": "Shilstone chart: coarseness factor {cf}, workability factor {wf}",
+        "combined": "Combined",
+        "target": "Target",
+        "upper": "Upper band",
+        "lower": "Lower band",
+        "dev": "Deviation",
+        "cf": "Coarseness factor",
+        "wf": "Workability factor"
+      },
+      "noCost": "Cost figures are not shown for your role.",
+      "costIncomplete": "Some materials have no price, so this total is incomplete.",
+      "whatif": {
+        "title": "What-ifs: guardrail shadow prices",
+        "hint": "Hypothetical. Relaxing a guardrail by one unit would change the cost by about this much; nothing here is a saving.",
+        "unit": "JOD/m³ per unit"
+      },
+      "trace": {
+        "figure": "Figure",
+        "value": "Value",
+        "formula": "Formula"
+      },
+      "validator": {
+        "pass": "Independent validator agrees",
+        "fail": "Independent validator disagrees",
+        "explain": "A second implementation with its own arithmetic recomputes every figure, check and the guardrails from the same snapshot. A difference is a hard failure.",
+        "version": "Validator version",
+        "figures": "Figures recomputed",
+        "checks": "Checks recomputed",
+        "mismatches": "Differences found"
+      }
+    },
+    "save": {
+      "gaps": "Evidence gaps before saving",
+      "gapsHint": "Every candidate needs a trial. The labels above say what is still unproven.",
+      "code": "Design code",
+      "name": "Design name",
+      "draft": "Save as draft",
+      "trial": "Request trial",
+      "trialGenerated": "Request trial is available for generated candidates that passed the validator.",
+      "authorize": "This candidate is predicted to fall short of the strength baseline. Authorising it needs a reason.",
+      "needsManager": "This candidate is predicted to fall short of the strength baseline. A QC manager must authorise it.",
+      "reason": "Reason for authorising",
+      "savedDraft": "Saved as a draft.",
+      "draftDone": "Draft {code} saved. Nothing is approved.",
+      "trialRequested": "Trial candidate created.",
+      "trialDone": "{code} is now a trial candidate. It is not approved."
+    },
+    "compare": {
+      "open": "Compare plants",
+      "title": "Compare plants",
+      "hint": "Runs this same request at each plant you choose, using that plant’s own materials and prices.",
+      "plants": "Plants",
+      "mapping": "Material mapping",
+      "mappingNone": "This request pins no material, so each plant uses its own materials and no mapping is needed.",
+      "counterpart": "Counterpart at this plant",
+      "noneOption": "No counterpart",
+      "confirm": "I have checked the mapping",
+      "run": "Run at these plants",
+      "running": "Running…",
+      "theoretical": "Theoretical and trial-only: nothing here is a saving or an approved mix.",
+      "col": {
+        "plant": "Plant",
+        "status": "Result",
+        "best": "Best JOD/m³",
+        "delta": "Δ vs current plant",
+        "haul": "Delivered estimate"
+      },
+      "haulNA": "not available",
+      "candidates": "{n, plural, one {1 candidate} other {# candidates}}",
+      "noCounterpart": "Skipped: a pinned material has no counterpart here",
+      "reason": {
+        "plant_not_accessible": "Skipped: you have no access to this plant"
+      }
+    },
+    "status": {
+      "candidates": "Candidates found",
+      "blocked": "Blocked: parameters missing",
+      "infeasible": "No feasible mix",
+      "no_valid_candidate": "No valid candidate",
+      "skipped": "Skipped"
+    },
+    "adhoc": {
+      "title": "What-if material",
+      "hint": "Enter the minimum set for a material you want to try in this request only. It is not saved and cannot become a design until it is added to the library with a test and a price.",
+      "category": "Category",
+      "nameEn": "Name (English)",
+      "nameAr": "Name (Arabic)",
+      "sg": "Specific gravity",
+      "sgSsd": "Specific gravity (SSD)",
+      "c3a": "C₃A (%)",
+      "scmType": "SCM type",
+      "scm": {
+        "fly_ash": "Fly ash",
+        "ggbs": "Slag (GGBS)",
+        "silica_fume": "Silica fume",
+        "natural_pozzolan": "Natural pozzolan"
+      },
+      "chloridePct": "Chlorides (%)",
+      "chlorideMgL": "Chlorides (mg/L)",
+      "paste": "Gradation (paste from a spreadsheet)",
+      "pastePlaceholder": "sieve, % passing — one per line",
+      "fm": "Fineness modulus",
+      "price": "Price (JOD per kg, up to 3 decimals)",
+      "priceHint": "Without a price the material is unavailable to the optimizer.",
+      "declared": "Every value here is user-declared and labelled as such in the results.",
+      "add": "Add to this request"
+    }
   }
 }

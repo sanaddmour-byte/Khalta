@@ -86,7 +86,7 @@ describe('guardrail parameters', () => {
   });
 
   it('merges the individual grading limits of both codes, tightest first', () => {
-    const lim = (min: number) => [{ sieve_mm: 4.75, min_pct: min, max_pct: 100 }];
+    const lim = (min: number) => ({ '4.75': { min, max: 100 } });
     const r = prepare(
       optimizerInput({
         mode: 'BOTH',

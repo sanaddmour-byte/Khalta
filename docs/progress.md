@@ -286,3 +286,28 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Studio, characteristics panel, DoF meter and conflict panel are M3.2; Arabic strings are drafts (no new UI strings here); Railway staging still awaits your go-ahead; JS values and rule verification pending; real attested designs and volumes still wanted.
 
 **Next:** M3.2 (Design Studio) — write `docs/plans/M3.2.md`.
+
+## 2026-10-02 — M3.2 Design Studio (F-018, F-019, F-020)
+
+**Changed**
+
+- `apps/web/src/studio`: the Studio (`/studio`): Evaluate and Generate paths, four stages (Requirements → Candidates → Inspect & Validate → Save / Request trial), plain-language exposure picker (F1–F3 turns Generate off with the reason), material pool chips with the optimizer's reason for every unusable material, characteristics panel (Auto / Fixed / Range / Target, live code limit beside each input, rejected values shown inline with rule and clause, objective toggle), DoF meter, blocked panel (named missing parameters), conflict panel with Release (user values only; hard rows are listed with no control and no saving), candidate cards (cost for cost-visible roles, Δ vs best, margin bars, evidence chips, "n of m characteristics met", notes), pin up to 4 with a side-by-side table, Inspect tabs (proportions with Σ volume, compliance table, strength evidence, gradation and Shilstone charts that are never mirrored, cost with hypothetical shadow prices, traceability, validator report), Save as draft and Request trial (enabled only after a validator pass and for a fresh result; shortfall needs a QC manager and a reason), what-if material quick-entry drawer, Compare plants with a confirmed mapping.
+- `apps/api`: `POST /api/design-requests/preflight` (usable pool with reasons, live limits, characteristics check, named blockers; writes nothing), `POST /api/design-requests/evaluate-mix` (typed mix, evaluator + validator, nothing stored), `POST /api/designs` (draft from a typed mix), `POST /api/design-requests/compare-plants` (one stored request per plant, mapping applied to material references, unmapped = skipped with a reason, audited), request-level `adHoc` what-if materials (user-declared; a candidate that uses one cannot become a design). Candidate view now carries validator version and counts.
+- **Fix found while building the UI:** the grading limits were read as a list, but the rules system stores a `range` rule as an object keyed by sieve (`{ "4.75": { min, max } }`), so a QC manager could not have entered them. The optimizer, the validator, the synthetic parameters, the fixtures and the formulation note now use the rules system's shape.
+- EN/AR strings (264 keys under `studio.*`; Arabic drafts listed in `docs/i18n-review.md`).
+
+**Commands run (all green):** `typecheck`, `lint` (incl. boundaries, formatting, the hard-coded-string rule), `test` (engine 291, validator 164, api 209, web 35, rbac 175, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (93, incl. 10 new: generate → compare → inspect → validator → request trial; inline rejection with clause; air-entrained disabled; named blockers; conflict → Release → candidates; typed mix → draft; what-if material; compare plants; role check; Arabic RTL; axe on every Studio stage), `screens` (125; `docs/screens/M3.2/` holds the Studio screens EN/AR × 1440/1024/390, reviewed), `db:drift`.
+
+**Deviations from the plan (and why)**
+
+- **Demo-tenant SYNTHETIC parameters:** the e2e and screen runs write the labelled SYNTHETIC engineering parameters into their own test database through the Rules API; I did not add them to the demo seed script, so the demo tenant (and every real tenant) still blocks with named parameters until a QC manager enters real values.
+- **No live strength conversion** in the strength picker (cube / B-grade are converted by the server through `strength.basis_map` when the request runs); the f′cr and limits are shown from the preflight.
+- **Quick entry** is the what-if (request-only) material drawer; entering characteristics for an existing library material still happens on the Materials screen.
+- **Typed mixes cannot request a trial** from the Studio: the lifecycle edge is turned on, but its evidence is the candidate validator, which only generated candidates have. A typed mix can be saved as a draft and evaluated.
+- Compare plants shows "not available" for delivered estimates (no site distance or haul cost exists yet).
+
+**Verification note:** tests prove the Studio shows what the API returns, cannot request a trial without a validator pass or after the request changed, never offers to release a code or engineering limit, shows blocked parameters by name, rejects a loosening value with its clause, and shows no cost to cost-blind roles (API tests). They do **not** prove any candidate will perform in your plant, that the synthetic parameters resemble yours, or that the Arabic wording is final.
+
+**Open items:** Railway staging still awaits your go-ahead; real engineering parameters (grading band, WF bounds, fines cap, pumpable minimum, ASTM C33 limits) and JS values still to be entered by a QC manager; Arabic review; real attested designs and volumes.
+
+**Next:** M3.3 (characteristic profiles) — write `docs/plans/M3.3.md`.

@@ -18,19 +18,19 @@ export const SYNTHETIC_PARAMS: Record<string, unknown> = {
   'eng.shilstone.wf.max': 45,
   'eng.fines.max_pct_75um': 6,
   'eng.pumpable.min_passing_0_3mm_pct': 10,
-  'grading.fine.limits': [
-    { sieve_mm: 9.5, min_pct: 100, max_pct: 100 },
-    { sieve_mm: 4.75, min_pct: 90, max_pct: 100 },
-    { sieve_mm: 2.36, min_pct: 65, max_pct: 100 },
-    { sieve_mm: 1.18, min_pct: 40, max_pct: 90 },
-    { sieve_mm: 0.6, min_pct: 20, max_pct: 70 },
-    { sieve_mm: 0.3, min_pct: 8, max_pct: 40 },
-    { sieve_mm: 0.15, min_pct: 0, max_pct: 15 },
-  ],
-  'grading.coarse.limits': [
-    { sieve_mm: 4.75, min_pct: 0, max_pct: 20 },
-    { sieve_mm: 2.36, min_pct: 0, max_pct: 6 },
-  ],
+  'grading.fine.limits': {
+    '9.5': { min: 100, max: 100 },
+    '4.75': { min: 90, max: 100 },
+    '2.36': { min: 65, max: 100 },
+    '1.18': { min: 40, max: 90 },
+    '0.6': { min: 20, max: 70 },
+    '0.3': { min: 8, max: 40 },
+    '0.15': { min: 0, max: 15 },
+  },
+  'grading.coarse.limits': {
+    '4.75': { min: 0, max: 20 },
+    '2.36': { min: 0, max: 6 },
+  },
 };
 
 /**

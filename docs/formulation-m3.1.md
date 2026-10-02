@@ -51,6 +51,6 @@ DoF = free quantities (B, W, one V per aggregate) − equalities (the volume bal
 1. **Maximum size D_max** = the smallest ASTM E11 sieve above the NMAS; grading sieves = ASTM sieves from 0.15 mm up to (not including) D_max. The 0.45-power curve is the target; the ASTM C33 limits act per aggregate.
 2. **Workability-factor adjustment** is one-sided, subtracting `pts` per `per_kg` of binder above `above_kg` (the seed key says "above").
 3. **Fines cap** = combined % passing 75 µm of the aggregate blend (the seed key `eng.fines.max_pct_75um`).
-4. **Individual grading limit format** (`grading.fine.limits`, `grading.coarse.limits`): a list of `{ sieve_mm, min_pct, max_pct }`; the coarse list applies to every coarse aggregate (the test schema has no size number).
+4. **Individual grading limit format** (`grading.fine.limits`, `grading.coarse.limits`): the rules system's `range` shape, an object keyed by sieve in mm, `{ "4.75": { "min": 90, "max": 100 } }`; the coarse limits apply to every coarse aggregate (the test schema has no size number).
 5. **Shilstone WF bounds** may be one number or a table keyed by NMAS.
 6. The ACI 211.1 w/c baseline ends at f′cr 40 MPa; beyond it the request is blocked.

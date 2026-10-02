@@ -34,6 +34,18 @@ function passAt(points: Point[] | undefined, s: number): Rat | null {
   return null;
 }
 
+/** A `range` rule is an object keyed by sieve (mm): `{ "4.75": { min, max } }`. */
+function limitsOf(v: unknown): { sieve_mm: number; min_pct: number; max_pct: number }[] | null {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return null;
+  const out: { sieve_mm: number; min_pct: number; max_pct: number }[] = [];
+  for (const [k, x] of Object.entries(v)) {
+    const { min, max } = (x ?? {}) as { min?: unknown; max?: unknown };
+    if (!num(Number(k)) || (!num(min) && !num(max))) return null;
+    out.push({ sieve_mm: Number(k), min_pct: num(min) ? min : 0, max_pct: num(max) ? max : 100 });
+  }
+  return out.length ? out : null;
+}
+
 export function validateCandidate(rec: CandidateRecord): CandidateValidatorResult {
   const out: CandidateMismatch[] = [];
   const add = (m: CandidateMismatch) => out.push(m);
@@ -332,8 +344,8 @@ export function validateCandidate(rec: CandidateRecord): CandidateValidatorResul
   for (const l of aggs) {
     const key = l.m?.category === 'fine_agg' ? 'grading.fine.limits' : 'grading.coarse.limits';
     for (const code of codes) {
-      const lim = rv(code, key) as { sieve_mm: number; min_pct: number; max_pct: number }[] | null;
-      if (!Array.isArray(lim)) {
+      const lim = limitsOf(rv(code, key));
+      if (lim === null) {
         add({
           key: `${code}:${key}`,
           kind: 'parameter_missing',

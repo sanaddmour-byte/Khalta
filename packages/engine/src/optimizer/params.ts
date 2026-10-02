@@ -6,17 +6,21 @@ import type { Band, Guardrails, OptimizerBlocker } from './types';
 
 type Limit = { sieve_mm: number; min_pct: number; max_pct: number };
 
-const isLimits = (v: unknown): v is Limit[] =>
-  Array.isArray(v) &&
-  v.length > 0 &&
-  v.every(
-    (x) =>
-      x !== null &&
-      typeof x === 'object' &&
-      isNum((x as Limit).sieve_mm) &&
-      isNum((x as Limit).min_pct) &&
-      isNum((x as Limit).max_pct),
-  );
+/**
+ * The rules system stores a `range` rule as an object keyed by sieve (mm): `{ "4.75": { min, max } }`.
+ * Returns the limits as a list (ascending sieve), or null when the value is absent or malformed.
+ */
+export function limitsOf(v: unknown): Limit[] | null {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return null;
+  const out: Limit[] = [];
+  for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
+    const { min, max } = (x ?? {}) as { min?: unknown; max?: unknown };
+    const sieve = Number(k);
+    if (!isNum(sieve) || (!isNum(min) && !isNum(max))) return null;
+    out.push({ sieve_mm: sieve, min_pct: isNum(min) ? min : 0, max_pct: isNum(max) ? max : 100 });
+  }
+  return out.length ? out.sort((a, b) => a.sieve_mm - b.sieve_mm) : null;
+}
 
 /** A value that is one number, or a table keyed by NMAS (mm) -> number; returns the number for `nmas`. */
 export function byNmas(v: unknown, nmas: number): number | null {
@@ -99,8 +103,8 @@ export function readGuardrails(
   const merge = (key: string, label: string): Limit[] | null => {
     let out: Limit[] | null = null;
     for (const code of opts.codes) {
-      const v = rules.value(code, key);
-      if (!isLimits(v)) {
+      const v = limitsOf(rules.value(code, key));
+      if (v === null) {
         blockers.push({
           code: 'rule_not_on_file',
           subject: `${code}:${key}`,

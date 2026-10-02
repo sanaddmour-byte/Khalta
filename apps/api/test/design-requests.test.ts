@@ -351,13 +351,11 @@ describe('Studio endpoints', () => {
   it('preflight: pool with reasons, live limits, characteristics check, named blockers; writes nothing', async () => {
     const m = await as('qc_manager');
     const before = await env.db.select().from(schema.designRequests);
-    const ok = await m
-      .post('/api/design-requests/preflight')
-      .send({
-        plantId: plantA,
-        mode: 'ACI',
-        requirements: { ...REQUIREMENTS, exposure: ['F0', 'S1', 'W0', 'C1'] },
-      });
+    const ok = await m.post('/api/design-requests/preflight').send({
+      plantId: plantA,
+      mode: 'ACI',
+      requirements: { ...REQUIREMENTS, exposure: ['F0', 'S1', 'W0', 'C1'] },
+    });
     expect(ok.status).toBe(200);
     const cemI = ok.body.pool.find((p: { id: string }) => p.id === mat['cem-i']);
     expect(cemI.usable).toBe(false);
@@ -375,13 +373,11 @@ describe('Studio endpoints', () => {
     });
     expect(bad.body.characteristics.ok).toBe(false);
     expect(JSON.stringify(bad.body.characteristics.rejected)).toContain('0.5');
-    const blocked = await m
-      .post('/api/design-requests/preflight')
-      .send({
-        plantId: plantA,
-        mode: 'ACI',
-        requirements: { ...REQUIREMENTS, exposure: ['F2', 'S0', 'W0', 'C1'] },
-      });
+    const blocked = await m.post('/api/design-requests/preflight').send({
+      plantId: plantA,
+      mode: 'ACI',
+      requirements: { ...REQUIREMENTS, exposure: ['F2', 'S0', 'W0', 'C1'] },
+    });
     expect(blocked.body.blockers[0].code).toBe('not_supported');
     expect(await env.db.select().from(schema.designRequests)).toHaveLength(before.length);
     expect(
@@ -515,7 +511,14 @@ describe('what-if (ad-hoc) materials', () => {
     const bad = await m.post('/api/design-requests').send({
       plantId: plantA,
       requirements: REQUIREMENTS,
-      adHoc: [{ category: 'cement', market_name_en: 'x', properties: { sg: 3.15 }, price_jod_per_kg: '0.0501' }],
+      adHoc: [
+        {
+          category: 'cement',
+          market_name_en: 'x',
+          properties: { sg: 3.15 },
+          price_jod_per_kg: '0.0501',
+        },
+      ],
     });
     expect(bad.status).toBe(400);
   });

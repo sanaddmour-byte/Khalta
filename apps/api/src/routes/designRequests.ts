@@ -63,7 +63,11 @@ function candidateView(c: CandidateRow, canCost: boolean) {
     evidence: c.evidence,
     requiresAuthorization: c.requiresAuthorization,
     costJodPerM3: canCost ? c.costJodPerM3 : null,
-    validator: { status: c.validatorStatus },
+    validator: {
+      status: c.validatorStatus,
+      version: (c.validator as { validatorVersion?: string }).validatorVersion ?? null,
+      checked: (c.validator as { evaluation?: { checked?: unknown } }).evaluation?.checked ?? null,
+    },
   };
 }
 
