@@ -1032,3 +1032,11 @@ All Arabic strings under `lifecycle.*` and the new `library.tabs.trial|awaiting`
 - **Gate wording** (`lifecycle.gate.*`, `lifecycle.code.*`): what must be true before approval, especially "الأدلة حديثة" (evidence is current), "القاعدة لم يوثقها مدير الجودة" (rule not verified) and the declared-values line.
 - **E-signature** (`lifecycle.sign.*`, `lifecycle.meaning.*`): what a typed signature means; the sentence that it claims no legal validity.
 - **Terms**: "إيقاف نهائي" for retire, "الإفراج" for release, "اجتياز التجربة" for pass the trial, "القيم المصرّح بها" for user-declared values.
+
+## M4.2 — Lab loop and PDF (drafts for Sanad to review)
+
+All Arabic under `lab.*`, `settings.production*`, `settings.solutionWater*`, `settings.letterhead*`, `settings.lh.*` in `ar.json`, and every string in `apps/api/src/submittal/strings.ts` (the PDF) are drafts. Priority:
+
+- **The PDF itself** (`submittal/strings.ts`): the title «مستند اعتماد الخلطة», the watermark «غير معتمد — للتجربة فقط», «مُستبدَل», «متوقف نهائياً», the disclaimer paragraph, and the approval block labels. This is the client-facing page.
+- **Production terms**: «الرطوبة الكلية», «الماء الحر», «الوزن المطلوب», «ماء محلول الإضافة», «خلطة إنتاج / أوزان خلطة تجريبية».
+- **Lab terms**: «خلطة تجريبية», «أسطوانة / مكعب», «رقم المجموعة», «متوسط ٣».

@@ -361,3 +361,30 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Railway staging still awaits your go-ahead; QC must enter the trial criteria, the real engineering parameters and JS values; Arabic review; trial batch entry and the PDF are M4.2.
 
 **Next:** M4.2 (Lab loop and PDF) — write `docs/plans/M4.2.md` when you say "Proceed".
+
+## 2026-10-02 — M4.2 Lab loop and PDF (F-023, F-024, F-025)
+
+**Changed**
+
+- `packages/engine`: `production/` — `toBatchWeights` (SSD → wet weights, every intermediate term, mass/water balance, named blockers; the admixture solution-water convention is opt-in) and its types; `./production` subpath export (the validator may read only the types).
+- `packages/validator`: `validateBatch` (independent arithmetic, operational limits, sign and balance checks); a new dependency-cruiser rule keeps it away from the conversion module.
+- `packages/db` (migrations 0020–0021): `trial_batches` extended (water added, supersedes), `strength_results`, `batch_instances` (append-only; a CHECK refuses one without a passing independent check).
+- `apps/api`: trial batches, strength results, batch-weights preview, batch instances; the trial gates now read real rows (strength judged only at the design's test age on the latest batch); `POST /api/designs/:id/submittal` (audited PDF export: AR / EN / both, Chromium + embedded Plex fonts, QR, letterhead, watermark by state, never any cost); settings for the letterhead and the solution-water convention.
+- `apps/web`: on the design sheet — Trial batches (log a batch, add cylinders, strength chart against f′c and f′cr with the running average of 3), Batch weights (moisture per aggregate, trace, independent check, save, history), Submittal PDF button with language choice; Settings gains production and letterhead fields; `/library?design=<id>` opens a design (the QR target).
+- ADR 0012; EN/AR strings (Arabic drafts, including the PDF's, in `docs/i18n-review.md`).
+
+**Commands run (green):** `typecheck`, `lint`, `test` (engine 328, validator 169, api 240, web 38, rbac 182, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (101 of 103 on the full run; the two failures — a Prices keyboard-direction test and an a11y overlay test — passed when run alone, as the Prices one has before, so I read them as load flakiness), `screens` (`docs/screens/M4.2/`, EN/AR × 1440/1024/390; Arabic 1440 reviewed), `db:drift` after commit. **Phase gates:** moisture tests (golden, properties, rejections) and the Arabic PDF visual snapshots (`apps/api/test/snapshots/`, reviewed) pass.
+
+**Deviations from the plan (and why)**
+
+- The submittal is `POST` (not `GET …pdf`) so the export is audited by the existing helper.
+- The Settings screen edits letterhead names and addresses; the logo is accepted by the API but has no upload control yet.
+- The legacy `trial_batches.strength_mpa` column stays (unread): dropping it needs an interactive migration prompt.
+- Compliance rows on the PDF show technical check ids (not translated names); a translated label table is a later polish.
+- The e2e database gets the moisture limits through the Rules API and an absorption test version for the engine's SYNTHETIC aggregates through SQL (they carry none).
+
+**Verification note:** tests prove the conversion arithmetic against hand-worked numbers, that impossible, stale, missing and un-limited inputs block by name, that a stored batch instance never changes the design and needs a passing independent check, that the PDF is watermarked for every state but approved/in-production, carries no cost, and renders Arabic right-to-left with shaped text. They do **not** prove your moisture meter readings, that the admixture convention matches your product, that the SYNTHETIC trial criteria suit your plant, or that the Arabic wording is final.
+
+**Open items:** Railway staging still awaits your go-ahead; QC must enter the moisture limits, the trial criteria, the real engineering parameters and JS values; the letterhead; Arabic review; real attested designs and volumes.
+
+**Next:** M5.1 (Savings pilot + proactive insights) — write `docs/plans/M5.1.md` when you say "Proceed".

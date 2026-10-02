@@ -583,7 +583,19 @@
     "requiresLab": "Approval requires lab-report sources",
     "requiresLabHint": "When on, a design that relies on user-declared key values cannot be approved. Enforced when approvals arrive.",
     "save": "Save settings",
-    "saved": "Settings saved"
+    "saved": "Settings saved",
+    "production": "Production and submittals",
+    "productionHint": "Used by batch weights and the PDF submittal.",
+    "solutionWater": "Subtract admixture solution water from batch water",
+    "solutionWaterHint": "Off by default: the convention differs per product. When on, solution water (mass × (1 − solids %)) is subtracted and named in the conversion.",
+    "letterhead": "Letterhead for the PDF submittal",
+    "letterheadHint": "Leave the names empty to print a plain header with the plant name. Both names are needed.",
+    "lh": {
+      "nameEn": "Company name (English)",
+      "nameAr": "Company name (Arabic)",
+      "addressEn": "Address (English)",
+      "addressAr": "Address (Arabic)"
+    }
   },
   "users": {
     "title": "Users",
@@ -1886,6 +1898,86 @@
       "requirements_change": "requirements",
       "rule_change": "rules",
       "test_change": "material tests"
+    }
+  },
+  "lab": {
+    "save": "Save",
+    "saved": "Saved.",
+    "batches": {
+      "title": "Trial batches",
+      "none": "No trial batch is logged yet.",
+      "specimens": "Specimens at {age} days (MPa)"
+    },
+    "batch": {
+      "add": "Log a trial batch",
+      "hint": "Appended to the record. A correction is a new batch. A trial batch alone does not start the trial.",
+      "date": "Batch date",
+      "slump": "Slump (mm)",
+      "air": "Air (%)",
+      "temperature": "Temperature (°C)",
+      "density": "Fresh density (kg/m³)",
+      "yield": "Yield (m³)",
+      "waterAdded": "Water added on site (kg/m³)",
+      "notes": "Notes",
+      "ssd": "SSD design (kg)",
+      "free": "Free water (kg)",
+      "weigh": "Weigh (kg)",
+      "waterLine": "Water to add: {batch} kg (design {design} kg − aggregate free water {free} kg).",
+      "balance": "Mass balance: design {ssd} kg, batch {batch} kg.",
+      "solutionOn": "Admixture solution water {kg} kg was subtracted (opt-in convention).",
+      "solutionOff": "Admixture solution water is not subtracted (default convention)."
+    },
+    "results": {
+      "add": "Add results",
+      "hint": "Cylinders or cubes of one set. Only specimens at the design test age ({age} days) are judged; others are stored and shown.",
+      "cast": "Cast date",
+      "age": "Age (days)",
+      "type": "Specimen type",
+      "cylinder": "Cylinder",
+      "cube": "Cube",
+      "set": "Set id",
+      "values": "Results in MPa (comma separated)"
+    },
+    "chart": {
+      "title": "Strength results against f′c and f′cr",
+      "specimen": "Specimen",
+      "results": "Result",
+      "avg3": "Average of 3"
+    },
+    "weights": {
+      "title": "Batch weights",
+      "hint": "Enter today's measured total moisture for each aggregate. The SSD design is converted to wet weights; the independent check must agree before it can be saved. A saved batch is a production correction, never a new design version.",
+      "moisture": "Total moisture %",
+      "convert": "Convert",
+      "store": "Save as today's batch",
+      "batchWater": "batch water {kg} kg",
+      "validator": {
+        "pass": "The independent check agrees with the conversion.",
+        "fail": "The independent check disagrees: do not use these weights."
+      },
+      "kind": {
+        "production": "Production batch",
+        "trial": "Trial batch weights"
+      }
+    },
+    "blocker": {
+      "parameter_missing": "A QC limit is not on file",
+      "moisture_missing": "No moisture reading for this aggregate",
+      "absorption_missing": "The aggregate has no absorption on file",
+      "moisture_impossible": "The moisture reading is impossible",
+      "moisture_stale": "The moisture reading is too old",
+      "moisture_future": "The reading time is invalid",
+      "no_water_line": "The design has no water line",
+      "solids_missing": "Admixture solids are not on file"
+    },
+    "pdf": {
+      "title": "Submittal PDF",
+      "language": "PDF language",
+      "en": "English",
+      "ar": "Arabic",
+      "both": "Arabic and English",
+      "download": "Download submittal PDF",
+      "watermark": "This design is not approved: the PDF carries a NOT APPROVED — TRIAL ONLY watermark."
     }
   }
 }

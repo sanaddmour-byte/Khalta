@@ -32,6 +32,14 @@ export interface TenantSettings {
   insightMinAnnualJod: number;
   sanityRanges: Record<string, { min?: number; max?: number }>;
   approvalRequiresLabSource: boolean;
+  admixtureSolutionWater: boolean;
+  letterhead: {
+    nameEn: string;
+    nameAr: string;
+    addressEn: string;
+    addressAr: string;
+    logoDataUrl: string | null;
+  } | null;
 }
 
 export const adminPlantsQuery = queryOptions({

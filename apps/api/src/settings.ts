@@ -48,6 +48,25 @@ export const settingsSchema = z.strictObject({
       sandRatioTolerancePts: 0.5,
       wcmTolerance: 0.005,
     }),
+  // Production (M4.2). Admixture solution water is subtracted from batch water only when the plant opts in.
+  admixtureSolutionWater: z.boolean().default(false),
+  // Letterhead for the PDF submittal; null = plain text header from the plant and company names.
+  letterhead: z
+    .strictObject({
+      nameEn: z.string().trim().max(120),
+      nameAr: z.string().trim().max(120),
+      addressEn: z.string().trim().max(300).default(''),
+      addressAr: z.string().trim().max(300).default(''),
+      /** Optional logo as a data URL (PNG or JPEG, ≤ 150 kB). */
+      logoDataUrl: z
+        .string()
+        .max(200_000)
+        .regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/)
+        .nullable()
+        .default(null),
+    })
+    .nullable()
+    .default(null),
   // When on, designs that rely on user-declared key properties cannot be approved (enforced from M4.1; on by default, 07 §2.5).
   approvalRequiresLabSource: z.boolean().default(true),
 });

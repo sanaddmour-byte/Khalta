@@ -86,7 +86,10 @@ export async function makeSignature(
   };
 }
 
-const ruleNumber = (rules: { ruleset: string; key: string; value: unknown }[], key: string) => {
+export const ruleNumber = (
+  rules: { ruleset: string; key: string; value: unknown }[],
+  key: string,
+) => {
   const r = rules.find((x) => x.ruleset === 'ENGINEERING' && x.key === key);
   return typeof r?.value === 'number' && Number.isFinite(r.value) ? r.value : null;
 };
@@ -103,11 +106,20 @@ export async function trialCriteria(db: Executor, tenantId: string): Promise<Tri
 }
 
 export async function trialBatchesOf(db: Executor, designId: string): Promise<TrialBatch[]> {
+  const [d] = await db
+    .select({ requirements: schema.mixDesigns.requirements })
+    .from(schema.mixDesigns)
+    .where(eq(schema.mixDesigns.id, designId));
+  const age = (d?.requirements as { testAgeDays?: number | null } | undefined)?.testAgeDays ?? null;
   const rows = await db
     .select()
     .from(schema.trialBatches)
     .where(eq(schema.trialBatches.designId, designId))
     .orderBy(asc(schema.trialBatches.batchedOn), asc(schema.trialBatches.createdAt));
+  const results = await db
+    .select()
+    .from(schema.strengthResults)
+    .where(eq(schema.strengthResults.designId, designId));
   const n = (v: string | null) => (v === null ? null : Number(v));
   return rows.map((r) => ({
     id: r.id,
@@ -117,7 +129,10 @@ export async function trialBatchesOf(db: Executor, designId: string): Promise<Tr
     temperatureC: n(r.temperatureC),
     freshDensityKgM3: n(r.freshDensityKgM3),
     yieldM3: n(r.yieldM3),
-    strengthMpa: (r.strengthMpa as number[]) ?? [],
+    // only the specimens of this batch cast for the design's test age are judged (others are stored and shown)
+    strengthMpa: results
+      .filter((x) => x.trialBatchId === r.id && age !== null && x.ageDays === age)
+      .map((x) => Number(x.resultMpa)),
   }));
 }
 

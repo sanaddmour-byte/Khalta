@@ -3,7 +3,9 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { supersede } from '../src/rules/service';
 import { createTestEnv, type TestEnv } from './helpers';
-import { optimizerWorld, REQUIREMENTS } from './opt-world';
+import { optimizerWorld, REQUIREMENTS as BASE_REQUIREMENTS } from './opt-world';
+
+const REQUIREMENTS = { ...BASE_REQUIREMENTS, testAgeDays: 28 };
 
 // SYNTHETIC world and SYNTHETIC trial criteria: labelled test data, not a plant's values.
 const CRITERIA = {
@@ -88,8 +90,28 @@ async function trialCandidate(code: string) {
 const designRow = async (id: string) =>
   (await env.db.select().from(schema.mixDesigns).where(eq(schema.mixDesigns.id, id)))[0]!;
 
-/** A passing SYNTHETIC trial batch built from the design's own stored evaluation (test fixture; M4.2 adds entry). */
-async function goodBatch(id: string, over: Record<string, unknown> = {}) {
+/** Log a SYNTHETIC trial batch and its cylinders through the real endpoints (M4.2). */
+async function logBatch(
+  id: string,
+  fields: Record<string, unknown>,
+  strengths: number[],
+  batchedOn = '2026-10-01',
+) {
+  const lab = await as('qc_manager');
+  const made = await lab.post(`/api/designs/${id}/trial-batches`).send({ batchedOn, ...fields });
+  expect(made.status, JSON.stringify(made.body)).toBe(201);
+  const res = await lab.post(`/api/trial-batches/${made.body.id}/strength-results`).send({
+    castDate: batchedOn,
+    ageDays: 28,
+    specimenType: 'cylinder',
+    setId: `S-${batchedOn}`,
+    resultsMpa: strengths,
+  });
+  expect(res.status, JSON.stringify(res.body)).toBe(201);
+}
+
+/** A passing SYNTHETIC trial batch built from the design's own stored evaluation. */
+async function goodBatch(id: string) {
   const d = await designRow(id);
   const [ev] = await env.db
     .select()
@@ -100,19 +122,11 @@ async function goodBatch(id: string, over: Record<string, unknown> = {}) {
     strengthAdequacy: { fcrMpa: number };
   };
   const density = rep.trace.find((t) => t.key === 'mass.fresh_density')!.value;
-  await env.db.insert(schema.trialBatches).values({
-    tenantId: env.tenantId,
-    designId: id,
-    batchedOn: '2026-10-01',
-    slumpMm: '105',
-    airPct: '2',
-    temperatureC: '28',
-    freshDensityKgM3: String(density),
-    yieldM3: '1.002',
-    strengthMpa: [rep.strengthAdequacy.fcrMpa + 3, rep.strengthAdequacy.fcrMpa + 4],
-    createdBy: null,
-    ...over,
-  });
+  await logBatch(
+    id,
+    { slumpMm: 105, airPct: 2, temperatureC: 28, freshDensityKgM3: density, yieldM3: 1.002 },
+    [rep.strengthAdequacy.fcrMpa + 3, rep.strengthAdequacy.fcrMpa + 4],
+  );
 }
 const gates = (body: { details?: { gates?: { id: string; met: boolean; code: string }[] } }) =>
   (body.details?.gates ?? []).filter((g) => !g.met).map((g) => g.id);
@@ -148,16 +162,12 @@ describe('the trial path is gated and every unmet gate is named', () => {
     );
 
     await setCriteria(true);
-    await env.db.insert(schema.trialBatches).values({
-      tenantId: env.tenantId,
-      designId: id,
-      batchedOn: '2026-10-02',
-      slumpMm: '160',
-      temperatureC: '35',
-      freshDensityKgM3: '2300',
-      yieldM3: '1',
-      strengthMpa: [1],
-    });
+    await logBatch(
+      id,
+      { slumpMm: 160, temperatureC: 35, freshDensityKgM3: 2300, yieldM3: 1 },
+      [1],
+      '2026-10-02',
+    );
     const failing = await mgr.post(`/api/designs/${id}/pass-trial`).send(SIGN);
     expect(failing.status).toBe(409);
     expect(gates(failing.body.error)).toEqual(

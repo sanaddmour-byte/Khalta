@@ -48,7 +48,10 @@ export function LibraryPage() {
   >('all');
   const [status, setStatus] = useState(ALL);
   const [q, setQ] = useState('');
-  const [open, setOpen] = useState<string | null>(null);
+  // the submittal's QR code links here: /library?design=<id> opens that design
+  const [open, setOpen] = useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get('design'),
+  );
   const { data, isLoading, isError } = useQuery({
     ...designsQuery({
       ...(tab === 'queue' ? { queue: 'true' } : {}),

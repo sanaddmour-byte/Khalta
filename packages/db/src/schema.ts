@@ -722,9 +722,13 @@ export const trialBatches = pgTable(
     temperatureC: numeric('temperature_c', { precision: 5, scale: 1 }),
     freshDensityKgM3: numeric('fresh_density_kg_m3', { precision: 8, scale: 1 }),
     yieldM3: numeric('yield_m3', { precision: 6, scale: 3 }),
-    /** Individual specimen strengths (MPa) at the design's test age. */
+    /** Legacy (M4.1 fixtures only, never read): strength results are rows of `strength_results` from M4.2. */
     strengthMpa: jsonb('strength_mpa').notNull().default([]),
+    /** Water added on site to reach the target slump (information only), kg per m³. */
+    waterAddedKgM3: numeric('water_added_kg_m3', { precision: 6, scale: 1 }),
     notes: text('notes'),
+    /** A correction is a new batch that names the one it replaces. */
+    supersedesId: uuid('supersedes_id').references((): AnyPgColumn => trialBatches.id),
     createdBy: text('created_by').references(() => users.id),
     createdAt: createdAt(),
   },
@@ -972,4 +976,60 @@ export const savingsEntries = pgTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('savings_entries_variant_eval_uq').on(t.baselineId, t.variantEvaluationId)],
+);
+
+/** One specimen's strength result (M4.2). Append-only. Stored as measured; judged only at the design's test age. */
+export const strengthResults = pgTable(
+  'strength_results',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    trialBatchId: uuid('trial_batch_id').references(() => trialBatches.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    castDate: date('cast_date', { mode: 'string' }).notNull(),
+    ageDays: integer('age_days').notNull(),
+    specimenType: text('specimen_type', { enum: ['cylinder', 'cube'] }).notNull(),
+    setId: text('set_id').notNull(),
+    resultMpa: numeric('result_mpa', { precision: 6, scale: 2 }).notNull(),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index('strength_results_design_idx').on(t.designId, t.ageDays)],
+);
+
+/**
+ * A production correction: the approved SSD design converted to wet batch weights from the day's moisture, with the
+ * full trace and the independent validator's verdict. NEVER a new design version (the design row is untouched).
+ */
+export const batchInstances = pgTable(
+  'batch_instances',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    designVersion: integer('design_version').notNull(),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    kind: text('kind', { enum: ['production', 'trial'] }).notNull(),
+    moisture: jsonb('moisture').notNull(),
+    config: jsonb('config').notNull(),
+    result: jsonb('result').notNull(),
+    validator: jsonb('validator').notNull(),
+    validatorStatus: text('validator_status', { enum: ['pass', 'fail'] }).notNull(),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index('batch_instances_design_idx').on(t.designId, t.createdAt)],
 );

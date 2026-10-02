@@ -18,6 +18,14 @@ module.exports = {
       from: { path: '^packages/validator/src' },
       to: { path: '^packages/engine/src/evaluate/(?!types\\.ts$)', reachable: true },
     },
+    {
+      name: 'validator-must-not-reach-production',
+      severity: 'error',
+      comment:
+        'validateBatch is a second implementation of the production conversion: it may read the production types, never the conversion module.',
+      from: { path: '^packages/validator/src' },
+      to: { path: '^packages/engine/src/production/(?!types\\.ts$)', reachable: true },
+    },
   ],
   options: {
     doNotFollow: { path: 'node_modules' },

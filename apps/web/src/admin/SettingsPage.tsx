@@ -71,6 +71,10 @@ function GeneralTab() {
       sg_max: String(data.sanityRanges['aggregate_sg_ssd']?.max ?? ''),
       abs_min: String(data.sanityRanges['aggregate_absorption_pct']?.min ?? ''),
       abs_max: String(data.sanityRanges['aggregate_absorption_pct']?.max ?? ''),
+      lh_nameEn: data.letterhead?.nameEn ?? '',
+      lh_nameAr: data.letterhead?.nameAr ?? '',
+      lh_addressEn: data.letterhead?.addressEn ?? '',
+      lh_addressAr: data.letterhead?.addressAr ?? '',
     });
   }, [data]);
   const m = useMutation({
@@ -103,6 +107,17 @@ function GeneralTab() {
       insightMinSavingJodPerM3: num(text['insightMinSavingJodPerM3'] ?? '') ?? 0,
       insightMinAnnualJod: num(text['insightMinAnnualJod'] ?? '') ?? 0,
       approvalRequiresLabSource: s.approvalRequiresLabSource,
+      admixtureSolutionWater: s.admixtureSolutionWater,
+      letterhead:
+        (text['lh_nameEn'] ?? '').trim() && (text['lh_nameAr'] ?? '').trim()
+          ? {
+              nameEn: (text['lh_nameEn'] ?? '').trim(),
+              nameAr: (text['lh_nameAr'] ?? '').trim(),
+              addressEn: (text['lh_addressEn'] ?? '').trim(),
+              addressAr: (text['lh_addressAr'] ?? '').trim(),
+              logoDataUrl: s.letterhead?.logoDataUrl ?? null,
+            }
+          : null,
       sanityRanges: {
         ...s.sanityRanges,
         aggregate_sg_ssd: range('sg_min', 'sg_max'),
@@ -189,6 +204,44 @@ function GeneralTab() {
             <Label htmlFor="s-lab">{t('settings.requiresLab')}</Label>
             <p className="text-xs text-muted">{t('settings.requiresLabHint')}</p>
           </div>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4" aria-label={t('settings.production')}>
+        <div>
+          <h3 className="text-sm font-semibold text-heading">{t('settings.production')}</h3>
+          <p className="text-xs text-muted">{t('settings.productionHint')}</p>
+        </div>
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="s-sol"
+            checked={s.admixtureSolutionWater}
+            onCheckedChange={(c) => setS({ ...s, admixtureSolutionWater: c === true })}
+            className="mt-0.5"
+            data-testid="s-solution-water"
+          />
+          <div>
+            <Label htmlFor="s-sol">{t('settings.solutionWater')}</Label>
+            <p className="text-xs text-muted">{t('settings.solutionWaterHint')}</p>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-sm font-medium">{t('settings.letterhead')}</h4>
+          <p className="text-xs text-muted">{t('settings.letterheadHint')}</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {(['nameEn', 'nameAr', 'addressEn', 'addressAr'] as const).map((k) => (
+            <div key={k} className="flex flex-col gap-1">
+              <Label htmlFor={`s-lh_${k}`}>{t(`settings.lh.${k}`)}</Label>
+              <Input
+                id={`s-lh_${k}`}
+                data-testid={`s-lh_${k}`}
+                dir={k.endsWith('Ar') ? 'rtl' : 'ltr'}
+                value={text[`lh_${k}`] ?? ''}
+                onChange={(e) => setText((x) => ({ ...x, [`lh_${k}`]: e.target.value }))}
+              />
+            </div>
+          ))}
         </div>
       </section>
 

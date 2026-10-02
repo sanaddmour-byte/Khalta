@@ -8,6 +8,7 @@
     "./decimal": "./src/prices/decimal.ts",
     "./evaluate": "./src/evaluate/index.ts",
     "./optimizer": "./src/optimizer/index.ts",
+    "./production": "./src/production/batch.ts",
     "./testing": "./src/testing/synthetic.ts",
     "./testing/fixtures": "./src/testing/fixtures.ts",
     "./testing/scenarios": "./src/testing/scenarios.ts",

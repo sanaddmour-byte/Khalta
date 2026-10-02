@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync, readdirSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import { runMigrations } from '@khalta/db';
@@ -21,7 +22,19 @@ function withDb(url: string, db: string) {
   return u.toString();
 }
 
+/** PDF tests need Chromium; use the pre-installed one when the environment does not say where it is. */
+function pickChromium() {
+  if (process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE']) return;
+  const dir = '/opt/pw-browsers';
+  if (!existsSync(dir)) return;
+  for (const d of readdirSync(dir).filter((x) => /^chromium-\d+$/.test(x))) {
+    const exe = join(dir, d, 'chrome-linux', 'chrome');
+    if (existsSync(exe)) process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'] = exe;
+  }
+}
+
 export default async function setup(project: TestProject) {
+  pickChromium();
   const adminUrl =
     process.env['TEST_DATABASE_URL'] ??
     execFileSync(join(import.meta.dirname, '../../../tools/test-db/start.sh'), { encoding: 'utf8' })

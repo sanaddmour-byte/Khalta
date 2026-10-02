@@ -379,3 +379,5 @@ export function validateEvaluation(
 
 export type { ValidatorMismatch, ValidatorResult } from '@khalta/engine';
 export { validateCandidate } from './candidate';
+
+export { validateBatch, BATCH_VALIDATOR_VERSION } from './batch';

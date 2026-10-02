@@ -25,6 +25,7 @@ import { AttestDialog } from './AttestDialog';
 import { ApprovalChip, DesignStatusChip, RevalidationChip, VerdictChip } from './chips';
 import { EditorDialog } from './EditorDialog';
 import { EvaluationTab, MaterialNames } from './EvaluationTab';
+import { LabSection } from './LabSection';
 import { LifecycleSection } from './LifecycleSection';
 import { VersionsSection } from './VersionsSection';
 
@@ -143,6 +144,7 @@ export function DesignSheet({
                     </Button>
                   )}
                   <LifecycleSection design={d} />
+                  <LabSection design={d} lines={q.data.lines} />
                   <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
                     <Field label={t('library.col.plant')}>
                       {plant ? (lang === 'ar' ? plant.nameAr : plant.nameEn) : '–'}

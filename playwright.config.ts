@@ -29,6 +29,10 @@ export default defineConfig({
         BETTER_AUTH_URL: 'http://localhost:3000',
         APP_BASE_URL: 'http://localhost:5173',
         LOG_LEVEL: 'warn',
+        // PDF submittals are printed by Chromium; the CI image and this sandbox say where it is
+        ...(process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE']
+          ? { PLAYWRIGHT_CHROMIUM_EXECUTABLE: process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'] }
+          : {}),
       },
     },
     {

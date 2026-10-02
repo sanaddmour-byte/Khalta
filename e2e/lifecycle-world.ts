@@ -99,26 +99,90 @@ async function withDb<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   }
 }
 
-/** SYNTHETIC fixture: one passing trial batch built from the design's own stored evaluation. */
+/** SYNTHETIC: one passing trial batch and its cylinders, built from the design's own stored evaluation and entered through the real endpoints. */
 export async function addPassingBatch(designId: string) {
-  await withDb(async (c) => {
+  const rep = await withDb(async (c) => {
     const { rows } = await c.query(
-      `SELECT d.tenant_id, e.report FROM mix_designs d JOIN design_evaluations e ON e.id = d.last_evaluation_id WHERE d.id = $1`,
+      `SELECT e.report FROM mix_designs d JOIN design_evaluations e ON e.id = d.last_evaluation_id WHERE d.id = $1`,
       [designId],
     );
-    const rep = rows[0].report as {
+    return rows[0].report as {
       trace: { key: string; value: number }[];
       strengthAdequacy: { fcrMpa: number };
     };
-    const density = rep.trace.find((t) => t.key === 'mass.fresh_density')!.value;
-    const fcr = rep.strengthAdequacy.fcrMpa;
-    await c.query(
-      `INSERT INTO trial_batches (tenant_id, design_id, batched_on, slump_mm, air_pct, temperature_c,
-         fresh_density_kg_m3, yield_m3, strength_mpa, notes)
-       VALUES ($1, $2, '2026-10-01', 105, 2, 28, $3, 1.002, $4::jsonb, 'SYNTHETIC trial batch (fixture)')`,
-      [rows[0].tenant_id, designId, density, JSON.stringify([fcr + 3, fcr + 4])],
-    );
   });
+  const density = rep.trace.find((t) => t.key === 'mass.fresh_density')!.value;
+  const fcr = rep.strengthAdequacy.fcrMpa;
+  const mgr = await as(emailFor('qc_manager'));
+  const made = await mgr.post(`/api/designs/${designId}/trial-batches`, {
+    data: {
+      batchedOn: '2026-10-01',
+      slumpMm: 105,
+      airPct: 2,
+      temperatureC: 28,
+      freshDensityKgM3: density,
+      yieldM3: 1.002,
+      notes: 'SYNTHETIC trial batch',
+    },
+  });
+  expect(made.ok(), await made.text()).toBe(true);
+  const id = ((await made.json()) as { id: string }).id;
+  const res = await mgr.post(`/api/trial-batches/${id}/strength-results`, {
+    data: {
+      castDate: '2026-10-01',
+      ageDays: 28,
+      specimenType: 'cylinder',
+      setId: 'SYN-1',
+      resultsMpa: [fcr + 3, fcr + 4],
+    },
+  });
+  expect(res.ok(), await res.text()).toBe(true);
+}
+
+/** SYNTHETIC moisture limits and aggregate absorption (the engine's synthetic aggregates carry none). */
+let moistureReady: Promise<void> | null = null;
+export function seedMoistureWorld() {
+  return (moistureReady ??= (async () => {
+    await seedLifecycleWorld();
+    const admin = await as(emailFor('admin'));
+    const rules = (await (await admin.get('/api/rules?ruleset=ENGINEERING')).json()).rules as {
+      id: string;
+      key: string;
+      value: unknown;
+    }[];
+    for (const [key, value] of [
+      ['eng.moisture.max_total_pct', 15],
+      ['eng.moisture.stale_hours', 24],
+    ] as const) {
+      const r = rules.find((x) => x.key === key)!;
+      if (r.value !== value) {
+        const res = await admin.patch(`/api/rules/${r.id}/value`, {
+          data: { value, reason: 'SYNTHETIC moisture limit' },
+        });
+        expect(res.ok(), await res.text()).toBe(true);
+      }
+    }
+    await withDb(async (c) => {
+      const { rows } = await c.query(
+        `SELECT m.id, t.id AS tid, t.version, t.properties, t.tenant_id FROM materials m
+         JOIN material_tests t ON t.material_id = m.id AND t.is_current
+         WHERE m.category LIKE '%!_agg' ESCAPE '!' AND NOT (t.properties ? 'absorption_pct')`,
+      );
+      for (const r of rows) {
+        await c.query(`UPDATE material_tests SET is_current = false WHERE id = $1`, [r.tid]);
+        await c.query(
+          `INSERT INTO material_tests (tenant_id, material_id, version, is_current, source, properties, tested_at)
+           VALUES ($1, $2, $3, true, 'supplier_datasheet', $4::jsonb, '2026-08-01')`,
+          [
+            r.tenant_id,
+            r.id,
+            r.version + 1,
+            JSON.stringify({ ...r.properties, absorption_pct: 1.2 }),
+          ],
+        );
+      }
+    });
+  })());
 }
 
 let flipped: string[] = [];

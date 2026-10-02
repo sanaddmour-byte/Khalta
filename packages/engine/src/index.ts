@@ -18,3 +18,4 @@ export * from './profiles';
 export * from './approval/trial';
 export * from './approval/gates';
 export * from './approval/classify';
+export * from './production/types';
