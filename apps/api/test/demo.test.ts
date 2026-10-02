@@ -1,0 +1,122 @@
+import { schema } from '@khalta/db';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { buildDemoPlan, DEMO_SEED, planHash, SYNTHETIC } from '../src/demo/plan';
+import { seedDemo } from '../src/demo/seed';
+import { createTestEnv, type TestEnv } from './helpers';
+
+describe('demo plan', () => {
+  it('is deterministic: same seed, same content; another seed differs', () => {
+    expect(planHash(buildDemoPlan(DEMO_SEED))).toBe(planHash(buildDemoPlan(DEMO_SEED)));
+    expect(planHash(buildDemoPlan(1))).not.toBe(planHash(buildDemoPlan(DEMO_SEED)));
+  });
+  it('labels every generated record as synthetic', () => {
+    const p = buildDemoPlan();
+    const labelled = (s: string) => s.includes(SYNTHETIC) || s.includes('تجريبي');
+    for (const x of [
+      ...p.plants.flatMap((q) => [q.nameEn, q.nameAr]),
+      ...p.suppliers.flatMap((q) => [q.nameEn, q.nameAr]),
+      ...p.materials.map((m) => m.nameEn), // Arabic market names stay plain on purpose so matching is realistic; notes also carry the label
+    ])
+      expect(labelled(x), x).toBe(true);
+    for (const d of p.designs) expect(d.code.startsWith('DEMO-')).toBe(true);
+    expect(
+      p.legacyCsv
+        .split('\n')
+        .slice(1)
+        .every((l) => l.includes(SYNTHETIC)),
+    ).toBe(true);
+  });
+  it('has the Appendix C shape', () => {
+    const p = buildDemoPlan();
+    expect(p.plants.map((x) => x.code)).toEqual(['AMM-01', 'AQB-01']);
+    expect(p.materials.filter((m) => m.category === 'cement')).toHaveLength(3);
+    expect(
+      p.materials.filter((m) => m.plant === 'AMM-01' && m.category.endsWith('agg')),
+    ).toHaveLength(6);
+    expect(
+      p.materials.filter((m) => m.plant === 'AQB-01' && m.category.endsWith('agg')),
+    ).toHaveLength(6);
+    expect(
+      p.materials
+        .filter((m) => m.category === 'admixture')
+        .every((m) => (m.properties['water_reduction_table'] as unknown[]).length === 4),
+    ).toBe(true);
+    expect(p.designs.filter((d) => d.plant === 'AMM-01')).toHaveLength(3);
+    expect(p.designs.filter((d) => d.attest)).toHaveLength(4);
+  });
+});
+
+describe('demo seed against a real database', () => {
+  let env: TestEnv;
+  beforeAll(async () => {
+    env = await createTestEnv({}, { seedRules: true });
+  });
+  afterAll(() => env.close());
+
+  it('creates the dataset through the app’s own API, once', async () => {
+    const deps = {
+      db: env.db,
+      auth: env.auth,
+      config: env.config,
+      tenantId: env.tenantId,
+      password: 'demo-password-change-me',
+    };
+    const t0 = Date.now();
+    const r = await seedDemo(deps);
+    expect(r).toEqual({ skipped: false, designs: 6 });
+    expect(Date.now() - t0).toBeLessThan(25_000);
+    expect(await seedDemo(deps)).toEqual({ skipped: true, designs: 0 }); // idempotent
+
+    const admin = await env.login('admin@khalta.test', 'demo-password-change-me');
+    const designs = (await admin.get('/api/designs')).body as {
+      code: string;
+      status: string;
+      approvalSource: string | null;
+      synthetic: boolean;
+      evaluationPending: boolean;
+    }[];
+    expect(designs).toHaveLength(6);
+    expect(
+      designs.filter((d) => d.status === 'in_production' && d.approvalSource === 'legacy_attested'),
+    ).toHaveLength(4);
+    expect(designs.filter((d) => d.status === 'draft')).toHaveLength(2);
+    expect(designs.every((d) => d.synthetic && d.evaluationPending)).toBe(true);
+
+    const m = (await admin.get('/api/prices')).body;
+    expect(m.summary.staleLimitDays).toBe(30);
+    expect(m.summary.stale).toBe(1); // exactly one stale cell
+    const hum = m.materials.find(
+      (x: { marketNameEn: string }) =>
+        x.marketNameEn.startsWith('Hummusiyeh') && x.marketNameEn.includes('Aqaba'),
+    );
+    const aqb = m.plants.find((p: { code: string }) => p.code === 'AQB-01');
+    expect(
+      m.cells.some(
+        (c: { materialId: string; plantId: string }) =>
+          c.materialId === hum.id && c.plantId === aqb.id,
+      ),
+    ).toBe(false); // unpriced
+    expect(
+      m.cells.filter((c: { notConvertible?: string }) => c.notConvertible === 'needs_density')
+        .length,
+    ).toBeGreaterThan(0); // water per m3
+    expect(((await admin.get('/api/price-snapshots')).body as unknown[]).length).toBe(2);
+
+    const mats = (await admin.get('/api/materials')).body as {
+      marketNameEn: string;
+      freshness: { status: string } | null;
+      canDesign: boolean;
+      notes?: string;
+    }[];
+    expect(mats.filter((x) => x.freshness?.status === 'expired')).toHaveLength(1);
+    expect(mats.length).toBe(19);
+    const fine = mats.filter((x) => x.marketNameEn.startsWith('Raml'));
+    expect(fine.every((x) => x.canDesign)).toBe(true);
+
+    const vols = await env.db.select().from(schema.productionVolumes);
+    expect(vols).toHaveLength(36);
+    expect(vols.every((v) => v.source === 'demo')).toBe(true);
+    const mgr = await env.login('qc.manager@khalta.test', 'demo-password-change-me');
+    expect(((await mgr.get('/api/designs?queue=true')).body as unknown[]).length).toBe(2); // two still await attestation
+  });
+});

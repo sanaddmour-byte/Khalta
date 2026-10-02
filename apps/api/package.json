@@ -9,7 +9,8 @@
     "test": "vitest run --coverage",
     "seed:dev": "tsx src/dev-seed.ts",
     "rules:sync": "tsx src/rules/cli.ts sync",
-    "rules:export-seed": "tsx src/rules/cli.ts export"
+    "rules:export-seed": "tsx src/rules/cli.ts export",
+    "seed:demo": "tsx src/demo/run.ts"
   },
   "dependencies": {
     "express": "catalog:",

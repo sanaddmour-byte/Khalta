@@ -87,7 +87,7 @@ export async function createTestEnv(
     return t!;
   }
 
-  async function login(email: string, password = PASSWORD) {
+  async function login(email: string, password: string = PASSWORD) {
     const agent = request.agent(app);
     const res = await agent.post('/api/auth/sign-in/email').send({ email, password });
     if (res.status !== 200) throw new Error(`login failed for ${email}: ${res.status} ${res.text}`);

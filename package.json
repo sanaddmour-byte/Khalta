@@ -17,7 +17,7 @@
     "e2e": "playwright test",
     "screens": "playwright test --config playwright.screens.config.ts",
     "db:migrate": "pnpm --filter @khalta/db migrate",
-    "db:seed:demo": "node scripts/stub.mjs db:seed:demo M1.3",
+    "db:seed:demo": "pnpm --filter @khalta/api seed:demo",
     "fixtures:export": "node scripts/stub.mjs fixtures:export M2.2",
     "db:drift": "pnpm --filter @khalta/db drift",
     "features:check": "pnpm --filter @khalta/features-check check",
