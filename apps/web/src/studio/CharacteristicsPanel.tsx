@@ -21,6 +21,7 @@ import {
   type CharState,
 } from './characteristics';
 import type { Bound, PoolMaterial, Rejected } from './api';
+import { describeSpec } from './characteristics';
 
 interface Props {
   pool: PoolMaterial[];
@@ -30,6 +31,8 @@ interface Props {
   rejected: Rejected[];
   nameOf: (m: PoolMaterial) => string;
   disabled?: boolean;
+  /** Values a selected profile supplies, by row id, with a readable origin label ("C30 pump v3"). */
+  profileRows?: Record<string, { label: string; spec: Record<string, unknown> }>;
 }
 
 const fmt = (v: unknown) =>
@@ -44,6 +47,7 @@ export function CharacteristicsPanel({
   rejected,
   nameOf,
   disabled,
+  profileRows,
 }: Props) {
   const { t } = useTranslation();
   const usable = pool.filter((m) => m.usable);
@@ -94,6 +98,7 @@ export function CharacteristicsPanel({
                   bound={bounds.find((b) => b.requirement === def.bound)}
                   rejected={rejected.filter((r) => r.key === row.id)}
                   disabled={disabled}
+                  profile={profileRows?.[row.id]}
                 />
               )),
             )}
@@ -115,6 +120,7 @@ function CharRow({
   bound,
   rejected,
   disabled,
+  profile,
 }: {
   def: CharDef;
   id: string;
@@ -126,6 +132,7 @@ function CharRow({
   bound: Bound | undefined;
   rejected: Rejected[];
   disabled: boolean | undefined;
+  profile: { label: string; spec: Record<string, unknown> } | undefined;
 }) {
   const { t } = useTranslation();
   const name = t(`studio.chars.${def.key}`);
@@ -231,6 +238,21 @@ function CharRow({
           </div>
         )}
       </div>
+      {state.mode !== 'auto' ? (
+        <p className="text-xs text-muted" data-testid={`char-origin-${id}`} data-origin="request">
+          {t('studio.chars.origin.request')}
+          {profile && ` · ${t('studio.chars.origin.overrides', { label: profile.label })}`}
+        </p>
+      ) : (
+        profile && (
+          <p className="text-xs text-muted" data-testid={`char-origin-${id}`} data-origin="profile">
+            {t('studio.chars.origin.profile', {
+              label: profile.label,
+              value: describeSpec(profile.spec),
+            })}
+          </p>
+        )
+      )}
       {rejected.map((r, i) => (
         <p
           key={i}

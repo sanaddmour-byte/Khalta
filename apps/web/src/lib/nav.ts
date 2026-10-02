@@ -6,6 +6,7 @@ import {
   Factory,
   FlaskConical,
   LayoutDashboard,
+  Layers,
   Library,
   Settings,
   TrendingDown,
@@ -27,6 +28,7 @@ export const NAV: NavItem[] = [
   { id: 'dashboard', path: '/', icon: LayoutDashboard, anyOf: null },
   { id: 'studio', path: '/studio', icon: FlaskConical, anyOf: ['design.write'] },
   { id: 'library', path: '/library', icon: Library, anyOf: ['library.read'] },
+  { id: 'profiles', path: '/profiles', icon: Layers, anyOf: ['design.write'] },
   {
     id: 'insights',
     path: '/insights',

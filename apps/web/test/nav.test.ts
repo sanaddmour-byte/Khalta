@@ -19,6 +19,7 @@ const EXPECTED: Record<Role, string[]> = {
     'dashboard',
     'studio',
     'library',
+    'profiles',
     'insights',
     'savings',
     'materials',
@@ -30,6 +31,7 @@ const EXPECTED: Record<Role, string[]> = {
     'dashboard',
     'studio',
     'library',
+    'profiles',
     'insights',
     'savings',
     'materials',
@@ -43,11 +45,12 @@ const EXPECTED: Record<Role, string[]> = {
 };
 
 describe('role-aware navigation', () => {
-  it('lists the eleven sections in spec order', () => {
+  it('lists the twelve sections in spec order', () => {
     expect(NAV.map((n) => n.id)).toEqual([
       'dashboard',
       'studio',
       'library',
+      'profiles',
       'insights',
       'savings',
       'materials',

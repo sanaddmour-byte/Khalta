@@ -2,7 +2,6 @@
 // loosening check on save and at approval, matching for a request, diff and usage.
 import { schema } from '@khalta/db';
 import {
-  characteristicsSchema,
   diffVersions,
   mergeLayers,
   mergePreferences,

@@ -311,3 +311,28 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Railway staging still awaits your go-ahead; real engineering parameters (grading band, WF bounds, fines cap, pumpable minimum, ASTM C33 limits) and JS values still to be entered by a QC manager; Arabic review; real attested designs and volumes.
 
 **Next:** M3.3 (characteristic profiles) — write `docs/plans/M3.3.md`.
+
+## 2026-10-02 — M3.3 Characteristic profiles (F-021)
+
+**Changed**
+
+- `packages/db`: `characteristic_profiles` and immutable `characteristic_profile_versions` (migrations 0016–0017: guard trigger that refuses content edits, deletes and un-approval; CHECK `profile_version_four_eyes`); design requests store the profile versions and per-row origins they used.
+- `packages/engine/src/profiles`: layering (company → plant → product family → request, request always wins), matching on `applies_to` (f′c range, exposure, pumpable, placement, season) with narrowest-wins and listed ties, version diff, material-preference merge.
+- `apps/api`: `/api/profiles` (list, create, new version, get, diff, usage, match, approve). QC engineers and managers draft; only a QC manager approves, never the author (API and DB). Save and approval check every covered exposure against ACI/JS and list rejected combinations; approval is blocked while any is rejected. Design requests resolve profiles server-side (hard-limit check on the merged result); a draft profile is refused for trial-candidate generation; a plant profile is visible and usable only at its plant.
+- `apps/web`: Profiles screen (`/profiles`: list with scope/plant/family filters, versions, content, per-exposure code check, diff, approve, "used by N designs" with older-version designs); create / new-version dialog sharing the Studio characteristics rows; Studio profile picker with suggestions, tie choice, placement and season, origin lines on every characteristic row ("from X v3", "your value overrides X v3"), applied-profiles line, Generate disabled while a selected profile is a draft (Evaluate unaffected), "Save these characteristics as a profile…".
+- ADR 0010; EN/AR strings (Arabic drafts in `docs/i18n-review.md`); nav gains Profiles for roles with `design.write`.
+
+**Commands run (all green):** `typecheck`, `lint`, `test` (engine 301, validator 164, api 218, web 38, rbac 182, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (97, incl. 4 new: list → detail → code check → new version needs another approver; suggested profile → origin badge → save as profile; draft blocks Generate but not Evaluate; Arabic RTL; axe on each), `screens` (`docs/screens/M3.3/`: profiles list, detail and Studio picker, EN/AR × 1440/1024/390), `db:drift`.
+
+**Deviations from the plan (and why)**
+
+- **The approval flow in the browser is exercised as "disabled for the author"**: the e2e world has one QC manager account, so the two-person approval itself is covered by API tests and the database CHECK, and by the e2e seed (engineer drafts, manager approves through the API).
+- The two seeded SYNTHETIC profiles exist only in the e2e/test databases; the e2e one at company scope (a plant-scoped draft needs a plant-assigned engineer, which that world does not have).
+- Usage insight is the stored older-version list on the profile and the API; the revalidation inbox item is M5.1.
+- The e2e world seed is now idempotent per database (spec files run in separate workers).
+
+**Verification note:** tests prove a profile can only tighten (the hard-limit checker runs on the merged result), versions are immutable, an author cannot approve their own version, a draft cannot drive trial-candidate generation, a plant profile does not leak to other plants, ties are shown rather than guessed, and the Studio labels where every value came from. They do **not** prove any profile's values are good engineering, that the synthetic profiles resemble yours, or that the Arabic wording is final.
+
+**Open items:** Railway staging still awaits your go-ahead; real engineering parameters (grading band, WF bounds, fines cap, pumpable minimum, ASTM C33 limits) and JS values still to be entered by a QC manager; Arabic review; real attested designs and volumes.
+
+**Next:** M4.1 (Library and lifecycle) — write `docs/plans/M4.1.md` when you say "Proceed".

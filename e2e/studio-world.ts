@@ -21,6 +21,14 @@ export function seedStudioWorld() {
   return (done ??= (async () => {
     const admin = await as('admin');
     const qc = await as('qc_manager');
+    // another spec file (own worker) may have seeded the world already: seed once per database
+    const existing = (await (await admin.get('/api/plants')).json()) as {
+      id: string;
+      code: string;
+    }[];
+    const ea = existing.find((x) => x.code === STUDIO_PLANTS.a);
+    const eb = existing.find((x) => x.code === STUDIO_PLANTS.b);
+    if (ea && eb) return { plantA: ea.id, plantB: eb.id };
     // engineering parameters (kinds: parameter / range): written as new, unverified rule versions
     const rules = (await (await admin.get('/api/rules?ruleset=ENGINEERING')).json()).rules as {
       id: string;
@@ -95,5 +103,48 @@ export function seedStudioWorld() {
       expect(pr.ok(), await pr.text()).toBe(true);
     }
     return { plantA: plants[0]!, plantB: plants[1]! };
+  })());
+}
+
+let profilesDone: Promise<void> | null = null;
+export const SYN_PROFILES = {
+  family: 'SYNTHETIC C30 family',
+  tenant: 'SYNTHETIC company defaults',
+};
+
+/** Two SYNTHETIC profiles (test data only): drafted by a QC engineer, approved by the QC manager. */
+export function seedProfiles() {
+  return (profilesDone ??= (async () => {
+    await seedStudioWorld();
+    const eng = await as('qc_engineer');
+    const mgr = await as('qc_manager');
+    const make = async (data: Record<string, unknown>) => {
+      const res = await eng.post('/api/profiles', { data });
+      expect(res.ok(), await res.text()).toBe(true);
+      const { id } = (await res.json()) as { id: string };
+      const ap = await mgr.post(`/api/profiles/${id}/versions/1/approve`, { data: {} });
+      expect(ap.ok(), await ap.text()).toBe(true);
+    };
+    await make({
+      scope: 'product_family',
+      family: 'C30',
+      nameEn: SYN_PROFILES.family,
+      nameAr: 'خلطة C30 اصطناعية',
+      appliesTo: { fcMin: 25, fcMax: 35 },
+      characteristics: { sand_ratio_pct: { mode: 'range', min: 38, max: 46 } },
+      materials: {},
+      objective: null,
+      mode: null,
+    });
+    await make({
+      scope: 'tenant',
+      nameEn: SYN_PROFILES.tenant,
+      nameAr: 'افتراضيات محطة اصطناعية',
+      appliesTo: {},
+      characteristics: {},
+      materials: {},
+      objective: 'cheapest',
+      mode: null,
+    });
   })());
 }

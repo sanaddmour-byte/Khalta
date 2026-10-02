@@ -37,6 +37,7 @@ export interface RequestBody {
   characteristics?: Record<string, unknown>;
   materials?: { include?: string[]; exclude?: string[] };
   adHoc?: AdHocMaterial[];
+  profileIds?: string[];
 }
 
 export interface PoolMaterial {

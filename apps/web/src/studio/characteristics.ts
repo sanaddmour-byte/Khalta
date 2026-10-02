@@ -191,3 +191,52 @@ export const EXPOSURE: Record<'F' | 'S' | 'W' | 'C', readonly string[]> = {
   C: ['C0', 'C1', 'C2'],
 };
 export const AIR_ENTRAINED = ['F1', 'F2', 'F3'];
+
+const str = (v: unknown) => (typeof v === 'number' ? String(v) : '');
+
+/** An Appendix E spec back into the form state (profiles are shown and edited through the same rows). */
+export function stateOfSpec(key: string, spec: Record<string, unknown>): CharState {
+  const mode = (spec['mode'] as CharMode) ?? 'auto';
+  const s: CharState = {
+    ...emptyChar(),
+    mode:
+      mode === 'auto' || mode === 'fixed' || mode === 'range' || mode === 'target' ? mode : 'auto',
+  };
+  if (key === 'scm') {
+    s.product = String(spec['product'] ?? '');
+    s.value = str(spec['pct']);
+  } else if (key === 'admixture') {
+    s.product = String(spec['product'] ?? '');
+    s.level = str(spec['dosage_level']) || '1';
+  } else s.value = str(spec['value']);
+  s.min = str(spec['min']);
+  s.max = str(spec['max']);
+  if (spec['basis'] === 'mass' || spec['basis'] === 'volume') s.basis = spec['basis'];
+  return s;
+}
+
+/** A resolved list (from `/api/profiles/match`) as the panel's map. */
+export function mapOfResolved(
+  list: { id: string; key: string; spec: Record<string, unknown> }[],
+): CharMap {
+  return Object.fromEntries(list.map((c) => [c.id, stateOfSpec(c.key, c.spec)]));
+}
+
+/** Short plain text for a spec: "range 38–42", "fixed 0.4", "target 380". */
+export function describeSpec(spec: Record<string, unknown>): string {
+  const mode = String(spec['mode'] ?? '');
+  if (mode === 'range') {
+    const min = spec['min'];
+    const max = spec['max'];
+    if (min !== undefined && max !== undefined) return `${String(min)}–${String(max)}`;
+    return max !== undefined ? `≤ ${String(max)}` : `≥ ${String(min)}`;
+  }
+  const v = spec['value'] ?? spec['pct'] ?? spec['dosage_level'];
+  return mode === 'target' ? `→ ${String(v)}` : `= ${String(v)}`;
+}
+
+/** The request-level rows a user has set (everything not Auto and complete). */
+export const requestRows = (map: CharMap): string[] =>
+  Object.entries(map)
+    .filter(([id, s]) => s.mode !== 'auto' && specOf(id.split('.')[0]!, s) !== null)
+    .map(([id]) => id);

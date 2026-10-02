@@ -18,7 +18,8 @@
     "plants": "Plants",
     "rules": "Rules",
     "imports": "Imports",
-    "settings": "Settings"
+    "settings": "Settings",
+    "profiles": "Profiles"
   },
   "sections": {
     "dashboard": {
@@ -64,6 +65,10 @@
     "settings": {
       "description": "Tenant settings such as plant limit, stale-price threshold and number format.",
       "milestone": "Arrives with M1.1"
+    },
+    "profiles": {
+      "description": "Reusable characteristic profiles for plants and product families, with versions and four-eyes approval.",
+      "milestone": "Arrives with M3.3"
     }
   },
   "shell": {
@@ -1462,7 +1467,12 @@
       "fines_max_pct": "Fines (75 µm)",
       "paste_l": "Paste volume",
       "fresh_density_kg_m3": "Fresh density",
-      "max_cost_jod_m3": "Maximum cost"
+      "max_cost_jod_m3": "Maximum cost",
+      "origin": {
+        "request": "Your value",
+        "overrides": "Your value overrides {label}",
+        "profile": "From {label}: {value}"
+      }
     },
     "dof": {
       "free": "{n, plural, one {1 quantity left for the optimizer} other {# quantities left for the optimizer}}",
@@ -1668,6 +1678,110 @@
       "priceHint": "Without a price the material is unavailable to the optimizer.",
       "declared": "Every value here is user-declared and labelled as such in the results.",
       "add": "Add to this request"
+    },
+    "profiles": {
+      "title": "Characteristic profiles",
+      "hint": "Profiles that match this request. Choose which to apply; your own values below always override them.",
+      "applySuggested": "Apply suggested",
+      "clear": "Clear",
+      "none": "No profile matches this request.",
+      "tie": "Equally specific as another match — choose one",
+      "draftBlocks": "A selected profile is still a draft. You can evaluate with it, but trial candidates need an approved profile.",
+      "saveAs": "Save these characteristics as a profile…",
+      "applied": "Applied profiles: {names}"
+    }
+  },
+  "profiles": {
+    "intro": "A characteristic profile is a reusable set of mix preferences for a plant, a product family, or the whole company. A profile tightens a request and never loosens a code or project limit. A draft can be used for evaluation; only an approved profile can drive trial-candidate generation.",
+    "new": "New profile",
+    "newVersion": "New version",
+    "approve": "Approve this version",
+    "approveOwn": "You wrote this version; a QC manager other than its author must approve it.",
+    "allPlants": "All plants",
+    "allScopes": "All scopes",
+    "appliesAny": "Any request",
+    "familyFilter": "Filter by product family",
+    "versions": "Versions",
+    "content": "Profile content",
+    "inForce": "Version {version} stays in force until this draft is approved.",
+    "empty": {
+      "title": "No profiles yet",
+      "description": "Save the characteristics you use often as a profile, or create one here."
+    },
+    "col": {
+      "name": "Name",
+      "scope": "Scope",
+      "plant": "Plant",
+      "appliesTo": "Applies to",
+      "status": "Status",
+      "version": "Latest"
+    },
+    "scope": {
+      "tenant": "Company",
+      "plant": "Plant",
+      "product_family": "Product family"
+    },
+    "status": {
+      "draft": "Draft",
+      "approved": "Approved"
+    },
+    "placement": {
+      "slab": "Slab",
+      "beam": "Beam",
+      "column": "Column",
+      "wall": "Wall",
+      "foundation": "Foundation",
+      "other": "Other"
+    },
+    "season": {
+      "summer": "Summer",
+      "winter": "Winter",
+      "all": "All year"
+    },
+    "check": {
+      "title": "Code check per exposure class",
+      "none": "No exposure class is covered, so no code limit was checked.",
+      "ok": "Within the code limits",
+      "rejected": "Would loosen a limit: "
+    },
+    "diff": {
+      "title": "Changes from v{from} to v{to}",
+      "none": "No differences.",
+      "added": "added",
+      "removed": "removed",
+      "changed": "changed"
+    },
+    "usage": {
+      "title": "Used by {n} designs",
+      "older": "{n, plural, one {1 design was made with an older version} other {# designs were made with older versions}}"
+    },
+    "dialog": {
+      "create": "New characteristic profile",
+      "newVersion": "New version of this profile",
+      "hint": "Saved as a draft. An approved version stays in force until a QC manager approves the new one."
+    },
+    "form": {
+      "nameEn": "Name (English)",
+      "nameAr": "Name (Arabic)",
+      "scope": "Scope",
+      "plant": "Plant",
+      "family": "Product family",
+      "appliesTo": "Applies when",
+      "appliesHint": "Leave a field empty to match any value.",
+      "fcMin": "f′c from",
+      "fcMax": "f′c to",
+      "pumpableOnly": "Pumpable only",
+      "placement": "Placement",
+      "season": "Season",
+      "any": "Any",
+      "exposure": "Exposure classes",
+      "objective": "Default objective",
+      "mode": "Default rule set",
+      "noDefault": "No default",
+      "exclude": "Materials to exclude",
+      "note": "What changed",
+      "saveDraft": "Save as draft",
+      "cancel": "Cancel"
     }
   }
 }

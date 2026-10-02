@@ -1016,3 +1016,11 @@ All Arabic strings under `studio.*` in `apps/web/src/locales/ar.json` are drafts
 - **Exposure cards** (`studio.exposure.*`): plain-language wording for the F, S, W and C classes (the classes themselves are the code classes; the plain wording is mine, not the code's).
 - **Safety wording**: `studio.banner` (candidates are trial proposals), `studio.inspect.strength.notModel` (no plant strength model), `studio.save.authorize` / `needsManager`, `studio.conflict.*` (hard limits are never relaxed), `studio.blocked.*`.
 - **Engineering terms**: coarseness factor, workability factor, grading band, paste volume, fresh density, SCM replacement, ad-hoc "what-if" material (`مادة افتراضية`).
+
+## M3.3 — Characteristic profiles (drafts for Sanad to review)
+
+All Arabic strings under `profiles.*`, `studio.profiles.*`, `studio.chars.origin.*`, `nav.profiles` and `sections.profiles` in `apps/web/src/locales/ar.json` are drafts. Priority for review:
+
+- **Governance wording**: `profiles.approveOwn` (an author cannot approve their own version), `profiles.inForce`, `profiles.dialog.hint`, `profiles.check.*` (a profile never loosens a code limit), `studio.profiles.draftBlocks` (a draft profile cannot generate trial candidates).
+- **Terms**: "ملف الخصائص" for characteristic profile, "عائلة المنتج" for product family, "موضع الصب" for placement, "مسودة" / "معتمد" for draft / approved.
+- **Origin lines** (`studio.chars.origin.*`): "قيمتك" (your value) and "قيمتك تتغلب على …" (overrides).

@@ -15,6 +15,7 @@ import { SettingsPage } from './admin/SettingsPage';
 import { ImportsPage } from './imports/ImportsPage';
 import { LibraryPage } from './library/LibraryPage';
 import { MaterialsPage } from './materials/MaterialsPage';
+import { ProfilesPage } from './profiles/ProfilesPage';
 import { PricesPage } from './prices/PricesPage';
 import { LoginPage } from './pages/Login';
 import { SectionPage } from './pages/Section';
@@ -65,6 +66,7 @@ const SCREENS: Record<string, () => React.JSX.Element> = {
   library: LibraryPage,
   savings: SavingsPage,
   studio: StudioPage,
+  profiles: ProfilesPage,
   imports: ImportsPage,
   plants: PlantsPage,
   settings: SettingsPage,

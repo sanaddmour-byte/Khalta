@@ -36,7 +36,17 @@ import {
 } from './api';
 import { CandidateCard, CompareTable } from './CandidatesStage';
 import { CharacteristicsPanel } from './CharacteristicsPanel';
-import { buildCharacteristics, dofOf, release, type CharMap } from './characteristics';
+import {
+  buildCharacteristics,
+  dofOf,
+  mapOfResolved,
+  release,
+  requestRows,
+  type CharMap,
+} from './characteristics';
+import { ProfilePicker, useProfileMatch } from './ProfilePicker';
+import { EMPTY_DRAFT, ProfileDialog, type ProfileDraft } from '../profiles/ProfileDialog';
+import { parseOrigin } from '../profiles/api';
 import { ComparePlantsDialog } from './ComparePlantsDialog';
 import { InspectStage, type Inspectable } from './InspectStage';
 import { BlockedPanel, ConflictPanel, DofMeter } from './panels';
@@ -63,6 +73,9 @@ interface Saved {
   excluded: string[];
   adHoc: AdHocMaterial[];
   lines: MixLine[];
+  profileIds: string[];
+  placement: string | null;
+  season: string | null;
 }
 const readSaved = (): Partial<Saved> => {
   try {
@@ -100,6 +113,10 @@ export function StudioPage() {
   const [excluded, setExcluded] = useState<string[]>(saved.excluded ?? []);
   const [adHoc, setAdHoc] = useState<AdHocMaterial[]>(saved.adHoc ?? []);
   const [lines, setLines] = useState<MixLine[]>(saved.lines ?? [{ materialId: '', kg: '' }]);
+  const [profileIds, setProfileIds] = useState<string[]>(saved.profileIds ?? []);
+  const [placement, setPlacement] = useState<string | null>(saved.placement ?? null);
+  const [season, setSeason] = useState<string | null>(saved.season ?? null);
+  const [saveProfile, setSaveProfile] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [compare, setCompare] = useState(false);
 
@@ -123,12 +140,23 @@ export function StudioPage() {
     try {
       window.localStorage.setItem(
         KEY,
-        JSON.stringify({ path, req, chars, objective, excluded, adHoc, lines }),
+        JSON.stringify({
+          path,
+          req,
+          chars,
+          objective,
+          excluded,
+          adHoc,
+          lines,
+          profileIds,
+          placement,
+          season,
+        }),
       );
     } catch {
       /* not remembered */
     }
-  }, [path, req, chars, objective, excluded, adHoc, lines]);
+  }, [path, req, chars, objective, excluded, adHoc, lines, profileIds, placement, season]);
 
   // ---- the request, as the API wants it (null while a field is incomplete)
   const body = useMemo<RequestBody | null>(() => {
@@ -155,8 +183,9 @@ export function StudioPage() {
       ...(Object.keys(characteristics).length > 0 && { characteristics }),
       ...(excluded.length > 0 && { materials: { exclude: excluded } }),
       ...(adHoc.length > 0 && { adHoc }),
+      ...(profileIds.length > 0 && { profileIds }),
     };
-  }, [req, chars, objective, excluded, adHoc, plantId]);
+  }, [req, chars, objective, excluded, adHoc, plantId, profileIds]);
   const key = JSON.stringify(body);
   const debounced = useDebounced(key, 500);
 
@@ -189,7 +218,51 @@ export function StudioPage() {
   const aggregates = pool.filter(
     (m) => m.usable && !excluded.includes(m.id) && ['fine_agg', 'coarse_agg'].includes(m.category),
   ).length;
-  const dof = result?.data.outcome.dof ?? dofOf(aggregates, chars);
+  const match = useProfileMatch(body, profileIds, placement, season, canWrite);
+  const profileMap = useMemo(
+    () => (match.applied ? mapOfResolved(match.applied.characteristics) : {}),
+    [match.applied],
+  );
+  // what the optimizer will see: the profiles' rows, with the request's own rows on top
+  const effective: CharMap = useMemo(() => {
+    const mine = Object.fromEntries(requestRows(chars).map((id) => [id, chars[id]!]));
+    return { ...profileMap, ...mine };
+  }, [profileMap, chars]);
+  const profileRows = useMemo(
+    () =>
+      Object.fromEntries(
+        (match.applied?.characteristics ?? []).flatMap((c) => {
+          const o = parseOrigin(c.origin);
+          return o ? [[c.id, { label: match.labelOf(o.profileId) ?? c.origin, spec: c.spec }]] : [];
+        }),
+      ),
+    [match],
+  );
+  const dof = result?.data.outcome.dof ?? dofOf(aggregates, effective);
+  const defaults = match.applied?.defaults;
+  const defaultsKey = JSON.stringify(defaults ?? null);
+  useEffect(() => {
+    if (!defaults) return;
+    if (defaults.objective) setObjective(defaults.objective);
+    const m = defaults.mode;
+    if (m) setReq((r) => ({ ...r, mode: m }));
+    // only when the profiles' defaults change, so the user can still change them afterwards
+  }, [defaultsKey]);
+  const profileDraft: ProfileDraft = {
+    ...EMPTY_DRAFT,
+    plantId,
+    appliesTo: {
+      ...(Number(req.fc) > 0 && { fcMin: Number(req.fc), fcMax: Number(req.fc) }),
+      ...(exposureList(req.exposure).length > 0 && { exposure: exposureList(req.exposure) }),
+      ...(req.pumpable && { pumpable: true }),
+      ...(placement && { placement }),
+      ...(season && { season }),
+    },
+    chars: Object.fromEntries(requestRows(chars).map((id) => [id, chars[id]!])),
+    exclude: excluded,
+    objective,
+    mode: req.mode,
+  };
 
   // ---- actions
   const gen = useMutation({
@@ -378,6 +451,15 @@ export function StudioPage() {
           {path === 'evaluate' && (
             <MixGrid lines={lines} setLines={setLines} pool={pool} nameOf={nameOfMat} />
           )}
+          <ProfilePicker
+            match={match}
+            selected={profileIds}
+            onChange={setProfileIds}
+            placement={placement}
+            season={season}
+            onPlacement={setPlacement}
+            onSeason={setSeason}
+          />
           {path === 'generate' && (
             <section className="flex flex-col gap-3" aria-labelledby="chars-title">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -394,7 +476,19 @@ export function StudioPage() {
                 bounds={pre.data?.bounds ?? []}
                 rejected={pre.data?.characteristics.rejected ?? []}
                 nameOf={nameOfMat}
+                profileRows={profileRows}
               />
+              {canWrite && (
+                <div>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setSaveProfile(true)}
+                    data-testid="save-as-profile"
+                  >
+                    {t('studio.profiles.saveAs')}
+                  </Button>
+                </div>
+              )}
             </section>
           )}
           {pre.data && pre.data.blockers.length > 0 && path === 'generate' && (
@@ -414,6 +508,7 @@ export function StudioPage() {
                   gen.isPending ||
                   airEntrained ||
                   blockedByRequest ||
+                  (match.applied?.hasDraft ?? false) ||
                   (pre.data ? !pre.data.characteristics.ok : false)
                 }
                 data-testid="generate"
@@ -456,6 +551,21 @@ export function StudioPage() {
             )}
           </div>
         </div>
+      )}
+
+      <ProfileDialog
+        open={saveProfile}
+        onOpenChange={setSaveProfile}
+        initial={profileDraft}
+        plants={plants}
+      />
+
+      {(stage === 'candidates' || stage === 'inspect') && profileIds.length > 0 && (
+        <p className="text-sm text-muted" data-testid="applied-profiles">
+          {t('studio.profiles.applied', {
+            names: profileIds.map((id) => match.labelOf(id) ?? id.slice(0, 8)).join(', '),
+          })}
+        </p>
       )}
 
       {stage === 'candidates' && (
