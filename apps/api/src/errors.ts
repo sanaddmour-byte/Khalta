@@ -30,6 +30,7 @@ function pgCode(err: unknown): string | undefined {
 }
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+  if (process.env['DEBUG_500']) console.error(err);
   let status = 500;
   let body: { code: string; message: string; details?: unknown } = {
     code: 'internal_error',

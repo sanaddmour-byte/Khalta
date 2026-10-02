@@ -2,13 +2,21 @@
 // tenant's materials, prices and rule versions, checks the user's characteristics, runs the optimizer with
 // the real solver and the independent candidate validator, and shapes what each role may see.
 import { schema, type Executor } from '@khalta/db';
-import { checkCharacteristics, todayAmman, type EvaluationSnapshot } from '@khalta/engine';
+import {
+  adHocMaterialSchema,
+  checkCharacteristics,
+  PRICE_PATTERN,
+  todayAmman,
+  type EvaluationSnapshot,
+  type Properties,
+} from '@khalta/engine';
 import { limitContextFor, selectRules } from '@khalta/engine/evaluate';
 import {
   candidateRecord,
   createHighsSolver,
   DEFAULT_OPTIMIZER_SETTINGS,
   optimize,
+  prepare,
   type OptimizeResult,
   type OptimizerInput,
   type OptimizerSettings,
@@ -19,7 +27,7 @@ import type { Mode, RuleRecord } from '@khalta/rules';
 import { and, eq, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError } from '../errors';
-import { loadSnapshotMaterials } from '../evaluation/service';
+import { loadSnapshotMaterials, runEvaluation as runEval } from '../evaluation/service';
 import { loadCurrentRecords } from '../rules/service';
 import { loadSettings, type Settings } from '../settings';
 
@@ -41,6 +49,8 @@ export const requestBody = z.strictObject({
       .default(null),
     airPct: z.number().min(0).max(15).nullable().default(null),
   }),
+  /** What-if materials that exist only inside this request (07 §2.4); never saved, never usable in a design until promoted. */
+  adHoc: z.array(adHocMaterialSchema).max(10).default([]),
   /** Appendix E characteristics; validated and checked against the hard limits by the engine. */
   characteristics: z.unknown().optional(),
   materials: z
@@ -120,6 +130,44 @@ export async function buildRequestSnapshot(
     {},
     now,
   );
+  body.adHoc.forEach((a, i) => {
+    const price = a.price_jod_per_kg;
+    if (price !== undefined && !PRICE_PATTERN.test(price))
+      throw new ApiError(400, 'invalid_request', 'An ad-hoc price has at most 3 decimals');
+    const fields = Object.fromEntries(
+      Object.keys(a.properties).map((k) => [k, 'user_declared' as const]),
+    );
+    materials.push({
+      id: `adhoc-${i + 1}`,
+      category: a.category,
+      nameEn: a.market_name_en,
+      nameAr: a.market_name_ar ?? null,
+      test: {
+        id: `adhoc-${i + 1}`,
+        version: 1,
+        source: 'user_declared',
+        fieldSources: fields,
+        testedAt: date,
+        validUntil: null,
+        freshness: 'fresh',
+        properties: a.properties as Properties,
+      },
+      price:
+        price === undefined
+          ? { status: 'unavailable' }
+          : {
+              status: 'ok',
+              priceId: `adhoc-${i + 1}`,
+              price,
+              unit: 'JOD/kg',
+              supplierId: 'adhoc',
+              includesDelivery: true,
+              effectiveFrom: date,
+              staleness: 'fresh',
+              ageDays: 0,
+            },
+    });
+  });
   const all = await loadCurrentRecords(db, tenantId);
   const mode = body.mode as Mode;
   const rules = selectRules(all, mode, request).map(slimRule);
@@ -204,4 +252,156 @@ export function candidateSnapshot(
     request: o.request,
     settings: { ...requestSnapshot.settings, roundingTolerance: o.roundingTolerance },
   };
+}
+
+// ------------------------------------------------------------------- Studio helpers (M3.2)
+
+const REQUIREMENTS_SHOWN = new Set([
+  'max_wcm',
+  'min_fc',
+  'max_cl_nonprestressed',
+  'max_cl_prestressed',
+  'sulfate_cement',
+  'scm_required',
+  'cacl2_prohibited',
+  'air_target_pct',
+  'air_tolerance_pct',
+]);
+
+/**
+ * Everything the Requirements stage needs before anything is solved: which materials are usable at the plant
+ * (and why not), the live code/project limits that bound the characteristics, what the optimizer would be
+ * blocked on, and whether the characteristics are acceptable. Writes nothing.
+ */
+export async function preflight(db: Executor, tenantId: string, body: RequestBody) {
+  const base = await buildRequestSnapshot(db, tenantId, body);
+  const ctxLimits = limitContextFor({ ...base, lines: [] });
+  let characteristics: {
+    ok: boolean;
+    invalid: unknown[];
+    rejected: unknown[];
+  } = { ok: true, invalid: [], rejected: [] };
+  if (body.characteristics !== undefined) {
+    const checked = checkCharacteristics(
+      [{ level: 'request', origin: 'request', characteristics: body.characteristics }],
+      ctxLimits,
+    );
+    characteristics = { ok: checked.ok, invalid: checked.invalid, rejected: checked.rejected };
+    if (checked.ok) base.characteristics = checked.characteristics ?? [];
+  }
+  const settings = await loadSettings(db, tenantId);
+  const prep = prepare({
+    base,
+    objective: body.objective,
+    ...(body.materials ? { materials: body.materials } : {}),
+    settings: optimizerSettings(settings),
+  });
+  const excluded = new Map(
+    (prep.ok ? prep.prepared.excluded : prep.excluded).map((e) => [e.materialId, e.reason]),
+  );
+  return {
+    pool: base.materials.map((m) => ({
+      id: m.id,
+      category: m.category,
+      nameEn: m.nameEn,
+      nameAr: m.nameAr,
+      usable: !excluded.has(m.id),
+      reason: excluded.get(m.id) ?? null,
+      hasTest: m.test !== null,
+      source: m.test?.source ?? null,
+    })),
+    bounds: ctxLimits.resolved.requirements
+      .filter((r) => REQUIREMENTS_SHOWN.has(r.requirement) || r.requirement.startsWith('scm.max.'))
+      .map((r) => ({
+        requirement: r.requirement,
+        value: r.value,
+        status: r.status,
+        source: r.governing ? String(r.governing.source) : null,
+        clause: r.governing?.clause_ref ?? null,
+        verified: r.verified,
+      })),
+    fcrMpa: ctxLimits.codeFcrMpa,
+    blockers: prep.ok ? [] : prep.blockers,
+    baseline: prep.ok
+      ? {
+          wc: prep.prepared.baselineWc,
+          wcmCeiling: prep.prepared.wcmCeiling,
+          waterKg: Object.fromEntries(prep.prepared.baseWaterKg),
+        }
+      : null,
+    characteristics,
+  };
+}
+
+/** Evaluate a typed (unsaved) mix and run the independent validator; stores nothing. */
+export async function evaluateMix(
+  db: Executor,
+  tenantId: string,
+  body: RequestBody,
+  lines: { materialId: string; kgPerM3: string }[],
+) {
+  const base = await buildRequestSnapshot(db, tenantId, body);
+  const ids = new Set(base.materials.map((m) => m.id));
+  if (lines.some((l) => !ids.has(l.materialId)))
+    throw new ApiError(
+      400,
+      'invalid_request',
+      'A line refers to a material not available at this plant',
+    );
+  if (new Set(lines.map((l) => l.materialId)).size !== lines.length)
+    throw new ApiError(400, 'invalid_request', 'A material appears twice in the lines');
+  const snapshot: EvaluationSnapshot = { ...base, lines };
+  if (body.characteristics !== undefined) {
+    const checked = checkCharacteristics(
+      [{ level: 'request', origin: 'request', characteristics: body.characteristics }],
+      limitContextFor(snapshot),
+    );
+    if (!checked.ok)
+      throw new ApiError(400, 'characteristics_rejected', 'The characteristics were rejected', {
+        invalid: checked.invalid,
+        rejected: checked.rejected,
+      });
+    snapshot.characteristics = checked.characteristics ?? [];
+  }
+  return runEval(snapshot);
+}
+
+const MAP_KEYED = ['agg_kg', 'agg_share_pct'] as const;
+
+/** Re-express a request's material references (ids) for another plant; `null` entries mean "no counterpart". */
+export function mapRequest(
+  body: RequestBody,
+  plantId: string,
+  map: Record<string, string | null>,
+): { ok: true; body: RequestBody } | { ok: false; missing: string[] } {
+  const missing = new Set<string>();
+  const one = (id: string): string => {
+    const to = map[id];
+    if (to === undefined || to === null) {
+      missing.add(id);
+      return id;
+    }
+    return to;
+  };
+  const list = (xs?: string[]) => (xs ? xs.map(one) : undefined);
+  const next: RequestBody = { ...body, plantId };
+  if (body.materials)
+    next.materials = {
+      ...(body.materials.include ? { include: list(body.materials.include)! } : {}),
+      ...(body.materials.exclude ? { exclude: list(body.materials.exclude)! } : {}),
+      ...(body.materials.prefer ? { prefer: list(body.materials.prefer)! } : {}),
+    };
+  if (body.characteristics && typeof body.characteristics === 'object') {
+    const c = JSON.parse(JSON.stringify(body.characteristics)) as Record<string, unknown>;
+    for (const k of MAP_KEYED) {
+      const m = c[k] as Record<string, unknown> | undefined;
+      if (m) c[k] = Object.fromEntries(Object.entries(m).map(([id, v]) => [one(id), v]));
+    }
+    for (const k of ['scm', 'admixture']) {
+      const s = c[k] as { product?: string } | undefined;
+      if (s?.product) s.product = one(s.product);
+    }
+    next.characteristics = c;
+  }
+  return missing.size ? { ok: false, missing: [...missing] } : { ok: true, body: next };
 }

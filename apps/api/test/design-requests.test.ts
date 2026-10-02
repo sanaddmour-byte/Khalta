@@ -346,3 +346,177 @@ describe('trial candidates', () => {
     });
   });
 });
+
+describe('Studio endpoints', () => {
+  it('preflight: pool with reasons, live limits, characteristics check, named blockers; writes nothing', async () => {
+    const m = await as('qc_manager');
+    const before = await env.db.select().from(schema.designRequests);
+    const ok = await m
+      .post('/api/design-requests/preflight')
+      .send({
+        plantId: plantA,
+        mode: 'ACI',
+        requirements: { ...REQUIREMENTS, exposure: ['F0', 'S1', 'W0', 'C1'] },
+      });
+    expect(ok.status).toBe(200);
+    const cemI = ok.body.pool.find((p: { id: string }) => p.id === mat['cem-i']);
+    expect(cemI.usable).toBe(false);
+    expect(cemI.reason).toContain('sulfate');
+    expect(ok.body.pool.find((p: { id: string }) => p.id === mat['cem-sr']).usable).toBe(true);
+    const wcm = ok.body.bounds.find((b: { requirement: string }) => b.requirement === 'max_wcm');
+    expect(wcm).toMatchObject({ value: 0.5, source: 'ACI', verified: false });
+    expect(ok.body.baseline.wc).toBeGreaterThan(0.4);
+    expect(ok.body.characteristics.ok).toBe(true);
+    const bad = await m.post('/api/design-requests/preflight').send({
+      plantId: plantA,
+      mode: 'ACI',
+      requirements: { ...REQUIREMENTS, exposure: ['F0', 'S1', 'W0', 'C1'] },
+      characteristics: { wcm: { mode: 'fixed', value: 0.7 } },
+    });
+    expect(bad.body.characteristics.ok).toBe(false);
+    expect(JSON.stringify(bad.body.characteristics.rejected)).toContain('0.5');
+    const blocked = await m
+      .post('/api/design-requests/preflight')
+      .send({
+        plantId: plantA,
+        mode: 'ACI',
+        requirements: { ...REQUIREMENTS, exposure: ['F2', 'S0', 'W0', 'C1'] },
+      });
+    expect(blocked.body.blockers[0].code).toBe('not_supported');
+    expect(await env.db.select().from(schema.designRequests)).toHaveLength(before.length);
+    expect(
+      (
+        await (
+          await as('procurement')
+        )
+          .post('/api/design-requests/preflight')
+          .send({ plantId: plantA, requirements: REQUIREMENTS })
+      ).status,
+    ).toBe(403);
+  });
+
+  it('evaluate-mix evaluates a typed mix with the validator and stores nothing; cost only with cost.view', async () => {
+    const m = await as('qc_manager');
+    const lines = [
+      ['cem-i', '350.000'],
+      ['water', '175.000'],
+      ['sand', '780.000'],
+      ['c20', '1035.000'],
+    ].map(([k, kg]) => ({ materialId: mat[k!]!, kgPerM3: kg! }));
+    const res = await m
+      .post('/api/design-requests/evaluate-mix')
+      .send({ plantId: plantA, mode: 'ACI', requirements: REQUIREMENTS, lines });
+    expect(res.status).toBe(200);
+    expect(res.body.validator.status).toBe('pass');
+    expect(res.body.report.cost.totalJodPerM3).not.toBeNull();
+    const dupes = await m
+      .post('/api/design-requests/evaluate-mix')
+      .send({ plantId: plantA, requirements: REQUIREMENTS, lines: [lines[0], lines[0]] });
+    expect(dupes.status).toBe(400);
+  });
+
+  it('POST /api/designs saves a typed mix as a draft, once per code, never approved', async () => {
+    const eng = await as('qc_engineer', [plantA]);
+    const lines = [
+      ['cem-i', '350.000'],
+      ['water', '175.000'],
+      ['sand', '780.000'],
+      ['c20', '1035.000'],
+    ].map(([k, kg]) => ({ materialId: mat[k!]!, kgPerM3: kg! }));
+    const body = {
+      plantId: plantA,
+      mode: 'ACI',
+      requirements: REQUIREMENTS,
+      lines,
+      code: 'STUDIO-1',
+      name: 'Typed mix',
+    };
+    const res = await eng.post('/api/designs').send(body);
+    expect(res.status).toBe(201);
+    expect(res.body.status).toBe('draft');
+    expect((await eng.post('/api/designs').send(body)).status).toBe(409);
+    const [d] = await env.db
+      .select()
+      .from(schema.mixDesigns)
+      .where(eq(schema.mixDesigns.id, res.body.id));
+    expect(d).toMatchObject({
+      status: 'draft',
+      approvalSource: null,
+      createdBy: expect.any(String),
+    });
+    expect(
+      (
+        await (
+          await as('plant_manager', [plantA])
+        )
+          .post('/api/designs')
+          .send({ ...body, code: 'STUDIO-2' })
+      ).status,
+    ).toBe(403);
+  });
+
+  it('compare-plants runs the request per plant with a confirmed mapping and skips what cannot be mapped', async () => {
+    const supplier = await makeSupplier(env);
+    const mapB = await seedMaterials(plantB, supplier);
+    const m = await as('qc_manager');
+    const res = await m.post('/api/design-requests/compare-plants').send({
+      mode: 'ACI',
+      requirements: REQUIREMENTS,
+      materials: { exclude: [mat['fly']!] },
+      plants: [{ plantId: plantA }, { plantId: plantB, mapping: { [mat['fly']!]: mapB['fly']! } }],
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.results).toHaveLength(2);
+    for (const r of res.body.results) {
+      expect(r.status).toBe('candidates');
+      expect(r.best.costJodPerM3).not.toBeNull();
+    }
+    const skipped = await m.post('/api/design-requests/compare-plants').send({
+      mode: 'ACI',
+      requirements: REQUIREMENTS,
+      materials: { exclude: [mat['fly']!] },
+      plants: [{ plantId: plantB, mapping: { [mat['fly']!]: null } }],
+    });
+    expect(skipped.body.results[0]).toMatchObject({ status: 'skipped' });
+    expect(skipped.body.results[0].reason).toContain('no_counterpart');
+    const other = await as('qc_engineer', [plantA]);
+    const denied = await other
+      .post('/api/design-requests/compare-plants')
+      .send({ mode: 'ACI', requirements: REQUIREMENTS, plants: [{ plantId: plantB }] });
+    expect(denied.body.results[0].reason).toBe('plant_not_accessible');
+  });
+});
+
+describe('what-if (ad-hoc) materials', () => {
+  it('can win a request, are labelled user-declared, and cannot become a design until promoted', async () => {
+    const m = await as('qc_manager');
+    const res = await m.post('/api/design-requests').send({
+      plantId: plantA,
+      mode: 'ACI',
+      requirements: REQUIREMENTS,
+      adHoc: [
+        {
+          category: 'cement',
+          market_name_en: 'Offer cement',
+          properties: { sg: 3.15, c3a_pct: 9 },
+          price_jod_per_kg: '0.050',
+        },
+      ],
+    });
+    expect(res.status).toBe(201);
+    const c = res.body.candidates[0];
+    expect(c.lines.some((l: { materialId: string }) => l.materialId === 'adhoc-1')).toBe(true);
+    expect(c.evidence).toContain('INPUT_USER_DECLARED');
+    const t = await m
+      .post(`/api/design-requests/${res.body.id}/candidates/${c.id}/trial-candidate`)
+      .send({ code: 'OPT-ADHOC', name: 'Adhoc' });
+    expect(t.status).toBe(409);
+    expect(t.body.error.code).toBe('adhoc_material');
+    const bad = await m.post('/api/design-requests').send({
+      plantId: plantA,
+      requirements: REQUIREMENTS,
+      adHoc: [{ category: 'cement', market_name_en: 'x', properties: { sg: 3.15 }, price_jod_per_kg: '0.0501' }],
+    });
+    expect(bad.status).toBe(400);
+  });
+});
