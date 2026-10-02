@@ -995,7 +995,8 @@
       "requested": "Requested",
       "achieved": "Achieved",
       "result": "Result",
-      "origin": "Origin"
+      "origin": "Origin",
+      "class": "Class"
     },
     "status": {
       "pass": "Pass",
@@ -1024,7 +1025,9 @@
       "moderate": "moderate",
       "high": "high",
       "pozzolan": "pozzolan",
-      "slag": "slag"
+      "slag": "slag",
+      "no accelerating admixture": "no accelerating admixture",
+      "accelerating admixture present": "accelerating admixture present"
     },
     "engineering": "Engineering check",
     "nearLimit": "Close to the limit",
@@ -1114,6 +1117,217 @@
       "deviated": "Deviated",
       "not_evaluated": "Not evaluated"
     },
-    "assumptions": "Assumptions made"
+    "assumptions": "Assumptions made",
+    "filter": {
+      "all": "All"
+    },
+    "shown": "Showing {shown} of {total} checks",
+    "class": {
+      "CODE_HARD": "Code limit",
+      "PROJECT_HARD": "Project limit",
+      "EMPIRICAL_CALIBRATED": "Calibrated model",
+      "ENGINEERING_GUARDRAIL": "Engineering guardrail",
+      "OPTIMIZATION_PREFERENCE": "Preference",
+      "DESIGN_AID": "Design aid",
+      "USER_SPECIFIED": "Your choice"
+    },
+    "trace": {
+      "title": "How this was calculated",
+      "rule": "Rule",
+      "formula": "Formula",
+      "inputs": "Inputs",
+      "none": "This check compares given values with the limit; there is no separate calculation.",
+      "verified": "verified",
+      "unverified": "unverified"
+    }
+  },
+  "reason": {
+    "air_baseline_used": "Air content {value} % is the ACI 211.1 entrapped-air estimate for the aggregate size, not a measured value.",
+    "air_entrained_assumed": "Exposure F1–F3 implies an air-entrained design; the air-entrained ACI 211.1 tables are not on file, so baselines are unavailable.",
+    "slump_between_bins": "Slump {slump} mm falls between the ACI 211.1 ranges {lower} and {upper} mm; the baseline water is interpolated between their nearest edges.",
+    "water_sg_assumed": "Water specific gravity was taken as 1.000 (not confirmed in the material record).",
+    "water_sg_defaulted": "Water specific gravity is not on file; 1.000 was used and is not confirmed.",
+    "strength_age_assumed": "Strength is specified at {days} days; the f′cr equations and baselines are 28-day values.",
+    "b_grade_ambiguous": "{grade} is ambiguous on the basis map (candidates for {fc} MPa).",
+    "b_grade_not_on_map": "This B-grade is not on the basis map.",
+    "cube_not_on_map": "Cube strength {value} MPa is not a class on the basis map.",
+    "fcr_rules_not_on_file": "{ruleset}: required-strength values are not on file ({keys}).",
+    "nmas_not_stated": "The maximum aggregate size is not stated.",
+    "nmas_out_of_domain": "Aggregate size {value} mm is outside the table range {min}–{max} mm (no extrapolation).",
+    "dosage_out_of_table": "{material}: dosage {dosage} % is outside the product table {min}–{max} % (no extrapolation).",
+    "reduction_table_missing": "{material}: the dosage–water-reduction table is not on file.",
+    "fcr_out_of_domain": "f′cr {value} MPa is outside the table range {min}–{max} MPa (no extrapolation).",
+    "air_entrained_tables_missing": "The ACI 211.1 tables for air-entrained concrete are not on file.",
+    "fcr_unavailable": "The required average strength f′cr is not available.",
+    "slump_not_stated": "Slump is not stated.",
+    "slump_or_nmas_out_of_domain": "Slump or aggregate size is outside the ACI 211.1 table range (no extrapolation).",
+    "fc_not_stated": "The specified strength is not stated.",
+    "basis_not_stated": "The strength basis (cylinder, cube or B-grade) is not stated.",
+    "from_m31": "Evaluated from M3.1 (grading guardrails).",
+    "dosage_level_from_m31": "The requested dosage level is compared from M3.1.",
+    "value_not_computable": "The value cannot be computed from the given proportions.",
+    "c3a_missing": "C₃A is not on file for {materials}.",
+    "scm_type_missing": "The SCM type is not recorded for {materials}.",
+    "admixture_type_missing": "The admixture type is not recorded for {materials}.",
+    "air_not_stated": "The air content is not stated in the design.",
+    "context_missing": "Cannot tell whether {rule} applies: the request lacks {fields}.",
+    "cement_equivalence_missing": "The cement C₃A equivalence limits are not on file.",
+    "chloride_data_missing": "Chloride content is not on file: {items}.",
+    "rule_value_missing": "No applicable rule has a value on file.",
+    "no_cementitious": "The design has no cementitious material.",
+    "design_lacks_line": "The design has no {what}.",
+    "sg_missing": "Specific gravity is missing for {materials}.",
+    "dosage_range_missing": "The product's dosage range is not on file.",
+    "price_missing": "No price is in force for the evaluation date at this plant.",
+    "price_not_convertible": "A price in {unit} cannot be converted to JOD/kg ({why}).",
+    "price_ambiguous": "{count} suppliers have a price in force; choose a preferred supplier.",
+    "price_stale": "The price is {days} days old (over the limit).",
+    "price_age_limit_not_configured": "No price-age limit is configured, so price age is not judged.",
+    "admixture_convention_missing": "The admixture water convention is not set; its water is not counted in w/cm.",
+    "admixture_solids_missing": "The admixture solids content is not on file, so its water cannot be counted.",
+    "limestone_not_counted": "Limestone filler is not counted as an SCM; confirm this against the project specification.",
+    "material_missing": "The material record was not found.",
+    "near_limit_not_configured": "No near-limit warning percentage is configured; warnings are off.",
+    "no_strength_records": "No strength records exist, so the f′cr no-data equations were used.",
+    "override_rejected": "The project value for {requirement} would loosen the code limit and was not applied.",
+    "rules_missing": "{count} applicable rule values are not on file.",
+    "rules_unverified": "{count} rule values used by this evaluation are not yet verified by a QC manager.",
+    "margin_not_configured": "No f′cr safety margin is configured; 0 MPa was added.",
+    "test_expired": "Test v{version} of {date} is past its validity.",
+    "test_missing": "No test data is on file.",
+    "test_age_limit_not_configured": "No test-age limit is configured, so test age is not judged.",
+    "declared_values": "User-declared key values: {fields}.",
+    "note_cacl2": "Accelerating admixtures (ASTM C494 Types C and E) may contain calcium chloride; their composition is not on file.",
+    "note_chloride_scope": "Cement and SCM chloride are not in the test schema and are not counted.",
+    "note_c3a": "Judged by the C₃A of every cement line, not by its label; a more resistant cement satisfies a lower class.",
+    "note_scm_required": "Presence of the required SCM only; the performance test of the cement–SCM combination is not evaluated.",
+    "note_product_range": "Product range {range} %.",
+    "note_air_band": "Target ± {tolerance} %.",
+    "note_min_fc": "Specified f′c on the cylinder basis against the exposure minimum.",
+    "volume_not_computable": "The volume could not be computed.",
+    "check_value_missing": "A value needed for this check is missing.",
+    "other": "{text}"
+  },
+  "portfolio": {
+    "title": "Portfolio",
+    "hint": "Every live design with its latest evaluation. Evaluate them all at once; failing and incomplete designs and designs whose inputs changed are listed first-class, not hidden.",
+    "filter": "Show",
+    "filters": {
+      "all": "All designs",
+      "failing": "Failing",
+      "incomplete": "Incomplete",
+      "not_evaluated": "Not evaluated yet",
+      "revalidation": "Needs revalidation",
+      "inputs_changed": "Inputs changed"
+    },
+    "evaluateAll": "Evaluate all",
+    "export": "Export CSV",
+    "batchDone": "{count, plural, one {1 design evaluated} other {# designs evaluated}}",
+    "counts": {
+      "total": "Designs",
+      "failing": "Failing",
+      "incomplete": "Incomplete",
+      "notEvaluated": "Not evaluated",
+      "revalidation": "Needs revalidation",
+      "inputsChanged": "Inputs changed"
+    },
+    "empty": {
+      "title": "No designs match",
+      "description": "Change the filter or import designs."
+    },
+    "col": {
+      "result": "Result",
+      "checks": "Checks",
+      "cost": "Cost per m³",
+      "evidence": "Evidence"
+    },
+    "notEvaluated": "Not evaluated",
+    "checkSummary": "{failing} failing · {open} open"
+  },
+  "dataQuality": {
+    "title": "Data quality",
+    "hint": "Every material, test, price and rule gap behind the latest evaluations, grouped by cause, with the designs each one affects. Fixing one cause can unblock many designs.",
+    "notEvaluated": "{count, plural, one {1 design has not been evaluated yet and is not covered here.} other {# designs have not been evaluated yet and are not covered here.}}",
+    "empty": {
+      "title": "No data-quality findings",
+      "description": "Nothing blocks or weakens the latest evaluations."
+    },
+    "affects": "{count, plural, one {Affects 1 design} other {Affects # designs}}"
+  },
+  "editor": {
+    "open": "Edit as new version",
+    "title": "Edit {code} as a new version",
+    "hint": "Your changes create a new draft version. Version {version} stays exactly as it is, in its current state.",
+    "remove": "Remove",
+    "addMaterial": "Add a material",
+    "choose": "Choose…",
+    "preview": "Live check (nothing is saved)",
+    "invalid": "Enter a positive quantity for every material (up to three decimals).",
+    "calculating": "Calculating…",
+    "note": "Why this change (required)",
+    "save": "Save as new version",
+    "saved": "Version {version} saved as a draft."
+  },
+  "versions": {
+    "title": "Versions",
+    "current": "This version",
+    "open": "Open",
+    "compare": "Compare with v{version}",
+    "priceOpportunity": "Price as an opportunity",
+    "eligible": "Recorded as a theoretical entry: not approved, not realized.",
+    "seeLedger": "Open the ledger",
+    "notEligible": "Not recorded as an opportunity:",
+    "reason": {
+      "validator_failed": "The independent validator disagreed.",
+      "verdict_fail": "A check fails.",
+      "verdict_incomplete": "Some checks could not be evaluated.",
+      "cost_incomplete": "A material has no usable price in the snapshot.",
+      "not_cheaper": "It is not cheaper than the baseline at the same prices."
+    },
+    "diffTitle": "Changes from v{from} to v{to}",
+    "change": "Change",
+    "changes": {
+      "added": "Added",
+      "removed": "Removed",
+      "changed": "Changed",
+      "same": "Unchanged"
+    },
+    "short": "v{n}"
+  },
+  "savings": {
+    "intro": "Cost baselines and theoretical opportunities. Nothing here is approved or realized: opportunities are estimates that need a trial and approval, and they are never added together.",
+    "baselines": "Cost baselines",
+    "createBaseline": "Create baseline",
+    "baselineHint": "A baseline fixes what an attested design costs per m³ at one named price snapshot. It is never re-priced; later comparisons use the same snapshot, so price movements are never credited to a change.",
+    "noBaselines": {
+      "title": "No baselines yet",
+      "description": "A QC manager can create one from an attested design and a saved price snapshot."
+    },
+    "col": {
+      "snapshot": "Price snapshot",
+      "cost": "Cost per m³",
+      "volume": "Monthly volume",
+      "annual": "Per year",
+      "state": "State",
+      "saving": "Difference per m³"
+    },
+    "volumeEstimate": "estimate from the import file",
+    "estimate": "estimate",
+    "jodYear": "{n} JOD/year",
+    "opportunities": "Opportunities",
+    "opportunityHint": "THEORETICAL: a manual variant that passes every evaluated check, was verified by the independent validator, and is cheaper at the baseline’s own prices. It is not approved and has not been tested.",
+    "noEntries": {
+      "title": "No opportunities yet",
+      "description": "Edit a baselined design as a new version, evaluate it, and press “Price as an opportunity”."
+    },
+    "baselineDone": "Baseline recorded.",
+    "baselineDialogHint": "Choose an attested design and a saved price snapshot. The design is evaluated at that snapshot and the cost must be complete and verified.",
+    "pickDesign": "Attested design",
+    "pickSnapshot": "Price snapshot",
+    "noSnapshots": "No price snapshot exists yet: create one on the Prices screen first.",
+    "reason": {
+      "validator_failed": "The independent validator disagreed.",
+      "cost_incomplete": "A material has no usable price in the snapshot."
+    }
   }
 }

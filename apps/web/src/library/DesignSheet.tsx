@@ -13,7 +13,7 @@ import {
   TabsTrigger,
 } from '@khalta/ui';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldCheck, X } from 'lucide-react';
+import { Pencil, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMe } from '../lib/auth';
@@ -23,9 +23,19 @@ import { usePrefs } from '../lib/prefs';
 import { designQuery } from './api';
 import { AttestDialog } from './AttestDialog';
 import { ApprovalChip, DesignStatusChip, RevalidationChip, VerdictChip } from './chips';
+import { EditorDialog } from './EditorDialog';
 import { EvaluationTab, MaterialNames } from './EvaluationTab';
+import { VersionsSection } from './VersionsSection';
 
-export function DesignSheet({ id, onClose }: { id: string | null; onClose: () => void }) {
+export function DesignSheet({
+  id,
+  onClose,
+  onOpen,
+}: {
+  id: string | null;
+  onClose: () => void;
+  onOpen?: (id: string) => void;
+}) {
   const { t } = useTranslation();
   const { lang } = usePrefs();
   const f = useFormat();
@@ -34,6 +44,7 @@ export function DesignSheet({ id, onClose }: { id: string | null; onClose: () =>
   const q = useQuery({ ...designQuery(id ?? ''), enabled: !!id });
   const [attest, setAttest] = useState(false);
   const [tab, setTab] = useState('details');
+  const [edit, setEdit] = useState(false);
   if (!id) return null;
   const d = q.data?.design;
   const canAttest =
@@ -107,6 +118,19 @@ export function DesignSheet({ id, onClose }: { id: string | null; onClose: () =>
                       {t('library.evaluationPending')}
                     </p>
                   )}
+                  {!!d &&
+                    (me?.capabilities ?? []).includes('design.write') &&
+                    !['superseded', 'retired'].includes(d.status) && (
+                      <Button
+                        className="mb-4 me-2"
+                        variant="secondary"
+                        onClick={() => setEdit(true)}
+                        data-testid="edit-open"
+                      >
+                        <Pencil className="size-4" aria-hidden />
+                        {t('editor.open')}
+                      </Button>
+                    )}
                   {canAttest && (
                     <Button
                       className="mb-4"
@@ -243,6 +267,8 @@ export function DesignSheet({ id, onClose }: { id: string | null; onClose: () =>
                     </table>
                   </section>
 
+                  <VersionsSection designId={d.id} code={d.code} onOpen={(v) => onOpen?.(v)} />
+
                   <section className="mt-6" aria-label={t('library.history')}>
                     <h3 className="mb-2 text-sm font-semibold text-heading">
                       {t('library.history')}
@@ -271,6 +297,17 @@ export function DesignSheet({ id, onClose }: { id: string | null; onClose: () =>
           )}
         </SheetContent>
       </Dialog>
+      {edit && d && q.data && (
+        <EditorDialog
+          design={d}
+          lines={q.data.lines}
+          onClose={() => setEdit(false)}
+          onSaved={(nid) => {
+            setEdit(false);
+            onOpen?.(nid);
+          }}
+        />
+      )}
       {attest && d && (
         <AttestDialog
           design={d}

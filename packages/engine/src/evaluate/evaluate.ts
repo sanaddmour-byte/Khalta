@@ -19,6 +19,7 @@ import {
   type EvidenceStatus,
   type QualityItem,
 } from './types';
+import { attachReasons } from './reasons';
 import { RuleIndex, Tracer } from './util';
 
 const fixedOf = (chars: readonly ResolvedCharacteristic[], key: string): number | null => {
@@ -223,7 +224,7 @@ export function evaluate(s: EvaluationSnapshot): EvaluationReport {
       `Strength is specified at ${s.request.testAgeDays} days; the f'cr equations and baselines are 28-day values.`,
     );
 
-  return {
+  return attachReasons({
     schema: 1,
     evaluatorVersion: EVALUATOR_VERSION,
     mode: s.mode,
@@ -244,5 +245,5 @@ export function evaluate(s: EvaluationSnapshot): EvaluationReport {
     assumptions,
     // Water without a test uses the stated default SG; every other line needs its own SG.
     minimumData: { ok: blend.missingMinimum.length === 0, missing: blend.missingMinimum },
-  };
+  });
 }

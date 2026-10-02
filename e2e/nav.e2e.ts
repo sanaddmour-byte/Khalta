@@ -86,8 +86,13 @@ test("plant switcher is scoped to the user's plants", async ({ page }) => {
   await page.keyboard.press('Escape');
 
   await start(page, { role: 'admin' }); // unscoped: "all plants" + each plant (other specs may add plants)
-  const plants = (await (await page.request.get('/api/plants')).json()) as unknown[];
+  const count = async () =>
+    ((await (await page.request.get('/api/plants')).json()) as unknown[]).length;
+  const before = await count();
   await page.goto('/');
   await page.getByTestId('plant-switcher').click();
-  await expect(page.getByRole('option')).toHaveCount(plants.length + 1);
+  const shown = await page.getByRole('option').count();
+  const after = await count(); // a parallel spec may add a plant while the page loads
+  expect(shown).toBeGreaterThanOrEqual(before + 1);
+  expect(shown).toBeLessThanOrEqual(after + 1);
 });

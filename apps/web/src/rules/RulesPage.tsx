@@ -34,7 +34,11 @@ export function RulesPage() {
   const [ruleset, setRuleset] = useState(ALL);
   const [status, setStatus] = useState(ALL);
   const [cls, setCls] = useState(ALL);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(() =>
+    typeof window === 'undefined'
+      ? ''
+      : (new URLSearchParams(window.location.search).get('q') ?? ''),
+  );
   const caps = me?.capabilities ?? [];
   const canVerify = caps.includes('rules.verify');
   const canImport = caps.includes('import.run');

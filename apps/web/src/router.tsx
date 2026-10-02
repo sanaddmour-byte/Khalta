@@ -19,6 +19,7 @@ import { PricesPage } from './prices/PricesPage';
 import { LoginPage } from './pages/Login';
 import { SectionPage } from './pages/Section';
 import { RulesPage } from './rules/RulesPage';
+import { SavingsPage } from './savings/SavingsPage';
 import { Shell } from './shell/Shell';
 
 interface RouterContext {
@@ -61,6 +62,7 @@ const SCREENS: Record<string, () => React.JSX.Element> = {
   materials: MaterialsPage,
   prices: PricesPage,
   library: LibraryPage,
+  savings: SavingsPage,
   imports: ImportsPage,
   plants: PlantsPage,
   settings: SettingsPage,

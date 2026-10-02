@@ -35,6 +35,8 @@ export interface BuildOptions {
   airPct?: number | null;
   projectOverrides?: ProjectOverride[];
   tablePolicy?: Record<string, 'ACI' | 'JS'>;
+  /** Preview of an unsaved edit: use these lines instead of the stored ones. */
+  linesOverride?: { materialId: string; quantity: string }[];
   now?: Date;
 }
 
@@ -80,15 +82,17 @@ export async function buildSnapshot(
     airPct: opts.airPct ?? req.airPct ?? null,
   };
 
-  const lines = await db
-    .select({
-      materialId: schema.mixDesignLines.materialId,
-      quantity: schema.mixDesignLines.quantityKgM3,
-      sourceLine: schema.mixDesignLines.sourceLine,
-    })
-    .from(schema.mixDesignLines)
-    .where(eq(schema.mixDesignLines.designId, design.id))
-    .orderBy(schema.mixDesignLines.sourceLine, schema.mixDesignLines.id);
+  const lines = opts.linesOverride
+    ? opts.linesOverride.map((l, i) => ({ ...l, sourceLine: i + 1 }))
+    : await db
+        .select({
+          materialId: schema.mixDesignLines.materialId,
+          quantity: schema.mixDesignLines.quantityKgM3,
+          sourceLine: schema.mixDesignLines.sourceLine,
+        })
+        .from(schema.mixDesignLines)
+        .where(eq(schema.mixDesignLines.designId, design.id))
+        .orderBy(schema.mixDesignLines.sourceLine, schema.mixDesignLines.id);
   const materialIds = [...new Set(lines.map((l) => l.materialId))];
 
   const mats = materialIds.length

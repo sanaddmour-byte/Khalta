@@ -39,6 +39,7 @@ const SPEC: Record<Role, Capability[]> = {
     'rules.read',
     'rules.verify',
     'design.attest',
+    'baseline.create',
     'production.release',
     'insight.accept',
     'insight.draft',
@@ -106,8 +107,14 @@ describe('role x capability matrix', () => {
       );
   });
 
-  it('only QC Manager can approve, attest, verify rules and mark trials passed', () => {
-    for (const cap of ['design.approve', 'design.attest', 'rules.verify', 'trial.pass'] as const)
+  it('only QC Manager can approve, attest, baseline, verify rules and mark trials passed', () => {
+    for (const cap of [
+      'design.approve',
+      'design.attest',
+      'baseline.create',
+      'rules.verify',
+      'trial.pass',
+    ] as const)
       expect(ROLES.filter((r) => roleCan(r, cap, { salesCanViewCost: true }))).toEqual([
         'qc_manager',
       ]);

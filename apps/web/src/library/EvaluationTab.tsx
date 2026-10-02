@@ -1,4 +1,4 @@
-import type { CheckResult, EvaluationReport } from '@khalta/engine';
+import type { EvaluationReport } from '@khalta/engine';
 import {
   Button,
   CodeBadge,
@@ -23,6 +23,7 @@ import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
 import { useFormat } from '../lib/format';
 import { usePrefs } from '../lib/prefs';
+import { ComplianceTable, useReason } from './ComplianceTable';
 import {
   evaluateDesign,
   evaluationQuery,
@@ -34,27 +35,9 @@ import {
 const chip =
   'inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium';
 
-/** Tri-state result: icon + text + colour, never colour alone. A check that was not evaluated is not a pass. */
-export function CheckStatus({ status }: { status: CheckResult['status'] }) {
-  const { t } = useTranslation();
-  const cfg = {
-    pass: { Icon: CircleCheck, cls: 'border-pass bg-pass-bg text-pass-text' },
-    fail: { Icon: CircleX, cls: 'border-fail bg-fail-bg text-fail-text' },
-    not_evaluated: { Icon: CircleHelp, cls: 'border-warn bg-warn-bg text-warn-text' },
-  }[status];
-  return (
-    <span data-status={status} className={`${chip} ${cfg.cls}`}>
-      <cfg.Icon className="size-3.5" aria-hidden />
-      {t(`evaluation.status.${status}`)}
-    </span>
-  );
-}
-
 const NamesContext = createContext<Map<string, { en: string; ar: string | null }>>(new Map());
 export const MaterialNames = NamesContext.Provider;
 const useMaterialNames = () => useContext(NamesContext);
-
-const checkKey = (id: string) => id.replace(/\./g, '_');
 
 export function EvaluationTab({ design }: { design: DesignCard }) {
   const { t } = useTranslation();
@@ -205,6 +188,7 @@ function EvaluationReportView({
   const { lang } = usePrefs();
   const f = useFormat();
   const r = d.report;
+  const why = useReason();
   const n = (v: number | string | null | undefined, digits = 3) =>
     v === null || v === undefined ? '–' : f.number(Number(v), { maximumFractionDigits: digits });
   const verified = d.validatorStatus === 'pass';
@@ -293,38 +277,7 @@ function EvaluationReportView({
 
       <Figures r={r} n={n} />
 
-      <section aria-label={t('evaluation.checks')}>
-        <h3 className="mb-2 text-sm font-semibold text-heading">{t('evaluation.checks')}</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" data-testid="checks-table">
-            <caption className="sr-only">{t('evaluation.checks')}</caption>
-            <thead>
-              <tr className="text-muted">
-                <th scope="col" className="py-1 text-start font-medium">
-                  {t('evaluation.col.check')}
-                </th>
-                <th scope="col" className="py-1 text-start font-medium">
-                  {t('evaluation.col.status')}
-                </th>
-                <th scope="col" className="py-1 text-start font-medium">
-                  {t('evaluation.col.value')}
-                </th>
-                <th scope="col" className="py-1 text-start font-medium">
-                  {t('evaluation.col.limit')}
-                </th>
-                <th scope="col" className="py-1 text-start font-medium">
-                  {t('evaluation.col.source')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {r.checks.map((c) => (
-                <CheckRow key={c.id} c={c} n={n} lang={lang} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <ComplianceTable r={r} n={n} names={(id) => <MaterialName id={id} lang={lang} />} />
 
       <StrengthSection r={r} n={n} />
 
@@ -357,7 +310,7 @@ function EvaluationReportView({
                   </>
                 )}
                 <span className="block text-xs text-muted" dir="auto">
-                  {q.detail}
+                  {why(q.reason, q.detail)}
                 </span>
               </li>
             ))}
@@ -420,7 +373,7 @@ function EvaluationReportView({
           <ul className="list-disc ps-5 text-sm text-muted" data-testid="assumptions">
             {r.assumptions.map((a, i) => (
               <li key={i} dir="auto">
-                {a}
+                {why(r.assumptionReasons?.[i], a)}
               </li>
             ))}
           </ul>
@@ -466,87 +419,9 @@ function Figures({ r, n }: { r: EvaluationReport; n: N }) {
   );
 }
 
-function CheckRow({ c, n, lang }: { c: CheckResult; n: N; lang: string }) {
-  const { t } = useTranslation();
-  const dosage = c.id.startsWith('admixture_dosage.');
-  const label = dosage ? (
-    <>
-      {t('evaluation.check.admixture_dosage')} · <MaterialName id={c.id.slice(17)} lang={lang} />
-    </>
-  ) : (
-    t(`evaluation.check.${checkKey(c.id)}`, { defaultValue: c.id })
-  );
-  const fmt = (v: CheckResult['value'] | CheckResult['limit']) => {
-    if (v === null) return '–';
-    if (Array.isArray(v))
-      return v.map((x) => t(`evaluation.klass.${x}`, { defaultValue: x })).join(' / ');
-    if (typeof v === 'boolean') return t(v ? 'library.yes' : 'library.no');
-    if (typeof v === 'string') return t(`evaluation.klass.${v}`, { defaultValue: v });
-    const unit =
-      c.units === '%' ? 'pct' : c.units === 'MPa' ? 'mpa' : c.units === 'm3' ? 'm3' : null;
-    return unit ? t(`evaluation.unit.${unit}`, { n: n(v, 4) }) : n(v, 4);
-  };
-  const src = c.governing?.source;
-  const code: CodeSource | null = src === 'ACI' || src === 'JS' || src === 'PROJECT' ? src : null;
-  return (
-    <tr
-      className="border-t border-line align-top"
-      data-testid="check-row"
-      data-check-id={c.id}
-      data-status={c.status}
-    >
-      <td className="py-1.5">
-        {label}
-        {c.blocker && (
-          <span className="block text-xs text-warn-text" data-testid="check-blocker">
-            {t(`evaluation.blocker.${c.blocker.code}`)}
-            <span className="block text-muted" dir="auto">
-              {c.blocker.detail}
-            </span>
-          </span>
-        )}
-        {c.warning === 'near_limit' && (
-          <span className="block text-xs text-warn-text">{t('evaluation.nearLimit')}</span>
-        )}
-        {c.note && (
-          <span className="block text-xs text-muted" dir="auto">
-            {c.note}
-          </span>
-        )}
-        {c.provisional && c.status !== 'not_evaluated' && (
-          <span className="block text-xs text-muted">{t('evaluation.provisionalRow')}</span>
-        )}
-      </td>
-      <td className="py-1.5">
-        <CheckStatus status={c.status} />
-      </td>
-      <td className="py-1.5 pe-4 whitespace-nowrap">
-        <Ltr>{fmt(c.value)}</Ltr>
-      </td>
-      <td className="py-1.5 whitespace-nowrap">
-        <Ltr>
-          {c.op && c.op !== 'in' && c.op !== 'is' ? `${c.op === 'abs<=' ? '±' : c.op} ` : ''}
-          {fmt(c.limit)}
-        </Ltr>
-      </td>
-      <td className="py-1.5">
-        {code ? (
-          <CodeBadge source={code} />
-        ) : (
-          <span className="text-xs text-muted">{t('evaluation.engineering')}</span>
-        )}
-        {c.governing && (
-          <span className="mt-0.5 block text-xs text-muted">
-            <Ltr>{c.governing.clause}</Ltr>
-          </span>
-        )}
-      </td>
-    </tr>
-  );
-}
-
 function StrengthSection({ r, n }: { r: EvaluationReport; n: N }) {
   const { t } = useTranslation();
+  const why = useReason();
   const s = r.strength;
   const a = r.strengthAdequacy;
   const w = r.waterBaseline;
@@ -590,7 +465,7 @@ function StrengthSection({ r, n }: { r: EvaluationReport; n: N }) {
         </dl>
         {s.blocker && (
           <p className="mt-1 text-xs text-warn-text" dir="auto">
-            {s.blocker.detail}
+            {why(s.blocker.reason, s.blocker.detail)}
           </p>
         )}
       </div>
@@ -619,7 +494,7 @@ function StrengthSection({ r, n }: { r: EvaluationReport; n: N }) {
         ) : (
           a.blocker && (
             <p className="mt-1 text-xs text-warn-text" dir="auto">
-              {a.blocker.detail}
+              {why(a.blocker.reason, a.blocker.detail)}
             </p>
           )
         )}
@@ -664,7 +539,7 @@ function StrengthSection({ r, n }: { r: EvaluationReport; n: N }) {
         ) : (
           w.blocker && (
             <p className="mt-1 text-xs text-warn-text" dir="auto">
-              {w.blocker.detail}
+              {why(w.blocker.reason, w.blocker.detail)}
             </p>
           )
         )}

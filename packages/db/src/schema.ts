@@ -665,6 +665,10 @@ export const designEvaluations = pgTable(
     priceBasis: jsonb('price_basis').notNull(),
     /** [{ id, version }] of every rule the evaluation used. */
     ruleVersions: jsonb('rule_versions').notNull(),
+    /** { failing, unevaluated, blockers, provisional, evidence, quality[] } for the portfolio views. */
+    summary: jsonb('summary').notNull().default({}),
+    /** materialId → test version the evaluation used (to show "inputs changed" without recomputing). */
+    testVersions: jsonb('test_versions').notNull().default({}),
     evaluatorVersion: text('evaluator_version').notNull(),
     validatorVersion: text('validator_version').notNull(),
     createdBy: text('created_by').references(() => users.id),
@@ -710,4 +714,77 @@ export const productionVolumes = pgTable(
     source: text('source', { enum: ['demo', 'import', 'batch_tickets'] }).notNull(),
   },
   (t) => [uniqueIndex('production_volumes_uq').on(t.designId, t.month)],
+);
+
+/**
+ * A cost baseline: what one attested design costs per m³ at one named, immutable price snapshot, from one
+ * stored evaluation. Never re-priced; later comparisons use the same snapshot (01-domain §14.2).
+ */
+export const costBaselines = pgTable(
+  'cost_baselines',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    evaluationId: uuid('evaluation_id')
+      .notNull()
+      .references(() => designEvaluations.id),
+    priceSnapshotId: uuid('price_snapshot_id')
+      .notNull()
+      .references(() => priceSnapshots.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    costJodPerM3: numeric('cost_jod_per_m3', { precision: 12, scale: 3 }).notNull(),
+    /** The stated average from the legacy file; an estimate, not a production record. */
+    monthlyVolumeM3: numeric('monthly_volume_m3', { precision: 12, scale: 2 }),
+    volumeSource: text('volume_source', { enum: ['import_file'] }),
+    annualJod: numeric('annual_jod', { precision: 16, scale: 3 }),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('cost_baselines_design_snapshot_uq').on(t.designId, t.priceSnapshotId)],
+);
+
+/** Ledger entries. Only `theoretical` exists until trials, approval and production volumes do (M4.x, M5.1). */
+export const savingsEntries = pgTable(
+  'savings_entries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    baselineId: uuid('baseline_id')
+      .notNull()
+      .references(() => costBaselines.id),
+    baselineDesignId: uuid('baseline_design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    variantDesignId: uuid('variant_design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    variantEvaluationId: uuid('variant_evaluation_id')
+      .notNull()
+      .references(() => designEvaluations.id),
+    /** The SAME snapshot prices both designs, so market movement is never credited to the change. */
+    priceSnapshotId: uuid('price_snapshot_id')
+      .notNull()
+      .references(() => priceSnapshots.id),
+    state: text('state', { enum: ['theoretical'] })
+      .notNull()
+      .default('theoretical'),
+    reasonCode: text('reason_code', { enum: ['manual_variant'] }).notNull(),
+    savingJodPerM3: numeric('saving_jod_per_m3', { precision: 12, scale: 3 }).notNull(),
+    monthlyVolumeM3: numeric('monthly_volume_m3', { precision: 12, scale: 2 }),
+    annualJod: numeric('annual_jod', { precision: 16, scale: 3 }),
+    /** True while any rule used is unverified (always, until QC verifies the rules). */
+    provisional: boolean('provisional').notNull(),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('savings_entries_variant_eval_uq').on(t.baselineId, t.variantEvaluationId)],
 );

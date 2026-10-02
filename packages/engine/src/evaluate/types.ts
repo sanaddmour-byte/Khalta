@@ -5,7 +5,7 @@ import type { StrengthBasis } from '../legacy/parse';
 import type { Category, Properties, Source } from '../materials/properties';
 import type { ResolvedCharacteristic } from '../characteristics/resolve';
 
-export const EVALUATOR_VERSION = '1.0.0';
+export const EVALUATOR_VERSION = '1.1.0';
 
 export const EVIDENCE_STATUSES = [
   'CODE_VERIFIED',
@@ -143,6 +143,12 @@ export interface GoverningRef {
   verified: boolean;
 }
 
+/** A stable key + parameters for an English explanation, so the UI can translate it. */
+export interface Reason {
+  key: string;
+  params: Record<string, string>;
+}
+
 export interface EvalBlocker {
   code:
     | 'rule_not_on_file'
@@ -153,6 +159,7 @@ export interface EvalBlocker {
     | 'not_applicable_here'
     | 'needs_trial';
   detail: string;
+  reason?: Reason;
 }
 
 export interface CheckResult {
@@ -174,6 +181,7 @@ export interface CheckResult {
   warning: 'near_limit' | null;
   traceKey: string | null;
   note?: string;
+  noteReason?: Reason;
 }
 
 export interface RequirementRow {
@@ -199,6 +207,7 @@ export interface CostLine {
   jod: string | null;
   state: 'priced' | 'unavailable' | 'ambiguous' | 'not_convertible' | 'no_price_needed';
   detail?: string;
+  reason?: Reason;
   stale: boolean;
 }
 
@@ -265,6 +274,7 @@ export interface QualityItem {
   severity: QualitySeverity;
   materialId?: string;
   detail: string;
+  reason?: Reason;
   evidence?: EvidenceStatus[];
 }
 
@@ -320,6 +330,8 @@ export interface EvaluationReport {
   characteristics: { rows: CharacteristicRow[] };
   evidence: EvidenceStatus[];
   assumptions: string[];
+  /** Same order as `assumptions`. */
+  assumptionReasons?: Reason[];
   /** SG (or other minimum data) missing for a line: the design cannot be called `evaluated`. */
   minimumData: { ok: boolean; missing: { materialId: string; field: string }[] };
 }

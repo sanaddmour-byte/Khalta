@@ -25,6 +25,7 @@ export const CAPABILITIES = [
   'rules.read',
   'rules.verify',
   'design.attest',
+  'baseline.create', // cost baselines on a named price snapshot (QC manager)
   'production.release', // release to / suspend in production
   'insight.accept',
   'insight.draft', // create a trial-only draft from an insight
@@ -74,6 +75,7 @@ const MATRIX: Record<Capability, Record<Role, Cell>> = {
   'rules.read': row({ admin: ALL, qc_manager: ALL, qc_engineer: ALL }),
   'rules.verify': row({ qc_manager: ALL }),
   'design.attest': row({ qc_manager: ALL }),
+  'baseline.create': row({ qc_manager: ALL }),
   'production.release': row({ qc_manager: ALL, plant_manager: ALL }),
   'insight.accept': row({ qc_manager: ALL }),
   'insight.draft': row({ qc_manager: ALL, qc_engineer: ALL }),

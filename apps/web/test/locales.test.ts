@@ -27,7 +27,19 @@ describe('locale resources', () => {
     const a = flat(resources.ar.translation as Tree);
     const same = Object.keys(e).filter((k) => e[k] === a[k]);
     const allowed =
-      /^(app\.nameAr|app\.nameEn|ui\.code\.(ACI|JS)|evaluation\.options\.aci|dev_materials\.cement|materials\.field\.c3a_pct)$/;
+      /^(app\.nameAr|app\.nameEn|ui\.code\.(ACI|JS)|evaluation\.options\.aci|reason\.other|dev_materials\.cement|materials\.field\.c3a_pct)$/;
     expect(same.filter((k) => !allowed.test(k))).toEqual([]);
+  });
+});
+
+describe('evaluator reasons', () => {
+  it('every structured reason key has an English and an Arabic text', async () => {
+    const { REASON_KEYS } = await import('@khalta/engine/evaluate');
+    const en = (resources.en.translation as { reason: Record<string, string> }).reason;
+    const ar = (resources.ar.translation as { reason: Record<string, string> }).reason;
+    for (const k of REASON_KEYS) {
+      expect(en[k], k).toBeTruthy();
+      expect(ar[k], k).toBeTruthy();
+    }
   });
 });

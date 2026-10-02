@@ -221,3 +221,30 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** the engine's blocker/assumption texts are English only (Arabic with the M2.2 compliance table); the checks table is cramped at 390 px (M2.2 polish); JS values and rule verification still pending; Railway staging awaits your go-ahead; real approved designs wanted as fixtures.
 
 **Next:** M2.2 (manual editor, cost baselines, compliance table) — write `docs/plans/M2.2.md`.
+
+## 2026-10-02 — M2.2 Mix intelligence pilot (F-012, F-013)
+
+**Changed**
+
+- `packages/engine`: structured reasons: every English explanation the evaluator writes (blockers, notes, assumptions, data-quality and cost details) also carries a stable key and parameters (`reasonOf`, `REASON_KEYS`); evaluator version 1.1.0; a test over all 111 scenarios fails if a sentence has no key.
+- `packages/db`: migrations 0012–0013: `cost_baselines` and `savings_entries` (append-only; the ledger state is the database constant `theoretical`, saving must be positive); `design_evaluations` gains `summary` and `test_versions` for the portfolio views.
+- `apps/api`: `POST /api/designs/:id/versions` (edits become the next **draft** version; source untouched), `GET .../versions`, `GET .../diff/:otherId`, `POST .../preview` (evaluates and validates an unsaved edit, stores nothing), `POST /api/designs/evaluate-batch` (≤ 200, one audit entry per design), `GET /api/portfolio`, `GET /api/data-quality`, `POST /api/portfolio/export` (logged CSV, formula characters neutralized), `POST/GET /api/baselines` (new capability `baseline.create`, QC manager only), `POST /api/savings/theoretical`, `GET /api/savings`. One shared `evaluateAndStore` serves the single, batch, baseline and opportunity paths.
+- `apps/web`: compliance table (failures first; filters by result, source and class; clause links to the Rules screen; traceability popover with formula, inputs, rule and evidence; reasons translated); Portfolio and Data-quality tabs in the Library (evaluate all, filters, counts, CSV); "Edit as new version" dialog with live check; Versions section with diff and "Price as an opportunity"; Savings screen (baselines, theoretical opportunities, no totals).
+- ADR 0008 (savings baseline). Arabic drafts in `docs/i18n-review.md`.
+
+**Commands run (all green):** `typecheck`, `lint` (incl. boundaries), `test` (engine 173, validator 146, api 180, web 26, rbac 168, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (83 incl. 5 new: portfolio, compliance table EN/AR, editor, import → evaluate → attest → baseline → variant → THEORETICAL entry), `screens` (`docs/screens/M2.2/`, reviewed), `db:drift`.
+
+**Gates:** import → evaluate → attest → baseline → manual variant → theoretical entry is tested end to end (API with real Postgres and browser). A live price change after a baseline cannot change it, and a variant is priced at the baseline's own snapshot (hand-computed: 10 kg cement at 0.075 JOD/kg replaced by 20 kg coarse at 0.007 JOD/kg = 0.610 JOD/m³, 8,784 JOD/year at 1,200 m³/month, both labelled estimates).
+
+**Deviations from the plan (and why)**
+
+- The live preview runs on the server (`/preview`: same pure evaluator and validator, nothing stored) instead of in the browser; this avoids shipping rules, tests and prices to the client and keeps one snapshot builder.
+- No lifecycle edge `evaluated → draft` was needed: an edit creates version N+1 as a new row in `draft`, so the existing version never changes state. The edge stays off.
+- A baseline needs an **existing** price snapshot (the QC manager has no `price.edit`, so I did not let this screen create one); the dialog says so when none exists. Creating the snapshot stays on the Prices screen.
+- A new baseline's cost must be complete and validator-verified, so a design with an unpriced material cannot be baselined until it is priced.
+
+**Verification note:** tests prove baselines are fixed to their snapshot, edits never overwrite an existing version, only compliant, validator-verified, cheaper variants become theoretical entries, and cost never reaches cost-blind roles. They do **not** prove any saving is achievable in production, that the volumes (averages from your file) are real, or that a variant is acceptable to produce; nothing here is approved or realized.
+
+**Open items:** Arabic strings are drafts (engineering wording first); `e2e` plant-switcher spec was made race-tolerant (a parallel spec can add a plant); JS values and rule verification pending; Railway staging awaits your go-ahead; real attested designs and volumes still wanted.
+
+**Next:** M3.1 (controlled optimizer) — write `docs/plans/M3.1.md`.
