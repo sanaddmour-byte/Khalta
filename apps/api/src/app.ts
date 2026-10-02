@@ -12,6 +12,8 @@ import { authenticate, originGuard } from './middleware';
 import { ApiRoutes } from './route';
 import { auditRoutes } from './routes/audit';
 import { attachmentRoutes } from './routes/attachments';
+import { designRoutes } from './routes/designs';
+import { legacyRoutes } from './routes/legacy';
 import { materialRoutes } from './routes/materials';
 import { meRoutes } from './routes/me';
 import { plantRoutes } from './routes/plants';
@@ -68,6 +70,8 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   attachmentRoutes(api);
   materialRoutes(api);
   priceRoutes(api);
+  legacyRoutes(api);
+  designRoutes(api);
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {
     res.json(api.openApiDocument());
   });

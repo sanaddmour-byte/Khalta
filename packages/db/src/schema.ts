@@ -525,3 +525,146 @@ export const priceImportBatches = pgTable('price_import_batches', {
   createdAt: createdAt(),
   committedAt: ts('committed_at'),
 });
+
+// ---- Designs and legacy import (M1.3) ----------------------------------------------------------
+export const DESIGN_STATUSES = [
+  'draft',
+  'evaluated',
+  'trial_candidate',
+  'trial_in_progress',
+  'trial_passed',
+  'approved',
+  'in_production',
+  'suspended',
+  'superseded',
+  'retired',
+] as const;
+
+/** The uploaded table, kept so mapping and matching can be redone without re-uploading. */
+export const legacyImportBatches = pgTable('legacy_import_batches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  filename: text('filename'),
+  rows: jsonb('rows').notNull(), // string[][] without the header
+  header: jsonb('header').notNull(), // string[]
+  status: text('status', { enum: ['uploaded', 'committed'] }).notNull(),
+  summary: jsonb('summary'),
+  createdBy: text('created_by')
+    .notNull()
+    .references(() => users.id),
+  createdAt: createdAt(),
+  committedAt: ts('committed_at'),
+});
+
+/**
+ * A mix design. Imported inputs (code, plant, requirements, lines, snapshot) never change in place;
+ * only status and approval bookkeeping do (trigger, migration 0009).
+ */
+export const mixDesigns = pgTable(
+  'mix_designs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    code: text('code').notNull(),
+    name: text('name').notNull(),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    version: integer('version').notNull().default(1),
+    status: text('status', { enum: DESIGN_STATUSES }).notNull().default('draft'),
+    approvalSource: text('approval_source', { enum: ['khalta', 'legacy_attested'] }),
+    externalApprovalRef: text('external_approval_ref'),
+    approvedBy: text('approved_by').references(() => users.id),
+    approvedAt: ts('approved_at'),
+    rulesetMode: text('ruleset_mode'),
+    requirements: jsonb('requirements').notNull(),
+    inputsSnapshot: jsonb('inputs_snapshot').notNull(),
+    /** What the file said (not an approval): reference, "in production" flag, average volume. */
+    importedApprovalRef: text('imported_approval_ref'),
+    importedInProduction: boolean('imported_in_production'),
+    avgMonthlyVolumeM3: numeric('avg_monthly_volume_m3', { precision: 12, scale: 2 }),
+    evaluationPending: boolean('evaluation_pending').notNull().default(true),
+    warnings: jsonb('warnings').notNull().default([]),
+    importBatchId: uuid('import_batch_id').references(() => legacyImportBatches.id),
+    synthetic: boolean('synthetic').notNull().default(false),
+    parentDesignId: uuid('parent_design_id'),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    deletedAt: ts('deleted_at'),
+  },
+  (t) => [
+    uniqueIndex('mix_designs_code_uq')
+      .on(t.tenantId, t.code, t.version)
+      .where(sql`${t.deletedAt} is null`),
+    index('mix_designs_plant_idx').on(t.tenantId, t.plantId, t.status),
+  ],
+);
+
+export const mixDesignLines = pgTable(
+  'mix_design_lines',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    materialId: uuid('material_id')
+      .notNull()
+      .references(() => materials.id),
+    /** Per m³ SSD in kg (litres converted through SG at import time). */
+    quantityKgM3: numeric('quantity_kg_m3', { precision: 12, scale: 3 }).notNull(),
+    originalQuantity: numeric('original_quantity', { precision: 12, scale: 3 }).notNull(),
+    originalUnit: text('original_unit', { enum: ['kg/m3', 'L/m3'] }).notNull(),
+    originalName: text('original_name').notNull(),
+    sourceLine: integer('source_line'),
+    matchMethod: text('match_method', { enum: ['exact', 'confirmed', 'created'] }).notNull(),
+  },
+  (t) => [index('mix_design_lines_design_idx').on(t.designId)],
+);
+
+/** Append-only history of every state change, with the evidence named (trigger, migration 0009). */
+export const designTransitions = pgTable(
+  'design_transitions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    fromStatus: text('from_status').notNull(),
+    toStatus: text('to_status').notNull(),
+    actorId: text('actor_id').references(() => users.id),
+    evidence: jsonb('evidence').notNull(),
+    at: ts('at').notNull().defaultNow(),
+  },
+  (t) => [index('design_transitions_design_idx').on(t.designId)],
+);
+
+export const productionVolumes = pgTable(
+  'production_volumes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    month: date('month', { mode: 'string' }).notNull(), // first day of the month
+    volumeM3: numeric('volume_m3', { precision: 12, scale: 2 }).notNull(),
+    source: text('source', { enum: ['demo', 'import', 'batch_tickets'] }).notNull(),
+  },
+  (t) => [uniqueIndex('production_volumes_uq').on(t.designId, t.month)],
+);

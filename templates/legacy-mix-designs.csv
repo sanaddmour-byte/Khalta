@@ -1,0 +1,6 @@
+design_code,plant_code,design_name,fc_mpa,strength_basis,test_age_days,exposure_classes,slump_mm,nmas_mm,pumpable,material_name,material_category,quantity,unit,approval_reference,currently_in_production,avg_monthly_volume_m3
+EXAMPLE-C30,AMM-01,C30 pump (example only),30,cylinder,28,F0;S0;W0;C1,125,19,true,إسمنت,cement,360,kg/m3,Submittal 2025-14,true,2400
+EXAMPLE-C30,AMM-01,C30 pump (example only),30,cylinder,28,F0;S0;W0;C1,125,19,true,ماء,water,175,kg/m3,Submittal 2025-14,true,2400
+EXAMPLE-C30,AMM-01,C30 pump (example only),30,cylinder,28,F0;S0;W0;C1,125,19,true,رمل,fine_agg,820,kg/m3,Submittal 2025-14,true,2400
+EXAMPLE-C30,AMM-01,C30 pump (example only),30,cylinder,28,F0;S0;W0;C1,125,19,true,فولية,coarse_agg,610,kg/m3,Submittal 2025-14,true,2400
+EXAMPLE-C30,AMM-01,C30 pump (example only),30,cylinder,28,F0;S0;W0;C1,125,19,true,ملدن,admixture,3.5,L/m3,Submittal 2025-14,true,2400

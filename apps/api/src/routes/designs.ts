@@ -1,0 +1,222 @@
+import { schema } from '@khalta/db';
+import { assertNotAuthor, canAccessPlant } from '@khalta/rbac';
+import { and, asc, desc, eq, ilike, inArray, isNull, or } from 'drizzle-orm';
+import { z } from 'zod';
+import { ApiError, notFound } from '../errors';
+import type { ApiRoutes } from '../route';
+
+const idParam = z.object({ id: z.uuid() });
+const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
+const listQuery = z.object({
+  status: z.enum(schema.DESIGN_STATUSES).optional(),
+  plantId: z.uuid().optional(),
+  q: z.string().trim().max(100).optional(),
+  /** The attestation queue: imported designs nobody has approved yet. */
+  queue: bool.optional(),
+});
+const attestBody = z.strictObject({
+  approvalReference: z.string().trim().min(2).max(200),
+  approvedOn: z.iso.date().optional(),
+  inProduction: z.boolean(),
+  note: z.string().trim().min(5).max(500),
+});
+
+const card = {
+  id: schema.mixDesigns.id,
+  code: schema.mixDesigns.code,
+  name: schema.mixDesigns.name,
+  plantId: schema.mixDesigns.plantId,
+  version: schema.mixDesigns.version,
+  status: schema.mixDesigns.status,
+  approvalSource: schema.mixDesigns.approvalSource,
+  externalApprovalRef: schema.mixDesigns.externalApprovalRef,
+  approvedAt: schema.mixDesigns.approvedAt,
+  evaluationPending: schema.mixDesigns.evaluationPending,
+  requirements: schema.mixDesigns.requirements,
+  importedApprovalRef: schema.mixDesigns.importedApprovalRef,
+  importedInProduction: schema.mixDesigns.importedInProduction,
+  avgMonthlyVolumeM3: schema.mixDesigns.avgMonthlyVolumeM3,
+  warnings: schema.mixDesigns.warnings,
+  synthetic: schema.mixDesigns.synthetic,
+  createdBy: schema.mixDesigns.createdBy,
+};
+
+export function designRoutes(api: ApiRoutes) {
+  api.get(
+    '/api/designs',
+    {
+      summary: 'List designs (no computed figures until the evaluator exists)',
+      capability: 'library.read',
+      query: listQuery,
+    },
+    async ({ auth, query, db }) => {
+      const where = [
+        eq(schema.mixDesigns.tenantId, auth.tenantId),
+        isNull(schema.mixDesigns.deletedAt),
+      ];
+      if (query.status) where.push(eq(schema.mixDesigns.status, query.status));
+      if (query.plantId) where.push(eq(schema.mixDesigns.plantId, query.plantId));
+      if (query.queue)
+        where.push(eq(schema.mixDesigns.status, 'draft'), isNull(schema.mixDesigns.approvalSource));
+      if (query.q) {
+        const like = `%${query.q.replace(/[%_\\]/g, '\\$&')}%`;
+        where.push(or(ilike(schema.mixDesigns.code, like), ilike(schema.mixDesigns.name, like))!);
+      }
+      if (!auth.scope.all) {
+        if (auth.scope.plantIds.length === 0) return [];
+        where.push(inArray(schema.mixDesigns.plantId, [...auth.scope.plantIds]));
+      }
+      return db
+        .select(card)
+        .from(schema.mixDesigns)
+        .where(and(...where))
+        .orderBy(asc(schema.mixDesigns.code));
+    },
+  );
+
+  api.get(
+    '/api/designs/:id',
+    {
+      summary: 'One design with its lines, warnings and history',
+      capability: 'library.read',
+      params: idParam,
+    },
+    async ({ auth, params, db }) => {
+      const [d] = await db
+        .select({
+          ...card,
+          importBatchId: schema.mixDesigns.importBatchId,
+          inputsSnapshot: schema.mixDesigns.inputsSnapshot,
+        })
+        .from(schema.mixDesigns)
+        .where(
+          and(
+            eq(schema.mixDesigns.id, params.id),
+            eq(schema.mixDesigns.tenantId, auth.tenantId),
+            isNull(schema.mixDesigns.deletedAt),
+          ),
+        );
+      if (!d || !canAccessPlant(auth.scope, d.plantId)) throw notFound('Design not found');
+      const [lines, transitions, batch] = await Promise.all([
+        db
+          .select({
+            id: schema.mixDesignLines.id,
+            materialId: schema.mixDesignLines.materialId,
+            nameEn: schema.materials.marketNameEn,
+            nameAr: schema.materials.marketNameAr,
+            category: schema.materials.category,
+            quantityKgM3: schema.mixDesignLines.quantityKgM3,
+            originalQuantity: schema.mixDesignLines.originalQuantity,
+            originalUnit: schema.mixDesignLines.originalUnit,
+            originalName: schema.mixDesignLines.originalName,
+            sourceLine: schema.mixDesignLines.sourceLine,
+            matchMethod: schema.mixDesignLines.matchMethod,
+          })
+          .from(schema.mixDesignLines)
+          .innerJoin(schema.materials, eq(schema.materials.id, schema.mixDesignLines.materialId))
+          .where(eq(schema.mixDesignLines.designId, d.id))
+          .orderBy(asc(schema.mixDesignLines.sourceLine)),
+        db
+          .select({
+            id: schema.designTransitions.id,
+            fromStatus: schema.designTransitions.fromStatus,
+            toStatus: schema.designTransitions.toStatus,
+            evidence: schema.designTransitions.evidence,
+            at: schema.designTransitions.at,
+            actor: schema.users.name,
+          })
+          .from(schema.designTransitions)
+          .leftJoin(schema.users, eq(schema.users.id, schema.designTransitions.actorId))
+          .where(eq(schema.designTransitions.designId, d.id))
+          .orderBy(desc(schema.designTransitions.at)),
+        d.importBatchId
+          ? db
+              .select({ filename: schema.legacyImportBatches.filename })
+              .from(schema.legacyImportBatches)
+              .where(eq(schema.legacyImportBatches.id, d.importBatchId))
+          : Promise.resolve([]),
+      ]);
+      return { design: d, lines, transitions, source: batch[0]?.filename ?? null };
+    },
+  );
+
+  api.mutate(
+    'post',
+    '/api/designs/:id/attest',
+    {
+      summary:
+        'Attest an imported design that was approved outside Khalta (four-eyes, e-signature note)',
+      capability: 'design.attest',
+      body: attestBody,
+      params: idParam,
+    },
+    async ({ auth, body, params, tx, audit }) => {
+      const [d] = await tx
+        .select()
+        .from(schema.mixDesigns)
+        .where(
+          and(
+            eq(schema.mixDesigns.id, params.id),
+            eq(schema.mixDesigns.tenantId, auth.tenantId),
+            isNull(schema.mixDesigns.deletedAt),
+          ),
+        )
+        .for('update');
+      if (!d || !canAccessPlant(auth.scope, d.plantId)) throw notFound('Design not found');
+      if (d.status !== 'draft' || d.approvalSource !== null || !d.importBatchId)
+        throw new ApiError(
+          409,
+          'conflict',
+          'Only an imported design awaiting attestation can be attested',
+        );
+      assertNotAuthor(auth.user.id, d.createdBy); // the importer cannot attest their own import
+      const now = new Date();
+      const approvedAt = body.approvedOn ? new Date(`${body.approvedOn}T00:00:00Z`) : now;
+      const target = body.inProduction ? 'in_production' : 'approved';
+      await tx
+        .update(schema.mixDesigns)
+        .set({
+          status: target,
+          approvalSource: 'legacy_attested',
+          externalApprovalRef: body.approvalReference,
+          approvedBy: auth.user.id,
+          approvedAt,
+          updatedAt: now,
+        })
+        .where(eq(schema.mixDesigns.id, d.id));
+      const evidence = {
+        kind: 'legacy_attestation',
+        approvalReference: body.approvalReference,
+        note: body.note,
+        note_scope: 'approved outside Khalta; not evaluated by Khalta',
+      };
+      const steps = body.inProduction
+        ? (['approved', 'in_production'] as const)
+        : (['approved'] as const);
+      let from: string = d.status;
+      for (const to of steps) {
+        await tx.insert(schema.designTransitions).values({
+          tenantId: auth.tenantId,
+          designId: d.id,
+          fromStatus: from,
+          toStatus: to,
+          actorId: auth.user.id,
+          evidence,
+        });
+        from = to;
+      }
+      await audit.record({
+        action: 'design.attest',
+        entityType: 'mix_design',
+        entityId: d.id,
+        before: { status: d.status },
+        after: {
+          status: target,
+          approvalSource: 'legacy_attested',
+          externalApprovalRef: body.approvalReference,
+        },
+      });
+      return { id: d.id, status: target };
+    },
+  );
+}
