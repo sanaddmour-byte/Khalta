@@ -99,6 +99,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       supplier: S(0),
       properties: {
         cement_type: 'CEM I 42.5N',
+        cement_kind: 'opc',
+        cement_strength_class: 42.5,
         sg: 3.15,
         mortar_strength_28d_mpa: 52,
         c3a_pct: 8.5,
@@ -116,6 +118,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       supplier: S(0),
       properties: {
         cement_type: 'CEM I 42.5N-SR3',
+        cement_kind: 'src',
+        cement_strength_class: 42.5,
         sg: 3.15,
         mortar_strength_28d_mpa: 50,
         c3a_pct: 2.8,
@@ -133,6 +137,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       supplier: S(0),
       properties: {
         cement_type: 'CEM II/A-P 42.5N',
+        cement_kind: 'ppc',
+        cement_strength_class: 42.5,
         sg: 3.08,
         mortar_strength_28d_mpa: 48,
         c3a_pct: 7.0,

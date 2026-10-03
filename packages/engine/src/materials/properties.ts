@@ -55,6 +55,13 @@ const cementitious = {
   blaine_m2_kg: positive.optional(),
 };
 
+/** Market types of cement in Jordan (M7.1). A LABEL: no check ever reads it; checks read the certificate numbers. */
+export const CEMENT_KINDS = ['opc', 'ppc', 'src', 'low_alkali', 'white'] as const;
+export type CementKind = (typeof CEMENT_KINDS)[number];
+/** Strength classes (EN 197-1): 32.5, 42.5, 52.5 MPa at 28 days. */
+export const CEMENT_CLASSES = [32.5, 42.5, 52.5] as const;
+export type CementClass = (typeof CEMENT_CLASSES)[number];
+
 export const ADMIXTURE_TYPES = ['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const; // ASTM C494
 export const SCM_TYPES = [
   'fly_ash',
@@ -85,7 +92,12 @@ const admixture = z.strictObject({
 export const PROPERTY_SCHEMAS = {
   fine_agg: aggregate,
   coarse_agg: aggregate,
-  cement: z.strictObject({ cement_type: z.string().min(1).max(60).optional(), ...cementitious }),
+  cement: z.strictObject({
+    cement_type: z.string().min(1).max(60).optional(),
+    cement_kind: z.enum(CEMENT_KINDS).optional(),
+    cement_strength_class: z.union([z.literal(32.5), z.literal(42.5), z.literal(52.5)]).optional(),
+    ...cementitious,
+  }),
   scm: z.strictObject({ scm_type: z.enum(SCM_TYPES).optional(), ...cementitious }),
   admixture,
   water: z.strictObject({

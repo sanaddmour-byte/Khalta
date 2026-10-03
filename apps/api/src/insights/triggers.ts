@@ -4,6 +4,7 @@
 import { schema, withAudit, type Db, type Executor } from '@khalta/db';
 import {
   annualised,
+  cementLabel,
   detectDrift,
   driftSeverity,
   freshness,
@@ -73,13 +74,39 @@ async function monthlyVolume(tx: Executor, d: DesignRow): Promise<string | null>
   return last?.volumeM3 ?? d.avgMonthlyVolumeM3 ?? null;
 }
 
+/** `white` when the design's cement is recorded as white, else `grey` (which keeps unlabelled cements, excludes white). */
+export async function cementColourOf(tx: Executor, designId: string): Promise<'white' | 'grey'> {
+  const rows = await tx
+    .select({ props: schema.materialTests.properties })
+    .from(schema.mixDesignLines)
+    .innerJoin(schema.materials, eq(schema.materials.id, schema.mixDesignLines.materialId))
+    .innerJoin(
+      schema.materialTests,
+      and(
+        eq(schema.materialTests.materialId, schema.materials.id),
+        eq(schema.materialTests.isCurrent, true),
+      ),
+    )
+    .where(
+      and(eq(schema.mixDesignLines.designId, designId), eq(schema.materials.category, 'cement')),
+    );
+  return rows.some((r) => cementLabel(r.props as Record<string, unknown>).kind === 'white')
+    ? 'white'
+    : 'grey';
+}
+
 /** The request the optimizer would run for an existing design: its own requirements, its plant, current prices. */
-export function requestFor(d: DesignRow, mode: 'ACI' | 'JS' | 'BOTH'): RequestBody | null {
+export function requestFor(
+  d: DesignRow,
+  mode: 'ACI' | 'JS' | 'BOTH',
+  cementColour: 'white' | 'grey' = 'grey',
+): RequestBody | null {
   const r = d.requirements as Record<string, unknown>;
   const parsed = requestBody.safeParse({
     plantId: d.plantId,
     mode,
     objective: 'cheapest',
+    cementColour,
     requirements: {
       fcMpa: r['fcMpa'],
       basis: r['basis'] ?? 'cylinder',
@@ -117,7 +144,8 @@ export async function onPriceChange({ db }: Ctx, tenantId: string, plantIds?: st
               .where(eq(schema.designEvaluations.id, d.lastEvaluationId))
           )[0]
         : undefined;
-      const body = requestFor(d, stored?.mode ?? 'BOTH');
+      // a design on a white cement is only ever offered white cements; any other design never gets one (M7.1)
+      const body = requestFor(d, stored?.mode ?? 'BOTH', await cementColourOf(tx, d.id));
       if (!body) continue;
       let run;
       try {

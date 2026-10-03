@@ -8,6 +8,7 @@ import {
   validateWaterReduction,
   CATEGORIES,
   SOURCES,
+  suggestCementLabel,
   type Category,
   type GradationPoint,
   type Properties,
@@ -52,6 +53,7 @@ import {
 } from './api';
 import { clearDraft, loadDraft, saveDraft, type Draft } from './drafts';
 import { fieldsFor, type FieldDef } from './fields';
+import { cementText } from './cementText';
 import { parseNumber } from './number';
 
 export type EntryTarget =
@@ -180,7 +182,7 @@ export function EntryDialog({
         const n = parseNumber(raw);
         if (n === null) errs[d.key] = t('materials.err.notNumber');
         else p[d.key] = n;
-      } else p[d.key] = raw;
+      } else p[d.key] = d.numeric ? Number(raw) : raw;
     }
     if (hasGradation && gradation.length > 0) p['sieve_analysis'] = gradation;
     if (isAdmixture && table.length > 0)
@@ -302,6 +304,13 @@ export function EntryDialog({
         ? (target.material.marketNameAr ?? target.material.marketNameEn)
         : target.material.marketNameEn
       : null;
+  const cementSuggestion =
+    category === 'cement' && !values['cement_kind'] && !values['cement_strength_class']
+      ? suggestCementLabel([nameEn, nameAr, matName ?? ''].join(' '))
+      : null;
+  const hasSuggestion =
+    !!cementSuggestion && (!!cementSuggestion.kind || !!cementSuggestion.strengthClass);
+
   const tiers: ['evaluate' | 'design' | 'optional', FieldDef[]][] = (
     ['evaluate', 'design', 'optional'] as const
   ).map((tier) => [tier, fields.filter((d) => d.tier === tier && d.key !== 'sg_confirmed')]);
@@ -499,6 +508,33 @@ export function EntryDialog({
               </Select>
             </div>
           </section>
+        )}
+
+        {category === 'cement' && (
+          <p className="mb-3 text-xs text-muted">{t('materials.cement.hint')}</p>
+        )}
+        {hasSuggestion && cementSuggestion && (
+          <div
+            className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-line p-2 text-sm"
+            data-testid="cement-suggestion"
+          >
+            <span>
+              {t('materials.cement.suggest', {
+                label: cementText(t, cementSuggestion.kind, cementSuggestion.strengthClass),
+              })}
+            </span>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                if (cementSuggestion.kind) setVal('cement_kind', cementSuggestion.kind);
+                if (cementSuggestion.strengthClass)
+                  setVal('cement_strength_class', String(cementSuggestion.strengthClass));
+              }}
+            >
+              {t('materials.cement.apply')}
+            </Button>
+          </div>
         )}
 
         {tiers.map(([tier, list]) =>

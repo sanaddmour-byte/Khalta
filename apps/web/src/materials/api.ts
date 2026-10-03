@@ -57,6 +57,9 @@ export interface MaterialRow extends Material {
   fm: number | null;
   freshness: Freshness | null;
   declaredKeyFields: string[];
+  /** Cement only: the recorded market label (absent for other categories). */
+  cementKind?: string | null;
+  cementClass?: number | null;
 }
 export interface AttachmentMeta {
   filename: string;

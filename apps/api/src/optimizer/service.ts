@@ -11,6 +11,8 @@ import {
   type ResolvedCharacteristic,
   PRICE_PATTERN,
   todayAmman,
+  cementLabel,
+  colourAllows,
   groupKey,
   groupOfParts,
   type EvaluationSnapshot,
@@ -65,6 +67,8 @@ export const requestBody = z.strictObject({
   profileIds: z.array(z.uuid()).max(3).optional(),
   /** Appendix E characteristics; validated and checked against the hard limits by the engine. */
   characteristics: z.unknown().optional(),
+  /** M7.1: `white` allows only cements recorded as white; `grey` excludes white cements; `any` (default) allows all. */
+  cementColour: z.enum(['any', 'white', 'grey']).default('any'),
   materials: z
     .strictObject({
       include: z.array(z.uuid()).max(200).optional(),
@@ -215,6 +219,26 @@ export interface Resolved {
   materials: { include?: string[]; exclude?: string[]; prefer?: string[] } | undefined;
 }
 
+/** Cements a colour request rules out, added to the request's own exclusions (so the pool says why). */
+export function withColour(
+  m: { include?: string[]; exclude?: string[]; prefer?: string[] } | undefined,
+  materials: readonly {
+    id: string;
+    category: string;
+    test: { properties: Record<string, unknown> } | null;
+  }[],
+  colour: 'any' | 'white' | 'grey',
+): { include?: string[]; exclude?: string[]; prefer?: string[] } | undefined {
+  if (colour === 'any') return m;
+  const out = materials
+    .filter(
+      (x) => x.category === 'cement' && !colourAllows(colour, cementLabel(x.test?.properties).kind),
+    )
+    .map((x) => x.id);
+  if (out.length === 0) return m;
+  return { ...(m ?? {}), exclude: [...new Set([...(m?.exclude ?? []), ...out])] };
+}
+
 /** Profiles (least specific first) then the request, merged and checked against the hard limits. */
 export async function resolveCharacteristics(
   db: Executor,
@@ -224,8 +248,9 @@ export async function resolveCharacteristics(
   forGeneration: boolean,
 ): Promise<Resolved> {
   const prof = await applyProfiles(db, tenantId, body.plantId, body.profileIds, forGeneration);
-  const materials =
+  const merged =
     prof.chosen.length > 0 ? mergePreferences(prof.chosen, body.materials) : body.materials;
+  const materials = withColour(merged, snapshot.materials, body.cementColour);
   const hasAny = prof.chosen.length > 0 || body.characteristics !== undefined;
   if (!hasAny)
     return {
@@ -384,6 +409,11 @@ const REQUIREMENTS_SHOWN = new Set([
   'air_tolerance_pct',
 ]);
 
+function cementLabelOf(m: { test: { properties?: unknown } | null }) {
+  const l = cementLabel((m.test?.properties ?? {}) as Record<string, unknown>);
+  return { cementKind: l.kind, cementClass: l.strengthClass };
+}
+
 /**
  * Everything the Requirements stage needs before anything is solved: which materials are usable at the plant
  * (and why not), the live code/project limits that bound the characteristics, what the optimizer would be
@@ -419,6 +449,7 @@ export async function preflight(db: Executor, tenantId: string, body: RequestBod
       reason: excluded.get(m.id) ?? null,
       hasTest: m.test !== null,
       source: m.test?.source ?? null,
+      ...(m.category === 'cement' ? cementLabelOf(m) : {}),
     })),
     bounds: ctxLimits.resolved.requirements
       .filter((r) => REQUIREMENTS_SHOWN.has(r.requirement) || r.requirement.startsWith('scm.max.'))

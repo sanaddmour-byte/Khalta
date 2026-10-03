@@ -469,7 +469,7 @@
       "limestone_pct": "محتوى الحجر الجيري",
       "alkali_na2o_eq_pct": "القلويات (مكافئ Na₂O)",
       "blaine_m2_kg": "نعومة بلين",
-      "cement_type": "نوع الإسمنت",
+      "cement_type": "مواصفة الإسمنت (كما في الشهادة)",
       "scm_type": "نوع المادة المكمّلة",
       "type": "نوع الإضافة (ASTM C494)",
       "solids_pct": "محتوى المواد الصلبة",
@@ -481,7 +481,9 @@
       "water_reduction_table": "جدول الجرعة وتخفيض الماء",
       "water_source": "مصدر الماء",
       "chloride_mg_l": "الكلوريد",
-      "fiber_type": "نوع الألياف"
+      "fiber_type": "نوع الألياف",
+      "cement_kind": "نوع الإسمنت",
+      "cement_strength_class": "فئة المقاومة"
     },
     "opt": {
       "shape": {
@@ -516,9 +518,24 @@
         "E": "النوع E",
         "F": "النوع F",
         "G": "النوع G"
+      },
+      "cement_kind": {
+        "opc": "إسمنت بورتلاندي عادي (OPC)",
+        "ppc": "إسمنت بوزولاني (PPC)",
+        "src": "إسمنت مقاوم للكبريتات (SRC)",
+        "low_alkali": "إسمنت قليل القلويات",
+        "white": "إسمنت أبيض"
       }
     },
-    "pricedAt": "مسعَّرة في {n} من {m} مصانع"
+    "pricedAt": "مسعَّرة في {n} من {m} مصانع",
+    "cement": {
+      "notRecorded": "النوع والفئة غير مسجلين",
+      "filter": "نوع الإسمنت",
+      "allKinds": "كل أنواع الإسمنت",
+      "suggest": "اقتراح من الاسم: {label}. أكّده قبل اعتماده.",
+      "apply": "تطبيق الاقتراح",
+      "hint": "هذه تسميات فقط. الفحوص تعتمد على القيم المختبرة (C3A والقلويات والبوزولان ومقاومة الملاط) وليس على التسمية."
+    }
   },
   "plants": {
     "intro": "محطات الخلط لديك. ترتبط الأسعار والمواد والتصاميم بالمصنع.",
@@ -1244,7 +1261,14 @@
     "note_min_fc": "f′c المحددة على أساس الأسطوانة مقابل أدنى قيمة لفئة التعرض.",
     "volume_not_computable": "تعذّر حساب الحجم.",
     "check_value_missing": "ينقص مُدخل لازم لهذا الفحص.",
-    "other": "{text}"
+    "other": "{text}",
+    "cement_src_c3a_missing": "{material} مسمّى SRC لكن قيمة C3A غير مسجلة.",
+    "cement_src_c3a_high": "{material} مسمّى SRC لكن قيمة C3A ‏{value}٪ تتجاوز حد المقاوم للكبريتات ‏{limit}٪.",
+    "cement_lowalk_missing": "{material} مسمّى قليل القلويات لكن محتوى القلويات غير مسجل.",
+    "cement_lowalk_limit_missing": "{material} مسمّى قليل القلويات لكن حد القلويات المنخفضة غير مسجل.",
+    "cement_lowalk_high": "{material} مسمّى قليل القلويات لكن القلويات ‏{value}٪ تتجاوز الحد ‏{limit}٪.",
+    "cement_ppc_pozzolan_missing": "{material} مسمّى PPC لكن محتوى البوزولان غير مسجل.",
+    "cement_class_low": "{material} مسمّى فئة {class} لكن مقاومة الملاط عند 28 يوماً ‏{value} ميغاباسكال أقل من حد الفئة ‏{min} ميغاباسكال."
   },
   "portfolio": {
     "title": "المحفظة",
@@ -1425,6 +1449,13 @@
       "objective": {
         "cheapest": "الأرخص",
         "closest": "الأقرب إلى أهدافي"
+      },
+      "cementColour": "لون الإسمنت",
+      "cementColourHint": "لا يُستخدم الإسمنت الأبيض إلا إذا اخترته، واختيار الرمادي يستثنيه.",
+      "colour": {
+        "any": "أي لون",
+        "white": "أبيض فقط",
+        "grey": "رمادي فقط"
       }
     },
     "exposure": {

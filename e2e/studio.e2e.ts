@@ -200,3 +200,12 @@ test('Arabic: right-to-left, no serious axe violations', async ({ page }) => {
   await settled(page);
   await expectNoSeriousAxe(page, 'studio ar');
 });
+
+test('cement colour: the choice is offered and can be set back to any', async ({ page }) => {
+  await open(page);
+  await choose(page, 'req-colour', 'White only');
+  await expect(page.getByTestId('req-colour')).toContainText('White only');
+  await expect(page.getByTestId('pool')).toBeVisible();
+  await choose(page, 'req-colour', 'Any');
+  await expectNoSeriousAxe(page, 'studio colour');
+});

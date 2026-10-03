@@ -1,4 +1,4 @@
-import { blockers, type Category } from '@khalta/engine';
+import { blockers, CEMENT_CLASSES, CEMENT_KINDS, type Category } from '@khalta/engine';
 
 export type FieldType = 'number' | 'text' | 'select';
 export interface FieldDef {
@@ -7,6 +7,8 @@ export interface FieldDef {
   /** Display unit; `null` = unitless. Rendered in an LTR island next to the input. */
   unit: string | null;
   options?: readonly string[];
+  /** A select whose chosen option is stored as a number (e.g. the cement strength class). */
+  numeric?: boolean;
   /** `evaluate` fields are needed to evaluate a mix, `design` fields to generate one; the rest are optional. */
   tier: 'evaluate' | 'design' | 'optional';
 }
@@ -50,7 +52,12 @@ const CEMENTITIOUS = [
 const BASE: Record<Category, Omit<FieldDef, 'tier'>[]> = {
   fine_agg: AGG,
   coarse_agg: AGG,
-  cement: [txt('cement_type'), ...CEMENTITIOUS],
+  cement: [
+    txt('cement_type'),
+    sel('cement_kind', CEMENT_KINDS),
+    { ...sel('cement_strength_class', CEMENT_CLASSES.map(String)), numeric: true },
+    ...CEMENTITIOUS,
+  ],
   scm: [
     sel('scm_type', ['fly_ash', 'ggbs', 'silica_fume', 'natural_pozzolan', 'limestone_filler']),
     ...CEMENTITIOUS,

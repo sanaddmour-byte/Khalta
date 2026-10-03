@@ -2,6 +2,7 @@ import { schema, type AuditRecorder, type Executor } from '@khalta/db';
 import {
   adHocMaterialSchema,
   CATEGORIES,
+  cementLabel,
   SOURCES,
   type Category,
   type Properties,
@@ -274,6 +275,13 @@ async function addTest(
   };
 }
 
+/** Cement kind/class from the current test's properties (cement only; labels never decide a check). */
+function cementLabelFields(category: string, properties: unknown) {
+  if (category !== 'cement') return {};
+  const l = cementLabel((properties ?? {}) as Record<string, unknown>);
+  return { cementKind: l.kind, cementClass: l.strengthClass };
+}
+
 export function materialRoutes(api: ApiRoutes) {
   api.get(
     '/api/materials/params',
@@ -359,6 +367,7 @@ export function materialRoutes(api: ApiRoutes) {
           fm: 'fm' in s ? s.fm : null,
           freshness: 'freshness' in s ? s.freshness : null,
           declaredKeyFields: 'declaredKeyFields' in s ? s.declaredKeyFields : [],
+          ...cementLabelFields(m.category, t?.properties),
         };
       });
     },

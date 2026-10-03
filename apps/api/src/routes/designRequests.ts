@@ -106,6 +106,7 @@ export async function createRequest(
         characteristics: body.characteristics ?? {},
         materials: run.resolved.materials ?? {},
         profileIds: body.profileIds ?? [],
+        cementColour: body.cementColour,
       },
       profileVersions: run.resolved.profiles,
       profileOrigins: run.resolved.origins,

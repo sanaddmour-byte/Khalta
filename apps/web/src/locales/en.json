@@ -469,7 +469,7 @@
       "limestone_pct": "Limestone content",
       "alkali_na2o_eq_pct": "Alkali (Na₂O eq.)",
       "blaine_m2_kg": "Blaine fineness",
-      "cement_type": "Cement type",
+      "cement_type": "Cement specification (as on the certificate)",
       "scm_type": "SCM type",
       "type": "Admixture type (ASTM C494)",
       "solids_pct": "Solids content",
@@ -481,7 +481,9 @@
       "water_reduction_table": "Dosage–water-reduction table",
       "water_source": "Water source",
       "chloride_mg_l": "Chloride",
-      "fiber_type": "Fiber type"
+      "fiber_type": "Fiber type",
+      "cement_kind": "Cement type",
+      "cement_strength_class": "Strength class"
     },
     "opt": {
       "shape": {
@@ -516,9 +518,24 @@
         "E": "Type E",
         "F": "Type F",
         "G": "Type G"
+      },
+      "cement_kind": {
+        "opc": "OPC",
+        "ppc": "PPC",
+        "src": "SRC",
+        "low_alkali": "Low alkali",
+        "white": "White"
       }
     },
-    "pricedAt": "Priced at {n} of {m} plants"
+    "pricedAt": "Priced at {n} of {m} plants",
+    "cement": {
+      "notRecorded": "Type and class not recorded",
+      "filter": "Cement type",
+      "allKinds": "All cement types",
+      "suggest": "Suggested from the name: {label}. Confirm it before using it.",
+      "apply": "Apply suggestion",
+      "hint": "These are labels. Checks use the tested values (C3A, alkali, pozzolan, mortar strength), never the label."
+    }
   },
   "plants": {
     "intro": "Your batching plants. Prices, materials and designs are scoped to a plant.",
@@ -1244,7 +1261,14 @@
     "note_min_fc": "Specified f′c on the cylinder basis against the exposure minimum.",
     "volume_not_computable": "The volume could not be computed.",
     "check_value_missing": "A value needed for this check is missing.",
-    "other": "{text}"
+    "other": "{text}",
+    "cement_src_c3a_missing": "{material} is labelled SRC but its C3A is not on file.",
+    "cement_src_c3a_high": "{material} is labelled SRC but its C3A {value} % is above the sulfate-resisting limit {limit} %.",
+    "cement_lowalk_missing": "{material} is labelled low alkali but its alkali content is not on file.",
+    "cement_lowalk_limit_missing": "{material} is labelled low alkali but the low-alkali limit is not on file.",
+    "cement_lowalk_high": "{material} is labelled low alkali but its alkali {value} % is above the limit {limit} %.",
+    "cement_ppc_pozzolan_missing": "{material} is labelled PPC but its pozzolan content is not on file.",
+    "cement_class_low": "{material} is labelled class {class} but its 28-day mortar strength {value} MPa is below the class minimum {min} MPa."
   },
   "portfolio": {
     "title": "Portfolio",
@@ -1425,6 +1449,13 @@
       "objective": {
         "cheapest": "Cheapest",
         "closest": "Closest to my targets"
+      },
+      "cementColour": "Cement colour",
+      "cementColourHint": "White cement is only used when you choose it; grey excludes white cement.",
+      "colour": {
+        "any": "Any",
+        "white": "White only",
+        "grey": "Grey only"
       }
     },
     "exposure": {

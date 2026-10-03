@@ -56,6 +56,37 @@ const RULES: Rule[] = [
   [/^evaluated from M3\.1/, 'from_m31', []],
   [/^the requested dosage level is compared from M3\.1/, 'dosage_level_from_m31', []],
   [/^the value cannot be computed from the given proportions/, 'value_not_computable', []],
+  [/^(.+) is labelled SRC but C3A is not on file$/, 'cement_src_c3a_missing', ['material']],
+  [
+    /^(.+) is labelled SRC but C3A ([\d.]+) % is above the sulfate-resisting limit ([\d.]+) %$/,
+    'cement_src_c3a_high',
+    ['material', 'value', 'limit'],
+  ],
+  [
+    /^(.+) is labelled low alkali but its alkali content is not on file$/,
+    'cement_lowalk_missing',
+    ['material'],
+  ],
+  [
+    /^(.+) is labelled low alkali but the low-alkali limit is not on file/,
+    'cement_lowalk_limit_missing',
+    ['material'],
+  ],
+  [
+    /^(.+) is labelled low alkali but alkali ([\d.]+) % is above the limit ([\d.]+) %$/,
+    'cement_lowalk_high',
+    ['material', 'value', 'limit'],
+  ],
+  [
+    /^(.+) is labelled PPC but its pozzolan content is not on file$/,
+    'cement_ppc_pozzolan_missing',
+    ['material'],
+  ],
+  [
+    /^(.+) is labelled class ([\d.]+) but its 28-day mortar strength ([\d.]+) MPa is below the class minimum ([\d.]+) MPa$/,
+    'cement_class_low',
+    ['material', 'class', 'value', 'min'],
+  ],
   [/^C3A is not on file for (.+)$/, 'c3a_missing', ['materials']],
   [/^SCM type is not recorded for (.+)$/, 'scm_type_missing', ['materials']],
   [/^admixture type is not recorded for (.+)$/, 'admixture_type_missing', ['materials']],

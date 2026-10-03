@@ -499,3 +499,26 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items (all need you):** the **go-live approval** and a Railway go-ahead; the production origin, bucket provider and credentials, and who is on call (blanks in `go-live.md`); the ERP field mapping (ADR 0016 stays proposed); QC must enter the real engineering parameters, JS values, trial criteria, moisture limits and letterhead; real attested designs, strength results and volumes; Arabic review (`docs/i18n-review.md`).
 
 **Next:** none planned in `04-phases.md`: M6.2 is the last milestone. Decisions for you: go-live, the pilot plant and its data, and whether to start on the open items above.
+
+## 2026-10-03 — M7.1 Cement classification
+
+**Changed**
+
+- **Properties:** optional `cement_kind` (OPC, PPC, SRC, low alkali, white) and `cement_strength_class` (32.5, 42.5, 52.5) on cement tests; `suggestCementLabel` reads English and Arabic market names. Existing cements show "not recorded".
+- **Checks:** labels decide nothing (property-tested). `cement_label_check` warnings when a label and the tested values disagree (SRC/C₃A, low alkali/alkali, PPC/pozzolan, class/28-day mortar strength). New SHARED rules `cement.class_min_28d_mpa.*`; `eng.cement.low_alkali.max_na2o_eq_pct` left empty for QC.
+- **Strength models:** group key includes kind and class.
+- **Studio:** cement colour any / white only / grey only (also honoured by proactive re-optimization); pool and candidate names carry "OPC 42.5".
+- **Materials:** type and class selects, suggestion from the name with an Apply button, label under the name, cement-type filter. Demo cements labelled.
+- ADR 0018.
+
+**Commands run (green):** see the DoD list below.
+
+**Deviations from the plan (and why)**
+
+- The market-to-standard mapping is a code constant (display and hints), not a SHARED rule.
+- The "no label" note is shown on the Materials screen, not as an evaluation item.
+- Suggestions are in the material form only; the legacy import preview does not suggest labels yet. PDF material tables do not show the label yet.
+
+**Verification note:** tests prove labels never change any check, each warning fires on both sides of its threshold, white cement is judged like any other, the colour option excludes the right cements, and the form, filter and Studio option work and pass axe in English. They do **not** prove that real mill certificates match the labels people enter.
+
+**Next:** none planned. Go-live remains blocked on a Railway plan upgrade and a backup-bucket decision.

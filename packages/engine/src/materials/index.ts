@@ -1,4 +1,5 @@
 export * from './adhoc';
+export * from './cement';
 export * from './drift';
 export * from './freshness';
 export * from './gradation';

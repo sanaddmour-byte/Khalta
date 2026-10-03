@@ -25,6 +25,7 @@ export interface ReqState {
   slump: string;
   nmas: string;
   pumpable: boolean;
+  cementColour: 'any' | 'white' | 'grey';
 }
 export const DEFAULT_REQ: ReqState = {
   plantId: '',
@@ -36,6 +37,7 @@ export const DEFAULT_REQ: ReqState = {
   slump: '100',
   nmas: '19',
   pumpable: false,
+  cementColour: 'any',
 };
 
 export const exposureList = (e: ReqState['exposure']) => [e.F, e.S, e.W, e.C];
@@ -79,6 +81,24 @@ export function RequirementsForm({
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="rq-colour">{t('studio.req.cementColour')}</Label>
+          <Select
+            value={req.cementColour}
+            onValueChange={(v) => set({ cementColour: v as ReqState['cementColour'] })}
+            disabled={disabled}
+          >
+            <SelectTrigger id="rq-colour" data-testid="req-colour">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">{t('studio.req.colour.any')}</SelectItem>
+              <SelectItem value="white">{t('studio.req.colour.white')}</SelectItem>
+              <SelectItem value="grey">{t('studio.req.colour.grey')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted">{t('studio.req.cementColourHint')}</p>
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="rq-mode">{t('studio.req.mode')}</Label>

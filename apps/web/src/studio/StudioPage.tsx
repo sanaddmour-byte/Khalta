@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { GitCompare, Play } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { cementText } from '../materials/cementText';
 import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
 import { usePlant } from '../lib/plant';
@@ -184,6 +185,7 @@ export function StudioPage() {
       ...(excluded.length > 0 && { materials: { exclude: excluded } }),
       ...(adHoc.length > 0 && { adHoc }),
       ...(profileIds.length > 0 && { profileIds }),
+      ...(req.cementColour !== 'any' && { cementColour: req.cementColour }),
     };
   }, [req, chars, objective, excluded, adHoc, plantId, profileIds]);
   const key = JSON.stringify(body);
@@ -210,7 +212,12 @@ export function StudioPage() {
     }));
     return [...base, ...extra];
   }, [pre.data, adHoc]);
-  const nameOfMat = (m: PoolMaterial) => (lang === 'ar' ? (m.nameAr ?? m.nameEn) : m.nameEn);
+  const nameOfMat = (m: PoolMaterial) => {
+    const n = lang === 'ar' ? (m.nameAr ?? m.nameEn) : m.nameEn;
+    return m.category === 'cement' && (m.cementKind || m.cementClass != null)
+      ? `${n} · ${cementText(t, m.cementKind, m.cementClass)}`
+      : n;
+  };
   const nameOf = (id: string) => {
     const m = pool.find((x) => x.id === id);
     return m ? nameOfMat(m) : id.slice(0, 8);

@@ -1,6 +1,7 @@
 // The group a strength model belongs to (01-domain §3): same plant, cement source, SCM family, admixture family,
 // specimen basis and test age. A change of any part is a different group, and a model whose own materials no longer
 // match its recorded group is invalidated (§4).
+import { cementGroupKind } from '../materials/cement';
 import type { Category } from '../materials/properties';
 
 export interface GroupMaterial {
@@ -94,14 +95,9 @@ export function kindOfMaterial(
   category: Category,
   props: Record<string, unknown> | null | undefined,
 ): string | null {
+  if (category === 'cement') return cementGroupKind(props);
   const v =
-    category === 'cement'
-      ? props?.['cement_type']
-      : category === 'scm'
-        ? props?.['scm_type']
-        : category === 'admixture'
-          ? props?.['type']
-          : null;
+    category === 'scm' ? props?.['scm_type'] : category === 'admixture' ? props?.['type'] : null;
   return typeof v === 'string' && v.length > 0 ? v : null;
 }
 

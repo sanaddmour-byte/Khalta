@@ -13,7 +13,7 @@ import {
   Td,
   Th,
 } from '@khalta/ui';
-import { CATEGORIES } from '@khalta/engine';
+import { CATEGORIES, CEMENT_KINDS } from '@khalta/engine';
 import { useQuery } from '@tanstack/react-query';
 import { Boxes, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -26,6 +26,7 @@ import { SectionPage } from '../pages/Section';
 import { coverageQuery } from '../prices/api';
 import { materialsQuery, type MaterialRow } from './api';
 import { FreshnessChip, ReadyChip, SourceChip } from './chips';
+import { cementText } from './cementText';
 import { EntryDialog } from './EntryDialog';
 import { MaterialSheet } from './MaterialSheet';
 
@@ -41,9 +42,14 @@ export function MaterialsPage() {
   const canRead = caps.includes('materials.read');
   const [category, setCategory] = useState(ALL);
   const [q, setQ] = useState('');
+  const [cementKind, setCementKind] = useState(ALL);
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const { data, isLoading, isError } = useQuery({
+  const {
+    data: all,
+    isLoading,
+    isError,
+  } = useQuery({
     ...materialsQuery({
       category: category === ALL ? undefined : category,
       q: q.trim() || undefined,
@@ -51,6 +57,12 @@ export function MaterialsPage() {
     }),
     enabled: canRead,
   });
+  const data =
+    all && category === 'cement' && cementKind !== ALL
+      ? all.filter((m) =>
+          cementKind === 'unrecorded' ? !m.cementKind : m.cementKind === cementKind,
+        )
+      : all;
 
   const canPrice = caps.includes('price.view');
   const coverage = useQuery({ ...coverageQuery, enabled: canPrice });
@@ -102,6 +114,26 @@ export function MaterialsPage() {
             ))}
           </SelectContent>
         </Select>
+        {category === 'cement' && (
+          <Select value={cementKind} onValueChange={setCementKind}>
+            <SelectTrigger
+              aria-label={t('materials.cement.filter')}
+              className="w-52"
+              data-testid="cement-kind-filter"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t('materials.cement.allKinds')}</SelectItem>
+              {CEMENT_KINDS.map((k) => (
+                <SelectItem key={k} value={k}>
+                  {t(`materials.opt.cement_kind.${k}`)}
+                </SelectItem>
+              ))}
+              <SelectItem value="unrecorded">{t('materials.cement.notRecorded')}</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {isLoading && (
@@ -154,6 +186,11 @@ export function MaterialsPage() {
                     >
                       {name(m)}
                     </button>
+                    {m.category === 'cement' && (
+                      <span className="block text-xs text-muted" data-testid="cement-label">
+                        {cementText(t, m.cementKind, m.cementClass)}
+                      </span>
+                    )}
                     <span className="block text-xs text-muted lg:hidden">
                       {t(`materials.category.${m.category}`)}
                     </span>

@@ -4,6 +4,7 @@
 import { approvalBlockers, resolve } from '@khalta/rules';
 import { achievedRows } from '../characteristics/achieved';
 import type { ResolvedCharacteristic } from '../characteristics/resolve';
+import { cementLabel } from '../materials/cement';
 import { declaredKeyFields } from '../materials/readiness';
 import type { Category, Properties } from '../materials/properties';
 import { entrappedAir, strengthAdequacy, waterBaseline } from './baselines';
@@ -18,6 +19,7 @@ import {
   type EvaluationSnapshot,
   type EvidenceStatus,
   type QualityItem,
+  type SnapshotMaterial,
 } from './types';
 import { attachReasons } from './reasons';
 import { RuleIndex, Tracer } from './util';
@@ -27,7 +29,73 @@ const fixedOf = (chars: readonly ResolvedCharacteristic[], key: string): number 
   return c && typeof c.spec.value === 'number' ? c.spec.value : null;
 };
 
-function materialQuality(s: EvaluationSnapshot, sulfateGoverns: boolean): QualityItem[] {
+const CLASS_RULE: Record<number, string> = {
+  32.5: 'cement.class_min_28d_mpa.c32_5',
+  42.5: 'cement.class_min_28d_mpa.c42_5',
+  52.5: 'cement.class_min_28d_mpa.c52_5',
+};
+
+/**
+ * M7.1: a cement's LABEL (type, strength class) against its mill certificate. Warnings only: the label never changes a
+ * check (sulfate resistance reads C3A, ASR reads the alkali content). Nothing is said about an unlabelled cement here
+ * (the Materials screen shows that); a limit that is not on file is named, never assumed.
+ */
+function cementLabelQuality(m: SnapshotMaterial, rules: RuleIndex): QualityItem[] {
+  const out: QualityItem[] = [];
+  const p = (m.test?.properties ?? {}) as Properties;
+  const num = (k: string) => (typeof p[k] === 'number' ? (p[k] as number) : null);
+  const l = cementLabel(p);
+  const name = m.nameEn;
+  const warn = (code: string, detail: string) =>
+    out.push({ code, severity: 'warning', materialId: m.id, detail, evidence: ['INPUT_MISSING'] });
+  if (l.kind === 'src') {
+    const c3a = num('c3a_pct');
+    const lim = rules.number('SHARED', 'cement.equivalence.high.max_c3a_pct');
+    if (c3a === null) warn('cement_label_check', `${name} is labelled SRC but C3A is not on file`);
+    else if (lim !== null && c3a > lim + 1e-9)
+      warn(
+        'cement_label_check',
+        `${name} is labelled SRC but C3A ${c3a} % is above the sulfate-resisting limit ${lim} %`,
+      );
+  }
+  if (l.kind === 'low_alkali') {
+    const alk = num('alkali_na2o_eq_pct');
+    const lim = rules.number('ENGINEERING', 'eng.cement.low_alkali.max_na2o_eq_pct');
+    if (alk === null)
+      warn(
+        'cement_label_check',
+        `${name} is labelled low alkali but its alkali content is not on file`,
+      );
+    else if (lim === null)
+      warn(
+        'cement_label_check',
+        `${name} is labelled low alkali but the low-alkali limit is not on file (eng.cement.low_alkali.max_na2o_eq_pct)`,
+      );
+    else if (alk > lim + 1e-9)
+      warn(
+        'cement_label_check',
+        `${name} is labelled low alkali but alkali ${alk} % is above the limit ${lim} %`,
+      );
+  }
+  if (l.kind === 'ppc' && num('pozzolan_pct') === null)
+    warn('cement_label_check', `${name} is labelled PPC but its pozzolan content is not on file`);
+  if (l.strengthClass !== null) {
+    const strength = num('mortar_strength_28d_mpa');
+    const min = rules.number('SHARED', CLASS_RULE[l.strengthClass]!);
+    if (strength !== null && min !== null && strength < min - 1e-9)
+      warn(
+        'cement_label_check',
+        `${name} is labelled class ${l.strengthClass} but its 28-day mortar strength ${strength} MPa is below the class minimum ${min} MPa`,
+      );
+  }
+  return out;
+}
+
+function materialQuality(
+  s: EvaluationSnapshot,
+  sulfateGoverns: boolean,
+  rules: RuleIndex,
+): QualityItem[] {
   const out: QualityItem[] = [];
   for (const l of s.lines) {
     const m = s.materials.find((x) => x.id === l.materialId);
@@ -72,6 +140,7 @@ function materialQuality(s: EvaluationSnapshot, sulfateGoverns: boolean): Qualit
       m.test.fieldSources,
       { sulfateGoverns },
     );
+    if (m.category === 'cement') out.push(...cementLabelQuality(m, rules));
     if (declared.length > 0)
       out.push({
         code: 'declared_values',
@@ -156,7 +225,7 @@ export function evaluate(s: EvaluationSnapshot): EvaluationReport {
   // 6. data quality, evidence, verdict
   const sulfateGoverns = resolved.requirements.some((r) => r.requirement === 'sulfate_cement');
   const quality: QualityItem[] = [
-    ...materialQuality(s, sulfateGoverns),
+    ...materialQuality(s, sulfateGoverns, rules),
     ...blend.quality,
     ...cost.quality,
     ...built.quality,

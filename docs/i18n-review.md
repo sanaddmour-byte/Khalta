@@ -1061,3 +1061,7 @@ All Arabic under `strength.*`, the new `evaluation.adequacy.plantModel|modelWc|m
 ## M6.1 — CSV export (drafts for Sanad to review)
 
 All Arabic under `exports.*` in `ar.json` is a draft. Priority: the sentence in `exports.note` (the file is a copy for the batching system, not an approval, no prices or costs, and a suspended, retired or unapproved design is never in it), and the button labels «تصدير التصاميم المعتمدة (CSV)» and «تنزيل ملف CSV».
+
+## M7.1 — Cement classification (drafts for Sanad to review)
+
+Arabic under `materials.cement.*`, `materials.opt.cement_kind.*`, `materials.field.cement_kind|cement_strength_class`, `studio.req.cementColour|colour.*` and the new `reason.cement_*` sentences are drafts. Priority: the type names (إسمنت بورتلاندي عادي OPC، بوزولاني PPC، مقاوم للكبريتات SRC، قليل القلويات، أبيض), the sentence that these are labels and checks use tested values, and the colour options (أي لون / أبيض فقط / رمادي فقط). `materials.field.cement_type` is now "مواصفة الإسمنت (كما في الشهادة)".

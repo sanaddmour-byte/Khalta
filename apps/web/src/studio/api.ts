@@ -38,6 +38,7 @@ export interface RequestBody {
   materials?: { include?: string[]; exclude?: string[] };
   adHoc?: AdHocMaterial[];
   profileIds?: string[];
+  cementColour?: 'any' | 'white' | 'grey';
 }
 
 export interface PoolMaterial {
@@ -49,6 +50,8 @@ export interface PoolMaterial {
   reason: string | null;
   hasTest: boolean;
   source: string | null;
+  cementKind?: string | null;
+  cementClass?: number | null;
 }
 export interface Bound {
   requirement: string;
