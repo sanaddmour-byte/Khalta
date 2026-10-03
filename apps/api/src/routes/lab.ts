@@ -141,6 +141,12 @@ export function labRoutes(api: ApiRoutes) {
     {
       summary: 'Add the specimens of one set (cast date, age, type) to a trial batch',
       capability: 'lab.enter',
+      after: ({ auth, result }) =>
+        api.jobs.enqueue(
+          'strength-result',
+          { tenantId: auth.tenantId, designId: (result as { designId: string }).designId },
+          { delaySeconds: api.jobDelaySeconds },
+        ),
       params: idParam,
       body: resultsBody,
       status: 201,
@@ -181,7 +187,7 @@ export function labRoutes(api: ApiRoutes) {
         entityId: b.id,
         after: { setId: body.setId, ageDays: body.ageDays, specimens: rows.length },
       });
-      return { ids: rows.map((r) => r.id) };
+      return { ids: rows.map((r) => r.id), designId: d.id };
     },
   );
 

@@ -1,4 +1,4 @@
-import { schema } from '@khalta/db';
+import { schema, type AuditRecorder, type Tx } from '@khalta/db';
 import { multiply, parseDecimal, roundTo } from '@khalta/engine';
 import { roleCan } from '@khalta/rbac';
 import { and, desc, eq } from 'drizzle-orm';
@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ApiError, forbidden, notFound } from '../errors';
 import type { ApiRoutes } from '../route';
 import { evaluateAndStore, loadDesign } from '../evaluation/run';
+import { realizeForEntry, systemAuth } from '../savings/service';
 
 const mode = z.enum(['ACI', 'JS', 'BOTH']).default('BOTH');
 const baselineBody = z.strictObject({
@@ -285,7 +286,8 @@ export function baselineRoutes(api: ApiRoutes) {
   api.get(
     '/api/savings',
     {
-      summary: 'Ledger entries (theoretical only; never summed across entries)',
+      summary:
+        'Ledger entries in three states (theoretical, approved, realized); never summed across states',
       capability: 'cost.view',
     },
     async ({ auth, db }) => {
@@ -304,6 +306,11 @@ export function baselineRoutes(api: ApiRoutes) {
           monthlyVolumeM3: schema.savingsEntries.monthlyVolumeM3,
           annualJod: schema.savingsEntries.annualJod,
           provisional: schema.savingsEntries.provisional,
+          period: schema.savingsEntries.period,
+          producedVolumeM3: schema.savingsEntries.producedVolumeM3,
+          baselineCostJodPerM3: schema.savingsEntries.baselineCostJodPerM3,
+          replacementCostJodPerM3: schema.savingsEntries.replacementCostJodPerM3,
+          totalJod: schema.savingsEntries.totalJod,
           createdAt: schema.savingsEntries.createdAt,
           plantId: schema.mixDesigns.plantId,
           code: schema.mixDesigns.code,
@@ -321,6 +328,52 @@ export function baselineRoutes(api: ApiRoutes) {
         .where(eq(schema.savingsEntries.tenantId, auth.tenantId))
         .orderBy(desc(schema.savingsEntries.createdAt));
       return rows.filter((r) => auth.scope.all || auth.scope.plantIds.includes(r.plantId));
+    },
+  );
+
+  api.get(
+    '/api/savings/blocked',
+    {
+      summary:
+        'Months a realized saving cannot be computed yet, and why (no volume, no month snapshot, incomplete cost); nothing is estimated',
+      capability: 'cost.view',
+    },
+    async ({ auth, db }) => {
+      const approved = await db
+        .select({
+          e: schema.savingsEntries,
+          code: schema.mixDesigns.code,
+          plantId: schema.mixDesigns.plantId,
+        })
+        .from(schema.savingsEntries)
+        .innerJoin(
+          schema.mixDesigns,
+          eq(schema.mixDesigns.id, schema.savingsEntries.variantDesignId),
+        )
+        .where(
+          and(
+            eq(schema.savingsEntries.tenantId, auth.tenantId),
+            eq(schema.savingsEntries.state, 'approved'),
+          ),
+        );
+      const sys = await systemAuth(db, auth.tenantId);
+      const none = { record: async () => {} } as unknown as AuditRecorder;
+      const blocked: { designId: string; code: string; month: string; reason: string }[] = [];
+      for (const a of approved) {
+        if (!(auth.scope.all || auth.scope.plantIds.includes(a.plantId))) continue;
+        const r = await realizeForEntry(db as unknown as Tx, none, sys, a.e, {
+          create: false,
+          persist: false,
+        });
+        for (const b of r.blocked)
+          blocked.push({
+            designId: a.e.variantDesignId,
+            code: a.code,
+            month: b.month,
+            reason: b.reason,
+          });
+      }
+      return { blocked };
     },
   );
 }

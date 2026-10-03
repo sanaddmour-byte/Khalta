@@ -10,7 +10,8 @@
     "seed:dev": "tsx src/dev-seed.ts",
     "rules:sync": "tsx src/rules/cli.ts sync",
     "rules:export-seed": "tsx src/rules/cli.ts export",
-    "seed:demo": "tsx src/demo/run.ts"
+    "seed:demo": "tsx src/demo/run.ts",
+    "worker": "tsx src/worker.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "catalog:",
@@ -26,6 +27,7 @@
     "exceljs": "catalog:",
     "express": "catalog:",
     "papaparse": "catalog:",
+    "pg-boss": "12.35.1",
     "pino": "catalog:",
     "pino-http": "catalog:",
     "playwright-core": "1.63.0",

@@ -15,7 +15,10 @@ import { ApiRoutes } from './route';
 import { auditRoutes } from './routes/audit';
 import { attachmentRoutes } from './routes/attachments';
 import { designRoutes } from './routes/designs';
+import { insightRoutes } from './routes/insights';
+import { volumeRoutes } from './routes/volumes';
 import { labRoutes } from './routes/lab';
+import { RecordingJobs, type Jobs } from './jobs';
 import { lifecycleRoutes } from './routes/lifecycle';
 import { evaluationRoutes } from './routes/evaluations';
 import { portfolioRoutes } from './routes/portfolio';
@@ -37,6 +40,10 @@ export interface AppDeps {
   db: Db;
   auth?: Auth;
   logger?: Logger;
+  /** Background queue; a recording stub when omitted (API tests). */
+  jobs?: Jobs;
+  /** Queue health for admins (the worker reports pg-boss queue counts). */
+  jobStatus?: () => Promise<unknown>;
 }
 
 // Only these Better Auth endpoints are exposed. Everything else (sign-up, change-email, password
@@ -47,7 +54,14 @@ const AUTH_ALLOWLIST = new Set([
   '/api/auth/get-session',
 ]);
 
-export function createApp({ config, db, auth = createAuth(db, config), logger }: AppDeps) {
+export function createApp({
+  config,
+  db,
+  auth = createAuth(db, config),
+  logger,
+  jobs,
+  jobStatus,
+}: AppDeps) {
   const log = logger ?? createLogger(config);
   const app = express();
   app.disable('x-powered-by');
@@ -69,6 +83,10 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   app.use(express.json({ limit: '1mb' }));
 
   const api = new ApiRoutes(db);
+  api.jobs = jobs ?? new RecordingJobs();
+  api.jobStatus = jobStatus ?? null;
+  api.priceDebounceSeconds = config.JOB_PRICE_DEBOUNCE_SECONDS;
+  api.jobDelaySeconds = config.JOB_DELAY_SECONDS;
   api.router.use(authenticate(db, auth));
   meRoutes(api);
   userRoutes(api, auth);
@@ -84,6 +102,8 @@ export function createApp({ config, db, auth = createAuth(db, config), logger }:
   designRoutes(api);
   lifecycleRoutes(api);
   labRoutes(api);
+  insightRoutes(api);
+  volumeRoutes(api);
   evaluationRoutes(api);
   portfolioRoutes(api);
   baselineRoutes(api);

@@ -5,6 +5,7 @@ import pg from 'pg';
 import { pino } from 'pino';
 import request from 'supertest';
 import { inject } from 'vitest';
+import { RecordingJobs } from '../src/jobs';
 import { createApp } from '../src/app';
 import { createAuth } from '../src/auth';
 import { bootstrap } from '../src/bootstrap';
@@ -49,7 +50,8 @@ export async function createTestEnv(
       syncRules(tx, audit, tenantId, seeds),
     );
   }
-  const app = createApp({ config, db: handle.db, auth, logger: pino({ level: 'silent' }) });
+  const jobs = new RecordingJobs();
+  const app = createApp({ config, db: handle.db, auth, logger: pino({ level: 'silent' }), jobs });
   let n = 0;
 
   async function seedUser(
@@ -106,6 +108,7 @@ export async function createTestEnv(
 
   return {
     app,
+    jobs,
     auth,
     config,
     db: handle.db,

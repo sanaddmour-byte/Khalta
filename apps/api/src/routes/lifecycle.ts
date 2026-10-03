@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { ApiError, notFound } from '../errors';
 import type { ApiRoutes } from '../route';
 import { loadDesign } from '../evaluation/run';
+import { createApprovedEntry } from '../savings/service';
 import {
   applyTransition,
   esignBody,
@@ -219,7 +220,20 @@ export function lifecycleRoutes(api: ApiRoutes) {
           superseded = parent.id;
         }
       }
-      return { id: d.id, status: 'approved', superseded };
+      // The APPROVED saving, if this version replaces a baselined design (a failure here never blocks the approval).
+      let savings: unknown = { state: 'skipped', reason: 'not_a_version' };
+      try {
+        await tx.transaction(async (sp) => {
+          savings = await createApprovedEntry(sp as typeof tx, audit, auth, {
+            ...d,
+            status: 'approved',
+          });
+        });
+      } catch (e) {
+        if (process.env['DEBUG_SAVINGS']) console.error(e);
+        savings = { state: 'skipped', reason: 'cost_incomplete' };
+      }
+      return { id: d.id, status: 'approved', superseded, savings };
     },
   );
 
@@ -277,6 +291,61 @@ export function lifecycleRoutes(api: ApiRoutes) {
         sig,
       );
       return { id: d.id, status: 'retired' };
+    },
+  );
+
+  const decisionBody = esignBody;
+  api.mutate(
+    'post',
+    '/api/designs/:id/suspend',
+    {
+      summary:
+        'Suspend an approved or in-production design (QC manager decision with a reason; nothing suspends automatically)',
+      capability: 'design.approve',
+      params: idParam,
+      body: decisionBody,
+    },
+    async ({ auth, params, body, tx, audit }) => {
+      const d = await loadDesign(tx, auth, params.id, true);
+      const sig = await makeSignature(tx, auth, d, 'suspended', body.reason);
+      await applyTransition(
+        tx,
+        auth,
+        audit,
+        d,
+        'suspended',
+        ['suspension_decision'],
+        { reason: body.reason, previous: d.status },
+        sig,
+      );
+      return { id: d.id, status: 'suspended' };
+    },
+  );
+
+  api.mutate(
+    'post',
+    '/api/designs/:id/reinstate',
+    {
+      summary:
+        'Reinstate a suspended design to approved or in production (QC manager decision with a reason)',
+      capability: 'design.approve',
+      params: idParam,
+      body: decisionBody.extend({ to: z.enum(['approved', 'in_production']).default('approved') }),
+    },
+    async ({ auth, params, body, tx, audit }) => {
+      const d = await loadDesign(tx, auth, params.id, true);
+      const sig = await makeSignature(tx, auth, d, 'reinstated', body.reason);
+      await applyTransition(
+        tx,
+        auth,
+        audit,
+        d,
+        body.to,
+        ['reinstatement_decision'],
+        { reason: body.reason },
+        sig,
+      );
+      return { id: d.id, status: body.to };
     },
   );
 }

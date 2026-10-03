@@ -1,4 +1,4 @@
-import { schema, type Executor } from '@khalta/db';
+import { schema, type AuditRecorder, type Executor, type Tx } from '@khalta/db';
 import { PRICE_UNITS, todayAmman, type PriceUnit } from '@khalta/engine';
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 import ExcelJS from 'exceljs';
@@ -116,6 +116,20 @@ async function matrix(db: Executor, auth: AuthContext, asOf: string, plantFilter
 
 const MAX_BATCH = 5000;
 
+/** One debounced job per plant per burst of edits (singleton key); the delay comes from configuration. */
+function enqueuePriceChange(api: ApiRoutes, tenantId: string, result: unknown) {
+  const rows = (result as { rows?: { plantId: string }[] } | null)?.rows ?? [];
+  for (const plantId of new Set(rows.map((r) => r.plantId)))
+    void api.jobs.enqueue(
+      'price-change',
+      { tenantId, plantIds: [plantId] },
+      {
+        singletonKey: `price:${tenantId}:${plantId}`,
+        delaySeconds: api.priceDebounceSeconds,
+      },
+    );
+}
+
 export function priceRoutes(api: ApiRoutes) {
   api.get(
     '/api/prices',
@@ -232,6 +246,7 @@ export function priceRoutes(api: ApiRoutes) {
     {
       summary: 'Enter prices (one cell or a pasted block); history is kept',
       capability: 'price.edit',
+      after: ({ auth, result }) => enqueuePriceChange(api, auth.tenantId, result),
       body: setBody,
       status: 201,
     },
@@ -341,6 +356,7 @@ export function priceRoutes(api: ApiRoutes) {
     {
       summary: 'Apply a percentage change to current prices (0 % = reconfirm)',
       capability: 'price.edit',
+      after: ({ auth, result }) => enqueuePriceChange(api, auth.tenantId, result),
       body: bulkBody,
     },
     async ({ auth, body, tx, audit }) => {
@@ -360,6 +376,7 @@ export function priceRoutes(api: ApiRoutes) {
     {
       summary: 'Copy one plant’s prices to another plant',
       capability: 'price.edit',
+      after: ({ auth, result }) => enqueuePriceChange(api, auth.tenantId, result),
       body: copyBody,
     },
     async ({ auth, body, tx, audit }) => {
@@ -561,6 +578,7 @@ export function priceRoutes(api: ApiRoutes) {
     {
       summary: 'Apply a previewed import, all or nothing',
       capability: 'price.edit',
+      after: ({ auth, result }) => enqueuePriceChange(api, auth.tenantId, result),
       body: commitBody,
     },
     async ({ auth, body, tx, audit }) => {
@@ -705,27 +723,6 @@ export function priceRoutes(api: ApiRoutes) {
   );
 
   // ---- Snapshots ----
-  const lineHash = (lines: SnapLine[]) =>
-    createHash('sha256')
-      .update(
-        JSON.stringify(
-          [...lines]
-            .sort((a, b) =>
-              `${a.materialId}|${a.plantId}`.localeCompare(`${b.materialId}|${b.plantId}`),
-            )
-            .map((l) => [
-              l.materialId,
-              l.plantId,
-              l.status,
-              l.priceId,
-              l.price,
-              l.unit,
-              l.jodPerKg,
-            ]),
-        ),
-      )
-      .digest('hex');
-
   api.mutate(
     'post',
     '/api/price-snapshots',
@@ -735,85 +732,7 @@ export function priceRoutes(api: ApiRoutes) {
       body: snapshotBody,
       status: 201,
     },
-    async ({ auth, body, tx, audit }) => {
-      const asOf = body.asOf ?? todayAmman();
-      const plantIds = await writablePlantIds(tx, auth, body.plantIds);
-      const { materials, cells } = await matrix(tx, auth, asOf, plantIds);
-      const byKey = new Map(cells.map((c) => [`${c.materialId}|${c.plantId}`, c]));
-      const lines: SnapLine[] = [];
-      for (const m of materials)
-        for (const p of plantIds) {
-          const c = byKey.get(`${m.id}|${p}`);
-          if (!c)
-            lines.push({
-              materialId: m.id,
-              plantId: p,
-              status: 'unavailable',
-              priceId: null,
-              supplierId: null,
-              price: null,
-              unit: null,
-              includesDelivery: null,
-              effectiveFrom: null,
-              jodPerKg: null,
-            });
-          else if (c.status === 'ambiguous')
-            lines.push({
-              materialId: m.id,
-              plantId: p,
-              status: 'ambiguous',
-              priceId: null,
-              supplierId: null,
-              price: null,
-              unit: null,
-              includesDelivery: null,
-              effectiveFrom: null,
-              jodPerKg: null,
-            });
-          else
-            lines.push({
-              materialId: m.id,
-              plantId: p,
-              status: c.jodPerKg ? 'ok' : 'not_convertible',
-              priceId: c.id!,
-              supplierId: c.supplierId!,
-              price: c.price!,
-              unit: c.unit!,
-              includesDelivery: c.includesDelivery!,
-              effectiveFrom: c.effectiveFrom!,
-              jodPerKg: c.jodPerKg ?? null,
-            });
-        }
-      const [snap] = await tx
-        .insert(schema.priceSnapshots)
-        .values({
-          tenantId: auth.tenantId,
-          name: body.name,
-          asOf,
-          plantIds,
-          lineCount: lines.length,
-          contentHash: lineHash(lines),
-          createdBy: auth.user.id,
-        })
-        .returning();
-      for (let i = 0; i < lines.length; i += 1000)
-        await tx
-          .insert(schema.priceSnapshotLines)
-          .values(lines.slice(i, i + 1000).map((l) => ({ ...l, snapshotId: snap!.id })));
-      await audit.record({
-        action: 'price.snapshot',
-        entityType: 'price_snapshot',
-        entityId: snap!.id,
-        after: { name: body.name, asOf, lines: lines.length, hash: snap!.contentHash },
-      });
-      return {
-        id: snap!.id,
-        name: snap!.name,
-        asOf,
-        lineCount: lines.length,
-        contentHash: snap!.contentHash,
-      };
-    },
+    async ({ auth, body, tx, audit }) => createSnapshot(tx, auth, audit, body, auth.user.id),
   );
 
   api.get(
@@ -867,6 +786,106 @@ export function priceRoutes(api: ApiRoutes) {
       return { ...s, lines, hashOk: lineHash(lines as unknown as SnapLine[]) === s.contentHash };
     },
   );
+}
+
+const lineHash = (lines: SnapLine[]) =>
+  createHash('sha256')
+    .update(
+      JSON.stringify(
+        [...lines]
+          .sort((a, b) =>
+            `${a.materialId}|${a.plantId}`.localeCompare(`${b.materialId}|${b.plantId}`),
+          )
+          .map((l) => [l.materialId, l.plantId, l.status, l.priceId, l.price, l.unit, l.jodPerKg]),
+      ),
+    )
+    .digest('hex');
+
+/** Freezes the prices in force on a date as a named, immutable snapshot (also used by the nightly job). */
+export async function createSnapshot(
+  tx: Tx,
+  auth: AuthContext,
+  audit: AuditRecorder,
+  body: { name: string; asOf?: string | undefined; plantIds?: string[] | undefined },
+  createdBy: string | null,
+) {
+  const asOf = body.asOf ?? todayAmman();
+  const plantIds = await writablePlantIds(tx, auth, body.plantIds);
+  const { materials, cells } = await matrix(tx, auth, asOf, plantIds);
+  const byKey = new Map(cells.map((c) => [`${c.materialId}|${c.plantId}`, c]));
+  const lines: SnapLine[] = [];
+  for (const m of materials)
+    for (const p of plantIds) {
+      const c = byKey.get(`${m.id}|${p}`);
+      if (!c)
+        lines.push({
+          materialId: m.id,
+          plantId: p,
+          status: 'unavailable',
+          priceId: null,
+          supplierId: null,
+          price: null,
+          unit: null,
+          includesDelivery: null,
+          effectiveFrom: null,
+          jodPerKg: null,
+        });
+      else if (c.status === 'ambiguous')
+        lines.push({
+          materialId: m.id,
+          plantId: p,
+          status: 'ambiguous',
+          priceId: null,
+          supplierId: null,
+          price: null,
+          unit: null,
+          includesDelivery: null,
+          effectiveFrom: null,
+          jodPerKg: null,
+        });
+      else
+        lines.push({
+          materialId: m.id,
+          plantId: p,
+          status: c.jodPerKg ? 'ok' : 'not_convertible',
+          priceId: c.id!,
+          supplierId: c.supplierId!,
+          price: c.price!,
+          unit: c.unit!,
+          includesDelivery: c.includesDelivery!,
+          effectiveFrom: c.effectiveFrom!,
+          jodPerKg: c.jodPerKg ?? null,
+        });
+    }
+  const [snap] = await tx
+    .insert(schema.priceSnapshots)
+    .values({
+      tenantId: auth.tenantId,
+      name: body.name,
+      asOf,
+      plantIds,
+      lineCount: lines.length,
+      contentHash: lineHash(lines),
+      createdBy,
+    })
+    .returning();
+  for (let i = 0; i < lines.length; i += 1000)
+    await tx
+      .insert(schema.priceSnapshotLines)
+      .values(lines.slice(i, i + 1000).map((l) => ({ ...l, snapshotId: snap!.id })));
+  await audit.record({
+    action: 'price.snapshot',
+    entityType: 'price_snapshot',
+    entityId: snap!.id,
+    after: { name: body.name, asOf, lines: lines.length, hash: snap!.contentHash },
+  });
+  return {
+    id: snap!.id,
+    name: snap!.name,
+    asOf,
+    lineCount: lines.length,
+    contentHash: snap!.contentHash,
+  };
 }
 
 interface SnapLine {

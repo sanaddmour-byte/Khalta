@@ -525,6 +525,12 @@ export function materialRoutes(api: ApiRoutes) {
     {
       summary: 'Record a new test version (never edits an old one)',
       capability: 'lab.enter',
+      after: ({ auth, params }) =>
+        api.jobs.enqueue(
+          'material-test',
+          { tenantId: auth.tenantId, materialId: (params as { id: string }).id },
+          { delaySeconds: api.jobDelaySeconds },
+        ),
       body: testBody,
       params: idParam,
       status: 201,

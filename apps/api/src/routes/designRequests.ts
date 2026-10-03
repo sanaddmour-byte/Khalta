@@ -71,7 +71,12 @@ function candidateView(c: CandidateRow, canCost: boolean) {
   };
 }
 
-async function createRequest(tx: Tx, auth: AuthContext, audit: AuditRecorder, body: RequestBody) {
+export async function createRequest(
+  tx: Tx,
+  auth: AuthContext,
+  audit: AuditRecorder,
+  body: RequestBody,
+) {
   if (!canAccessPlant(auth.scope, body.plantId)) throw notFound('Plant not found');
   const [plant] = await tx
     .select({ id: schema.plants.id })
@@ -169,6 +174,246 @@ async function createRequest(tx: Tx, auth: AuthContext, audit: AuditRecorder, bo
     objective: r.objective,
     outcome: row!.outcome,
     candidates: stored.sort((a, b) => a.rank - b.rank).map((c) => candidateView(c, canCost)),
+  };
+}
+
+/**
+ * Turns one validated candidate into a draft design and moves it to TRIAL CANDIDATE (never approved).
+ * `lineage` makes it the next version of an existing design (an accepted insight), so approving it supersedes the parent.
+ */
+export async function requestTrialDesign(
+  tx: Tx,
+  auth: AuthContext,
+  audit: AuditRecorder,
+  params: { id: string; cid: string },
+  body: z.infer<typeof trialBody>,
+  lineage?: { version: number; parentDesignId: string },
+) {
+  const [req] = await tx
+    .select()
+    .from(schema.designRequests)
+    .where(
+      and(
+        eq(schema.designRequests.id, params.id),
+        eq(schema.designRequests.tenantId, auth.tenantId),
+      ),
+    );
+  if (!req || !canAccessPlant(auth.scope, req.plantId)) throw notFound('Design request not found');
+  const [cand] = await tx
+    .select()
+    .from(schema.designCandidates)
+    .where(
+      and(
+        eq(schema.designCandidates.id, params.cid),
+        eq(schema.designCandidates.requestId, req.id),
+        eq(schema.designCandidates.tenantId, auth.tenantId),
+      ),
+    )
+    .for('update');
+  if (!cand) throw notFound('Candidate not found');
+  const [existing] = await tx
+    .select({ id: schema.mixDesigns.id })
+    .from(schema.mixDesigns)
+    .where(eq(schema.mixDesigns.sourceCandidateId, cand.id));
+  if (existing) throw new ApiError(409, 'conflict', 'This candidate already became a design');
+
+  // The independent validator runs again now, on the rebuilt snapshot: nothing is trusted from storage.
+  const snapshot: EvaluationSnapshot = candidateSnapshot(
+    req.snapshot as Omit<EvaluationSnapshot, 'lines'>,
+    cand,
+  );
+  const { report } = runEvaluation(snapshot);
+  const inputs = req.inputs as { materials?: { include?: string[]; exclude?: string[] } };
+  const record = candidateRecord(
+    {
+      configuration: cand.configuration as never,
+      lines: cand.lines as never,
+      snapshot,
+      report,
+      guardrails: cand.guardrails as never,
+      margins: cand.margins as never,
+      binding: [],
+      costJodPerM3: report.cost.totalJodPerM3,
+      objectiveValue: Number(cand.objectiveValue),
+      deviations: cand.deviations as never,
+      characteristics: cand.characteristics as never,
+      evidence: cand.evidence as never,
+      requiresAuthorization: cand.requiresAuthorization,
+      notes: [],
+    },
+    inputs.materials ?? {},
+  );
+  const fresh = validateCandidate(record);
+  if (fresh.status !== 'pass')
+    throw new ApiError(
+      409,
+      'validator_failed',
+      'The independent validator no longer agrees with this candidate; run the request again',
+      { mismatches: fresh.mismatches.slice(0, 10) },
+    );
+
+  let authorization: { by: string; reason: string } | null = null;
+  if (cand.requiresAuthorization) {
+    if (!roleCan(auth.role, 'candidate.authorize', auth.settings))
+      throw new ApiError(
+        403,
+        'authorization_required',
+        'This candidate is predicted to fall short of the strength baseline (MODEL_PREDICTS_SHORTFALL); a QC manager must authorise it',
+      );
+    if (!body.authorizationReason)
+      throw new ApiError(
+        400,
+        'authorization_reason_required',
+        'A reason is required to authorise a candidate that is predicted to fall short',
+      );
+    authorization = { by: auth.user.id, reason: body.authorizationReason };
+  }
+
+  const adHocIds = (cand.lines as { materialId: string }[]).filter((l) =>
+    l.materialId.startsWith('adhoc-'),
+  );
+  if (adHocIds.length > 0)
+    throw new ApiError(
+      409,
+      'adhoc_material',
+      'This candidate uses a what-if material that exists only in the request; add it to the library (with a test and a price) and run the request again',
+    );
+  const [dupe] = await tx
+    .select({ id: schema.mixDesigns.id })
+    .from(schema.mixDesigns)
+    .where(
+      and(
+        eq(schema.mixDesigns.tenantId, auth.tenantId),
+        eq(schema.mixDesigns.code, body.code),
+        isNull(schema.mixDesigns.deletedAt),
+      ),
+    );
+  if (dupe && !lineage)
+    throw new ApiError(409, 'conflict', 'A design with this code already exists');
+
+  const reqInput = req.request as EvaluationSnapshot['request'];
+  const cfg = cand.configuration as { nmasMm: number };
+  const requirements = {
+    fcMpa: reqInput.fcMpa,
+    basis: reqInput.basis,
+    testAgeDays: reqInput.testAgeDays,
+    exposure: reqInput.exposure,
+    slumpMm: reqInput.slumpMm,
+    nmasMm: cfg.nmasMm,
+    pumpable: reqInput.pumpable,
+    s3Option: reqInput.s3Option,
+    airPct: snapshot.request.airPct,
+  };
+  const [design] = await tx
+    .insert(schema.mixDesigns)
+    .values({
+      tenantId: auth.tenantId,
+      code: body.code,
+      name: body.name,
+      plantId: req.plantId,
+      version: lineage?.version ?? 1,
+      status: 'draft',
+      rulesetMode: req.mode,
+      requirements,
+      inputsSnapshot: {
+        source: 'optimizer',
+        requestId: req.id,
+        candidateId: cand.id,
+        rank: cand.rank,
+        evidence: cand.evidence,
+        note: 'an optimizer candidate: not approved; a trial is required',
+        profiles: req.profileVersions,
+      },
+      evaluationPending: true,
+      sourceCandidateId: cand.id,
+      ...(lineage ? { parentDesignId: lineage.parentDesignId } : {}),
+      createdBy: auth.user.id,
+    })
+    .returning();
+  const lines = cand.lines as { materialId: string; kgPerM3: string }[];
+  const names = await tx
+    .select({ id: schema.materials.id, nameEn: schema.materials.marketNameEn })
+    .from(schema.materials)
+    .where(
+      and(
+        eq(schema.materials.tenantId, auth.tenantId),
+        inArray(
+          schema.materials.id,
+          lines.map((l) => l.materialId),
+        ),
+      ),
+    );
+  const nameBy = new Map(names.map((n) => [n.id, n.nameEn]));
+  await tx.insert(schema.mixDesignLines).values(
+    lines.map((l, i) => ({
+      tenantId: auth.tenantId,
+      designId: design!.id,
+      materialId: l.materialId,
+      quantityKgM3: l.kgPerM3,
+      originalQuantity: l.kgPerM3,
+      originalUnit: 'kg/m3' as const,
+      originalName: nameBy.get(l.materialId) ?? '',
+      sourceLine: i + 1,
+      matchMethod: 'confirmed' as const,
+    })),
+  );
+  await tx.insert(schema.designTransitions).values({
+    tenantId: auth.tenantId,
+    designId: design!.id,
+    fromStatus: 'none',
+    toStatus: 'draft',
+    actorId: auth.user.id,
+    evidence: { kind: 'optimizer_candidate', requestId: req.id, candidateId: cand.id },
+  });
+
+  const run = await evaluateAndStore(tx, auth, audit, design!, {
+    mode: req.mode,
+    ...(snapshot.request.airPct !== null ? { airPct: snapshot.request.airPct } : {}),
+  });
+  if (run.status !== 'evaluated')
+    throw new ApiError(
+      409,
+      'conflict',
+      'The design could not be evaluated cleanly, so it cannot become a trial candidate',
+    );
+  const verdict = canTransition('evaluated', 'trial_candidate', ['validated_candidate']);
+  if (!verdict.ok) throw new ApiError(409, 'conflict', verdict.reason);
+  await tx
+    .update(schema.mixDesigns)
+    .set({ status: 'trial_candidate', updatedAt: new Date() })
+    .where(eq(schema.mixDesigns.id, design!.id));
+  await tx.insert(schema.designTransitions).values({
+    tenantId: auth.tenantId,
+    designId: design!.id,
+    fromStatus: 'evaluated',
+    toStatus: 'trial_candidate',
+    actorId: auth.user.id,
+    evidence: {
+      kind: 'validated_candidate',
+      requestId: req.id,
+      candidateId: cand.id,
+      candidateValidator: fresh.status,
+      evaluationId: run.evaluationId,
+      evidenceLabels: cand.evidence,
+      authorization,
+      note: 'implies no approval; a trial is required',
+    },
+  });
+  await audit.record({
+    action: 'design.trial_candidate',
+    entityType: 'mix_design',
+    entityId: design!.id,
+    after: {
+      requestId: req.id,
+      candidateId: cand.id,
+      rank: cand.rank,
+      authorized: authorization !== null,
+      status: 'trial_candidate',
+    },
+  });
+  return {
+    design: { id: design!.id, code: design!.code, status: 'trial_candidate' },
+    evaluationId: run.evaluationId,
   };
 }
 
@@ -290,233 +535,7 @@ export function designRequestRoutes(api: ApiRoutes) {
       body: trialBody,
       status: 201,
     },
-    async ({ auth, params, body, tx, audit }) => {
-      const [req] = await tx
-        .select()
-        .from(schema.designRequests)
-        .where(
-          and(
-            eq(schema.designRequests.id, params.id),
-            eq(schema.designRequests.tenantId, auth.tenantId),
-          ),
-        );
-      if (!req || !canAccessPlant(auth.scope, req.plantId))
-        throw notFound('Design request not found');
-      const [cand] = await tx
-        .select()
-        .from(schema.designCandidates)
-        .where(
-          and(
-            eq(schema.designCandidates.id, params.cid),
-            eq(schema.designCandidates.requestId, req.id),
-            eq(schema.designCandidates.tenantId, auth.tenantId),
-          ),
-        )
-        .for('update');
-      if (!cand) throw notFound('Candidate not found');
-      const [existing] = await tx
-        .select({ id: schema.mixDesigns.id })
-        .from(schema.mixDesigns)
-        .where(eq(schema.mixDesigns.sourceCandidateId, cand.id));
-      if (existing) throw new ApiError(409, 'conflict', 'This candidate already became a design');
-
-      // The independent validator runs again now, on the rebuilt snapshot: nothing is trusted from storage.
-      const snapshot: EvaluationSnapshot = candidateSnapshot(
-        req.snapshot as Omit<EvaluationSnapshot, 'lines'>,
-        cand,
-      );
-      const { report } = runEvaluation(snapshot);
-      const inputs = req.inputs as { materials?: { include?: string[]; exclude?: string[] } };
-      const record = candidateRecord(
-        {
-          configuration: cand.configuration as never,
-          lines: cand.lines as never,
-          snapshot,
-          report,
-          guardrails: cand.guardrails as never,
-          margins: cand.margins as never,
-          binding: [],
-          costJodPerM3: report.cost.totalJodPerM3,
-          objectiveValue: Number(cand.objectiveValue),
-          deviations: cand.deviations as never,
-          characteristics: cand.characteristics as never,
-          evidence: cand.evidence as never,
-          requiresAuthorization: cand.requiresAuthorization,
-          notes: [],
-        },
-        inputs.materials ?? {},
-      );
-      const fresh = validateCandidate(record);
-      if (fresh.status !== 'pass')
-        throw new ApiError(
-          409,
-          'validator_failed',
-          'The independent validator no longer agrees with this candidate; run the request again',
-          { mismatches: fresh.mismatches.slice(0, 10) },
-        );
-
-      let authorization: { by: string; reason: string } | null = null;
-      if (cand.requiresAuthorization) {
-        if (!roleCan(auth.role, 'candidate.authorize', auth.settings))
-          throw new ApiError(
-            403,
-            'authorization_required',
-            'This candidate is predicted to fall short of the strength baseline (MODEL_PREDICTS_SHORTFALL); a QC manager must authorise it',
-          );
-        if (!body.authorizationReason)
-          throw new ApiError(
-            400,
-            'authorization_reason_required',
-            'A reason is required to authorise a candidate that is predicted to fall short',
-          );
-        authorization = { by: auth.user.id, reason: body.authorizationReason };
-      }
-
-      const adHocIds = (cand.lines as { materialId: string }[]).filter((l) =>
-        l.materialId.startsWith('adhoc-'),
-      );
-      if (adHocIds.length > 0)
-        throw new ApiError(
-          409,
-          'adhoc_material',
-          'This candidate uses a what-if material that exists only in the request; add it to the library (with a test and a price) and run the request again',
-        );
-      const [dupe] = await tx
-        .select({ id: schema.mixDesigns.id })
-        .from(schema.mixDesigns)
-        .where(
-          and(
-            eq(schema.mixDesigns.tenantId, auth.tenantId),
-            eq(schema.mixDesigns.code, body.code),
-            isNull(schema.mixDesigns.deletedAt),
-          ),
-        );
-      if (dupe) throw new ApiError(409, 'conflict', 'A design with this code already exists');
-
-      const reqInput = req.request as EvaluationSnapshot['request'];
-      const cfg = cand.configuration as { nmasMm: number };
-      const requirements = {
-        fcMpa: reqInput.fcMpa,
-        basis: reqInput.basis,
-        testAgeDays: reqInput.testAgeDays,
-        exposure: reqInput.exposure,
-        slumpMm: reqInput.slumpMm,
-        nmasMm: cfg.nmasMm,
-        pumpable: reqInput.pumpable,
-        s3Option: reqInput.s3Option,
-        airPct: snapshot.request.airPct,
-      };
-      const [design] = await tx
-        .insert(schema.mixDesigns)
-        .values({
-          tenantId: auth.tenantId,
-          code: body.code,
-          name: body.name,
-          plantId: req.plantId,
-          version: 1,
-          status: 'draft',
-          rulesetMode: req.mode,
-          requirements,
-          inputsSnapshot: {
-            source: 'optimizer',
-            requestId: req.id,
-            candidateId: cand.id,
-            rank: cand.rank,
-            evidence: cand.evidence,
-            note: 'an optimizer candidate: not approved; a trial is required',
-            profiles: req.profileVersions,
-          },
-          evaluationPending: true,
-          sourceCandidateId: cand.id,
-          createdBy: auth.user.id,
-        })
-        .returning();
-      const lines = cand.lines as { materialId: string; kgPerM3: string }[];
-      const names = await tx
-        .select({ id: schema.materials.id, nameEn: schema.materials.marketNameEn })
-        .from(schema.materials)
-        .where(
-          and(
-            eq(schema.materials.tenantId, auth.tenantId),
-            inArray(
-              schema.materials.id,
-              lines.map((l) => l.materialId),
-            ),
-          ),
-        );
-      const nameBy = new Map(names.map((n) => [n.id, n.nameEn]));
-      await tx.insert(schema.mixDesignLines).values(
-        lines.map((l, i) => ({
-          tenantId: auth.tenantId,
-          designId: design!.id,
-          materialId: l.materialId,
-          quantityKgM3: l.kgPerM3,
-          originalQuantity: l.kgPerM3,
-          originalUnit: 'kg/m3' as const,
-          originalName: nameBy.get(l.materialId) ?? '',
-          sourceLine: i + 1,
-          matchMethod: 'confirmed' as const,
-        })),
-      );
-      await tx.insert(schema.designTransitions).values({
-        tenantId: auth.tenantId,
-        designId: design!.id,
-        fromStatus: 'none',
-        toStatus: 'draft',
-        actorId: auth.user.id,
-        evidence: { kind: 'optimizer_candidate', requestId: req.id, candidateId: cand.id },
-      });
-
-      const run = await evaluateAndStore(tx, auth, audit, design!, {
-        mode: req.mode,
-        ...(snapshot.request.airPct !== null ? { airPct: snapshot.request.airPct } : {}),
-      });
-      if (run.status !== 'evaluated')
-        throw new ApiError(
-          409,
-          'conflict',
-          'The design could not be evaluated cleanly, so it cannot become a trial candidate',
-        );
-      const verdict = canTransition('evaluated', 'trial_candidate', ['validated_candidate']);
-      if (!verdict.ok) throw new ApiError(409, 'conflict', verdict.reason);
-      await tx
-        .update(schema.mixDesigns)
-        .set({ status: 'trial_candidate', updatedAt: new Date() })
-        .where(eq(schema.mixDesigns.id, design!.id));
-      await tx.insert(schema.designTransitions).values({
-        tenantId: auth.tenantId,
-        designId: design!.id,
-        fromStatus: 'evaluated',
-        toStatus: 'trial_candidate',
-        actorId: auth.user.id,
-        evidence: {
-          kind: 'validated_candidate',
-          requestId: req.id,
-          candidateId: cand.id,
-          candidateValidator: fresh.status,
-          evaluationId: run.evaluationId,
-          evidenceLabels: cand.evidence,
-          authorization,
-          note: 'implies no approval; a trial is required',
-        },
-      });
-      await audit.record({
-        action: 'design.trial_candidate',
-        entityType: 'mix_design',
-        entityId: design!.id,
-        after: {
-          requestId: req.id,
-          candidateId: cand.id,
-          rank: cand.rank,
-          authorized: authorization !== null,
-          status: 'trial_candidate',
-        },
-      });
-      return {
-        design: { id: design!.id, code: design!.code, status: 'trial_candidate' },
-        evaluationId: run.evaluationId,
-      };
-    },
+    async ({ auth, params, body, tx, audit }) => requestTrialDesign(tx, auth, audit, params, body),
   );
 
   api.readPost(

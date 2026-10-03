@@ -27,7 +27,13 @@ export const esignBody = z.strictObject({ reason: z.string().trim().min(5).max(5
 export type EsignBody = z.infer<typeof esignBody>;
 
 export type Meaning =
-  'trial_reviewed' | 'approved' | 'released' | 'retired' | 'declared_values_accepted';
+  | 'trial_reviewed'
+  | 'approved'
+  | 'released'
+  | 'retired'
+  | 'suspended'
+  | 'reinstated'
+  | 'declared_values_accepted';
 
 /** A typed e-signature: who, in what role, meaning what, why, and bound to the exact design version. */
 export interface ESignature {

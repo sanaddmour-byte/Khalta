@@ -5,6 +5,7 @@ import express, { Router, type Request, type Response } from 'express';
 import type { ZodType } from 'zod';
 import type { AuthContext } from './middleware';
 import { forbidden } from './errors';
+import { RecordingJobs, type Jobs } from './jobs';
 
 interface Opts<B, P, Q> {
   summary: string;
@@ -14,6 +15,8 @@ interface Opts<B, P, Q> {
   params?: ZodType<P>;
   query?: ZodType<Q>;
   status?: number;
+  /** After the transaction commits (never inside it): enqueue background work. A failure here never fails the request. */
+  after?: (a: { auth: AuthContext; body: B; params: P; result: unknown }) => void | Promise<void>;
 }
 
 interface ReadArgs<P, Q> {
@@ -39,6 +42,13 @@ const SAFE = new Set(['get', 'head', 'options']);
  */
 export class ApiRoutes {
   readonly router = Router();
+  /** Background job queue (a recording stub until a worker is attached). */
+  jobs: Jobs = new RecordingJobs();
+  /** Seconds a price-change job waits so a burst of edits becomes one job (spec: 15 minutes). */
+  priceDebounceSeconds = 900;
+  /** Reports queue health to admins; attached by the worker. */
+  jobStatus: (() => Promise<unknown>) | null = null;
+  jobDelaySeconds = 5;
   readonly registry = new OpenAPIRegistry();
   readonly mutationRoutes = new Set<string>();
   /** POST routes that only read (the body carries the query). They write nothing, so they bypass withAudit; listed so tests can prove it. */
@@ -52,7 +62,11 @@ export class ApiRoutes {
     if (capability && !roleCan(auth.role, capability, auth.settings)) throw forbidden();
   }
 
-  private document(method: string, path: string, o: Opts<unknown, unknown, unknown>) {
+  private document(
+    method: string,
+    path: string,
+    o: Pick<Opts<unknown, unknown, unknown>, 'summary' | 'capability' | 'body' | 'status'>,
+  ) {
     this.routes.push({ method: method.toUpperCase(), path, capability: o.capability });
     const request: Record<string, unknown> = {};
     if (o.body) request['body'] = { content: { 'application/json': { schema: o.body } } };
@@ -119,6 +133,11 @@ export class ApiRoutes {
       const result = await withAudit(this.db, ctx, (tx, audit) =>
         handler({ auth, body, params, tx, audit }),
       );
+      try {
+        await o.after?.({ auth, body, params, result });
+      } catch {
+        /* background work is best effort; the nightly sweep catches up */
+      }
       res.status(o.status ?? 200).json(result ?? { ok: true });
     });
   }

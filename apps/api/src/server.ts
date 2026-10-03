@@ -4,6 +4,8 @@ import { createApp } from './app';
 import { createAuth } from './auth';
 import { bootstrap } from './bootstrap';
 import { loadConfig } from './config';
+import { startWorker, type Jobs } from './jobs';
+import { handlersFor } from './jobs/handlers';
 import { syncRules } from './rules/service';
 
 const config = loadConfig();
@@ -25,6 +27,23 @@ console.log(
   `rules: ${sync.inserted} inserted, ${sync.drift.length} differ from seed files (database wins)`,
 );
 
-createApp({ config, db: handle.db, auth }).listen(config.PORT, () => {
+// In dev, tests and e2e the worker runs inside this process; staging runs `worker.ts` as its own service.
+let jobs: Jobs | undefined;
+let jobStatus: (() => Promise<unknown>) | undefined;
+if (config.JOBS_IN_PROCESS === '1') {
+  const w = await startWorker(config, handlersFor(handle.db), (e, name) =>
+    console.error(`job ${name} failed`, e),
+  );
+  jobs = w.jobs;
+  jobStatus = w.status;
+}
+
+createApp({
+  config,
+  db: handle.db,
+  auth,
+  ...(jobs ? { jobs } : {}),
+  ...(jobStatus ? { jobStatus } : {}),
+}).listen(config.PORT, () => {
   console.log(`api listening on :${config.PORT}`);
 });

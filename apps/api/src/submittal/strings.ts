@@ -88,5 +88,7 @@ export const MEANING: Record<string, [string, string]> = {
   approved: ['Approved', 'الاعتماد'],
   released: ['Released', 'الإفراج'],
   retired: ['Retired', 'الإيقاف النهائي'],
+  suspended: ['Suspended', 'التعليق'],
+  reinstated: ['Reinstated', 'إعادة التفعيل'],
   declared_values_accepted: ['Declared values accepted', 'قبول القيم المصرّح بها'],
 };

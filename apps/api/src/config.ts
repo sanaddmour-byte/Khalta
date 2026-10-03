@@ -15,6 +15,11 @@ const schema = z.object({
   KHALTA_DEMO: z.enum(['0', '1']).default('0'),
   /** `1` behind a reverse proxy (Railway): trust X-Forwarded-For for client IPs (rate limiting, logs). */
   TRUST_PROXY: z.enum(['0', '1']).default('0'),
+  /** Proactive engine (M5.1): debounce for price-change jobs and the short delay other jobs wait for the commit. */
+  JOB_PRICE_DEBOUNCE_SECONDS: z.coerce.number().int().min(0).default(900),
+  JOB_DELAY_SECONDS: z.coerce.number().int().min(0).default(5),
+  /** `1` runs the worker inside the API process (dev, tests, e2e); staging runs `worker.ts` separately. */
+  JOBS_IN_PROCESS: z.enum(['0', '1']).default('0'),
   /** Built web app to serve from the API (same origin); unset = API only. */
   WEB_DIST_DIR: z.string().optional(),
 });

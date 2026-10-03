@@ -772,9 +772,13 @@ export const productionVolumes = pgTable(
       .references(() => plants.id),
     month: date('month', { mode: 'string' }).notNull(), // first day of the month
     volumeM3: numeric('volume_m3', { precision: 12, scale: 2 }).notNull(),
-    source: text('source', { enum: ['demo', 'import', 'batch_tickets'] }).notNull(),
+    source: text('source', { enum: ['demo', 'import', 'batch_tickets', 'manual'] }).notNull(),
+    /** Manual entries: who entered it and why a correction was needed. Latest row per design and month wins. */
+    note: text('note'),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
   },
-  (t) => [uniqueIndex('production_volumes_uq').on(t.designId, t.month)],
+  (t) => [index('production_volumes_design_month_idx').on(t.designId, t.month, t.createdAt)],
 );
 
 /**
@@ -956,17 +960,27 @@ export const savingsEntries = pgTable(
     variantDesignId: uuid('variant_design_id')
       .notNull()
       .references(() => mixDesigns.id),
-    variantEvaluationId: uuid('variant_evaluation_id')
-      .notNull()
-      .references(() => designEvaluations.id),
+    /** Null for approved/realized entries: their costs are computed at a snapshot, not stored as an evaluation. */
+    variantEvaluationId: uuid('variant_evaluation_id').references(() => designEvaluations.id),
     /** The SAME snapshot prices both designs, so market movement is never credited to the change. */
     priceSnapshotId: uuid('price_snapshot_id')
       .notNull()
       .references(() => priceSnapshots.id),
-    state: text('state', { enum: ['theoretical'] })
+    state: text('state', { enum: ['theoretical', 'approved', 'realized'] })
       .notNull()
       .default('theoretical'),
-    reasonCode: text('reason_code', { enum: ['manual_variant'] }).notNull(),
+    reasonCode: text('reason_code', {
+      enum: ['manual_variant', 'insight', 'approval', 'month'],
+    }).notNull(),
+    /** Realized entries: the month (first day) and the produced volume it was multiplied by. */
+    period: date('period', { mode: 'string' }),
+    producedVolumeM3: numeric('produced_volume_m3', { precision: 12, scale: 2 }),
+    /** Approved/realized: both costs per m³ at `priceSnapshotId` (the same snapshot for both). */
+    baselineCostJodPerM3: numeric('baseline_cost_jod_per_m3', { precision: 12, scale: 3 }),
+    replacementCostJodPerM3: numeric('replacement_cost_jod_per_m3', { precision: 12, scale: 3 }),
+    /** The total this entry stands for (per m³ × volume), for approved/realized. */
+    totalJod: numeric('total_jod', { precision: 16, scale: 3 }),
+    insightId: uuid('insight_id').references((): AnyPgColumn => insights.id),
     savingJodPerM3: numeric('saving_jod_per_m3', { precision: 12, scale: 3 }).notNull(),
     monthlyVolumeM3: numeric('monthly_volume_m3', { precision: 12, scale: 2 }),
     annualJod: numeric('annual_jod', { precision: 16, scale: 3 }),
@@ -975,7 +989,17 @@ export const savingsEntries = pgTable(
     createdBy: text('created_by').references(() => users.id),
     createdAt: createdAt(),
   },
-  (t) => [uniqueIndex('savings_entries_variant_eval_uq').on(t.baselineId, t.variantEvaluationId)],
+  (t) => [
+    uniqueIndex('savings_entries_theoretical_uq')
+      .on(t.baselineId, t.variantEvaluationId)
+      .where(sql`${t.state} = 'theoretical'`),
+    uniqueIndex('savings_entries_approved_uq')
+      .on(t.baselineId, t.variantDesignId)
+      .where(sql`${t.state} = 'approved'`),
+    uniqueIndex('savings_entries_realized_uq')
+      .on(t.baselineId, t.variantDesignId, t.period)
+      .where(sql`${t.state} = 'realized'`),
+  ],
 );
 
 /** One specimen's strength result (M4.2). Append-only. Stored as measured; judged only at the design's test age. */
@@ -1032,4 +1056,89 @@ export const batchInstances = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index('batch_instances_design_idx').on(t.designId, t.createdAt)],
+);
+
+/**
+ * A proactive insight (01-domain §8). One open row per `dedupe_key`: a repeat updates it, it is never duplicated.
+ * Nothing here changes a design: accepting creates a trial-only draft; suspension is a separate QC act.
+ */
+export const insights = pgTable(
+  'insights',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    type: text('type', {
+      enum: [
+        'opportunity',
+        'test_expired',
+        'prices_stale',
+        'test_drift',
+        'rule_change',
+        'low_strength',
+        'compliance_failure',
+      ],
+    }).notNull(),
+    severity: text('severity', { enum: ['info', 'medium', 'high', 'critical'] }).notNull(),
+    status: text('status', { enum: ['open', 'snoozed', 'dismissed', 'accepted', 'expired'] })
+      .notNull()
+      .default('open'),
+    plantId: uuid('plant_id').references(() => plants.id),
+    designId: uuid('design_id').references(() => mixDesigns.id),
+    dedupeKey: text('dedupe_key').notNull(),
+    /** What changed and the named inputs (no cost fields; cost lives in the typed columns below). */
+    payload: jsonb('payload').notNull(),
+    savingJodPerM3: numeric('saving_jod_per_m3', { precision: 12, scale: 3 }),
+    annualJod: numeric('annual_jod', { precision: 16, scale: 3 }),
+    provisional: boolean('provisional').notNull().default(true),
+    snoozedUntil: ts('snoozed_until'),
+    resolvedReason: text('resolved_reason'),
+    resolvedBy: text('resolved_by').references(() => users.id),
+    resolvedAt: ts('resolved_at'),
+    /** Accepted: the trial-only draft it produced. */
+    draftDesignId: uuid('draft_design_id').references(() => mixDesigns.id),
+    firstSeenAt: createdAt(),
+    lastSeenAt: ts('last_seen_at').notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('insights_open_dedupe_uq')
+      .on(t.tenantId, t.dedupeKey)
+      .where(sql`${t.status} in ('open', 'snoozed')`),
+    index('insights_inbox_idx').on(t.tenantId, t.status, t.severity),
+  ],
+);
+
+/** Append-only history of an insight (created, updated, snoozed, dismissed, accepted, expired). */
+export const insightEvents = pgTable(
+  'insight_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    insightId: uuid('insight_id')
+      .notNull()
+      .references(() => insights.id),
+    kind: text('kind').notNull(),
+    actorId: text('actor_id').references(() => users.id),
+    detail: jsonb('detail').notNull().default({}),
+    at: ts('at').notNull().defaultNow(),
+  },
+  (t) => [index('insight_events_insight_idx').on(t.insightId, t.at)],
+);
+
+/** One digest per tenant per day (Asia/Amman), taken by the nightly sweep. */
+export const dailyDigests = pgTable(
+  'daily_digests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    day: date('day', { mode: 'string' }).notNull(),
+    summary: jsonb('summary').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('daily_digests_day_uq').on(t.tenantId, t.day)],
 );

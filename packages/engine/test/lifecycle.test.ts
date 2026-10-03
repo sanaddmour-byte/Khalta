@@ -50,7 +50,7 @@ describe('lifecycle graph (01-domain §14.1)', () => {
   });
 
   it('turns on only the edges that exist in this milestone', () => {
-    expect(ACTIVE_MILESTONE).toBe('M4.1');
+    expect(ACTIVE_MILESTONE).toBe('M5.1');
     const v = canTransition('draft', 'evaluated', ['evaluation_verified']);
     expect(v.ok).toBe(true);
     expect(canTransition('evaluated', 'evaluated', ['evaluation_verified']).ok).toBe(true);
@@ -68,20 +68,14 @@ describe('lifecycle graph (01-domain §14.1)', () => {
     expect(canTransition('trial_passed', 'approved', ['four_eyes_approval']).ok).toBe(true);
     expect(canTransition('approved', 'superseded', ['new_version_approved']).ok).toBe(true);
     expect(canTransition('approved', 'retired', ['qc_decision']).ok).toBe(true);
-    for (const [from, to, ev, at] of [
-      ['approved', 'suspended', ['suspension_decision'], 'M5.1'],
-      ['in_production', 'suspended', ['suspension_decision'], 'M5.1'],
-      ['suspended', 'approved', ['reinstatement_decision'], 'M5.1'],
-    ] as const) {
-      const r = canTransition(from, to, ev);
-      expect(r.ok).toBe(false);
-      if (!r.ok) {
-        expect(r.code).toBe('not_yet_available');
-        expect(r.availableFrom).toBe(at);
-        expect(r.reason).toContain(at);
-      }
-      expect(canTransition(from, to, ev, at).ok).toBe(true);
-    }
+    // M5.1: suspension and reinstatement (QC decisions), the last edges to switch on
+    expect(canTransition('approved', 'suspended', ['suspension_decision']).ok).toBe(true);
+    expect(canTransition('in_production', 'suspended', ['suspension_decision']).ok).toBe(true);
+    expect(canTransition('suspended', 'approved', ['reinstatement_decision']).ok).toBe(true);
+    expect(canTransition('suspended', 'in_production', ['reinstatement_decision']).ok).toBe(true);
+    // a build that is still at M4.1 refuses them with the milestone named
+    const early = canTransition('approved', 'suspended', ['suspension_decision'], 'M4.1');
+    expect(early).toMatchObject({ ok: false, code: 'not_yet_available', availableFrom: 'M5.1' });
   });
 
   it('every legal edge names its evidence and refuses to move without it', () => {

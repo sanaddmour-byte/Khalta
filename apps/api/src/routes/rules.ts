@@ -167,6 +167,12 @@ export function ruleRoutes(api: ApiRoutes) {
     {
       summary: 'Verify a rule value against the licensed document (typed e-signature note)',
       capability: 'rules.verify',
+      after: ({ auth }) =>
+        api.jobs.enqueue(
+          'rule-change',
+          { tenantId: auth.tenantId },
+          { singletonKey: `rules:${auth.tenantId}`, delaySeconds: api.jobDelaySeconds * 6 },
+        ),
       body: verifyBody,
       params: idParam,
     },
@@ -219,6 +225,12 @@ export function ruleRoutes(api: ApiRoutes) {
     {
       summary: 'Correct a rule value (creates a new, unverified version)',
       capability: 'import.run',
+      after: ({ auth }) =>
+        api.jobs.enqueue(
+          'rule-change',
+          { tenantId: auth.tenantId },
+          { singletonKey: `rules:${auth.tenantId}`, delaySeconds: api.jobDelaySeconds * 6 },
+        ),
       body: editBody,
       params: idParam,
     },
@@ -320,6 +332,12 @@ export function ruleRoutes(api: ApiRoutes) {
     {
       summary: 'Apply a previewed CSV import (all or nothing; new versions are unverified)',
       capability: 'import.run',
+      after: ({ auth }) =>
+        api.jobs.enqueue(
+          'rule-change',
+          { tenantId: auth.tenantId },
+          { singletonKey: `rules:${auth.tenantId}`, delaySeconds: api.jobDelaySeconds * 6 },
+        ),
       body: commitBody,
     },
     async ({ auth, body, tx, audit }) => {
