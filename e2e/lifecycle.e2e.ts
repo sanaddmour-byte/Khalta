@@ -34,6 +34,7 @@ async function signAs(page: Page, email: string) {
 }
 async function sign(page: Page, reason: string) {
   await expect(page.getByTestId('sign-dialog')).toBeVisible();
+  await page.waitForTimeout(600); // the dialog's entrance animation misreads contrast mid-fade
   await expectNoSeriousAxe(page, 'sign dialog');
   await page.getByTestId('sign-reason').fill(reason);
   await page.getByTestId('sign-submit').click();

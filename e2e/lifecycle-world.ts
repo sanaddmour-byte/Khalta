@@ -220,3 +220,54 @@ export async function advanceToTrialPassed(designId: string) {
   });
   expect(b.ok(), await b.text()).toBe(true);
 }
+
+/** SYNTHETIC: a design walked all the way to `approved` (second QC manager signs) and released to `in_production`. */
+export async function liveDesign(code: string): Promise<string> {
+  const id = await trialCandidate(code);
+  await advanceToTrialPassed(id);
+  await verifyRules();
+  const second = await as(SECOND_MANAGER);
+  const a = await second.post(`/api/designs/${id}/approve`, {
+    data: { reason: 'SYNTHETIC approval for the pilot fixtures' },
+  });
+  expect(a.ok(), await a.text()).toBe(true);
+  const r = await second.post(`/api/designs/${id}/release`, {
+    data: { reason: 'SYNTHETIC release' },
+  });
+  expect(r.ok(), await r.text()).toBe(true);
+  return id;
+}
+
+/** SYNTHETIC: an insight row straight into the e2e database (the jobs that create them are covered by the API tests). */
+export async function seedInsight(
+  plantId: string,
+  row: {
+    type: string;
+    severity: string;
+    designId?: string;
+    payload: unknown;
+    savingJodPerM3?: string;
+    annualJod?: string;
+    key: string;
+  },
+) {
+  await withDb(async (c) => {
+    const { rows } = await c.query(`SELECT tenant_id FROM plants WHERE id = $1`, [plantId]);
+    await c.query(
+      `INSERT INTO insights (tenant_id, type, severity, plant_id, design_id, dedupe_key, payload, saving_jod_per_m3, annual_jod)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9)
+       ON CONFLICT DO NOTHING`,
+      [
+        rows[0].tenant_id,
+        row.type,
+        row.severity,
+        plantId,
+        row.designId ?? null,
+        row.key,
+        JSON.stringify(row.payload),
+        row.savingJodPerM3 ?? null,
+        row.annualJod ?? null,
+      ],
+    );
+  });
+}

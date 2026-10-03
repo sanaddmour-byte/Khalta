@@ -20,6 +20,7 @@ import { PricesPage } from './prices/PricesPage';
 import { LoginPage } from './pages/Login';
 import { SectionPage } from './pages/Section';
 import { RulesPage } from './rules/RulesPage';
+import { InsightsPage } from './insights/InsightsPage';
 import { SavingsPage } from './savings/SavingsPage';
 import { StudioPage } from './studio/StudioPage';
 import { Shell } from './shell/Shell';
@@ -65,6 +66,7 @@ const SCREENS: Record<string, () => React.JSX.Element> = {
   prices: PricesPage,
   library: LibraryPage,
   savings: SavingsPage,
+  insights: InsightsPage,
   studio: StudioPage,
   profiles: ProfilesPage,
   imports: ImportsPage,

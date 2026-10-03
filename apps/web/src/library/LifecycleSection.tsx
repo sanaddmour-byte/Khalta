@@ -37,6 +37,8 @@ const CAP: Record<Action, Capability> = {
   approve: 'design.approve',
   release: 'production.release',
   retire: 'design.approve',
+  suspend: 'design.approve',
+  reinstate: 'design.approve',
 };
 
 /** The next steps this design can take, per status (the server's graph still decides). */
@@ -49,10 +51,11 @@ function actionsFor(status: string): Action[] {
     case 'trial_passed':
       return ['approve', 'retire'];
     case 'approved':
-      return ['release', 'retire'];
+      return ['release', 'suspend', 'retire'];
     case 'in_production':
+      return ['suspend', 'retire'];
     case 'suspended':
-      return ['retire'];
+      return ['reinstate', 'retire'];
     case 'draft':
     case 'evaluated':
       return ['retire'];

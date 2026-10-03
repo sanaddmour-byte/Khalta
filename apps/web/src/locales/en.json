@@ -1357,6 +1357,26 @@
     "reason": {
       "validator_failed": "The independent validator disagreed.",
       "cost_incomplete": "A material has no usable price in the snapshot."
+    },
+    "board": "Savings by state",
+    "boardHint": "Three states, never added together. Theoretical is an estimate at current prices; approved is the saving of an approved replacement at one price snapshot; realized is the measured month, both costs at that month's snapshot times the volume produced.",
+    "entries": "{n, plural, one {# entry} other {# entries}}",
+    "stateHint": {
+      "theoretical": "Estimates from opportunities. No trial yet.",
+      "approved": "A replacement was approved. Per year is an estimate from the monthly volume.",
+      "realized": "Measured months with a recorded volume and a month snapshot."
+    },
+    "noTotal": "Each estimate stands alone and is not totalled.",
+    "jodTotal": "{n} JOD",
+    "blocked": {
+      "title": "Months that cannot be measured yet",
+      "hint": "A month is measured only when its volume and its price snapshot exist. Nothing is estimated in their place.",
+      "none": "No month is waiting.",
+      "reason": {
+        "no_volume": "No volume recorded",
+        "no_snapshot": "No price snapshot for the month",
+        "cost_incomplete": "A material has no usable price"
+      }
     }
   },
   "studio": {
@@ -1817,7 +1837,9 @@
       "pass-trial": "Pass the trial",
       "approve": "Approve for production use",
       "release": "Release to production",
-      "retire": "Retire this design"
+      "retire": "Retire this design",
+      "suspend": "Suspend this design",
+      "reinstate": "Reinstate this design"
     },
     "do": {
       "start-trial": "Start trial",
@@ -1825,7 +1847,9 @@
       "approve": "Approve…",
       "release": "Release…",
       "retire": "Retire…",
-      "accept": "Accept declared values…"
+      "accept": "Accept declared values…",
+      "suspend": "Suspend…",
+      "reinstate": "Reinstate…"
     },
     "gate": {
       "trial_batch": "At least one trial batch is logged",
@@ -1867,14 +1891,18 @@
         "approve": "Approve {code}",
         "release": "Release {code} to production",
         "retire": "Retire {code}",
-        "accept": "Accept declared values of {code}"
+        "accept": "Accept declared values of {code}",
+        "suspend": "Suspend {code}",
+        "reinstate": "Reinstate {code}"
       },
       "meaning": {
         "pass-trial": "You confirm that the trial criteria are met and you have reviewed the results.",
         "approve": "You approve this design for production use. A trial passed, the rules are verified and the evidence is current.",
         "release": "You release this approved design to production at its plant.",
         "retire": "You retire this design. It cannot be used again; a new version is needed.",
-        "accept": "You accept that some key values are user-declared and not from a lab report or datasheet."
+        "accept": "You accept that some key values are user-declared and not from a lab report or datasheet.",
+        "suspend": "You suspend this design. It stops being available for production until a QC manager reinstates it. Nothing suspends automatically.",
+        "reinstate": "You reinstate this suspended design and confirm the reason for suspension no longer applies."
       },
       "reason": "Reason (at least 5 characters)",
       "scope": "A typed e-signature records who signed, in what role, what it means, why, when, and the exact version of the design. It does not claim legal validity.",
@@ -1885,7 +1913,9 @@
       "approved": "Approved",
       "released": "Released",
       "retired": "Retired",
-      "declared_values_accepted": "Declared values accepted"
+      "declared_values_accepted": "Declared values accepted",
+      "suspended": "Suspended",
+      "reinstated": "Reinstated"
     },
     "signedLine": "{meaning} by {name}: {reason}",
     "changeClass": "Change class: {classes}.",
@@ -1979,5 +2009,75 @@
       "download": "Download submittal PDF",
       "watermark": "This design is not approved: the PDF carries a NOT APPROVED — TRIAL ONLY watermark."
     }
+  },
+  "insights": {
+    "intro": "Proactive findings: cheaper options at today's prices, expiring tests, stale prices, drift in material tests, rule changes and strength results. An insight never changes a design; accepting an opportunity only creates a trial draft.",
+    "inbox": "Inbox",
+    "severity": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "info": "Info"
+    },
+    "type": {
+      "opportunity": "Cost opportunity",
+      "test_expired": "Material tests expired",
+      "prices_stale": "Prices are stale",
+      "test_drift": "Material test drift",
+      "rule_change": "Rule change",
+      "low_strength": "Strength below target",
+      "compliance_failure": "Compliance check failing"
+    },
+    "summary": {
+      "opportunity": "A cheaper candidate exists for {code} at current prices.",
+      "low_strength": "{code}: the average strength {avg} MPa is below the required {req} MPa.",
+      "compliance_failure": "{code}: {n, plural, one {# check fails} other {# checks fail}} after a material test.",
+      "test_drift": "{name}: {n, plural, one {# value} other {# values}} moved; {designs, plural, one {# design is} other {# designs are}} affected.",
+      "rule_change": "A rule change leaves {n, plural, one {# design} other {# designs}} failing or provisional.",
+      "test_expired": "{n, plural, one {# material test has} other {# material tests have}} expired.",
+      "prices_stale": "{n, plural, one {# price is} other {# prices are}} older than the stale-price limit."
+    },
+    "opportunityBasis": "Theoretical: at current prices, before any trial or approval. It is not a saving yet.",
+    "allPlants": "All plants",
+    "openDesign": "Open the design",
+    "accept": "Accept as a trial draft",
+    "acceptHint": "Accepting re-runs the optimizer now and creates a trial-only draft at TRIAL CANDIDATE. It needs a trial and QC approval like any other design.",
+    "accepted": "Trial draft created.",
+    "snooze1": "Snooze 1 day",
+    "snooze7": "Snooze 1 week",
+    "snoozed": "Snoozed.",
+    "snoozedBack": "Snooze ended",
+    "dismiss": "Dismiss",
+    "dismissHint": "Say why this needs no action. The reason is kept in the history.",
+    "reason": "Reason (at least 3 characters)",
+    "dismissed": "Dismissed.",
+    "filter": {
+      "severity": "Severity",
+      "type": "Type",
+      "all": "All"
+    },
+    "empty": {
+      "title": "Nothing needs attention",
+      "description": "New findings appear here after a price change, a material test, a rule change or a strength result, and the nightly check."
+    },
+    "digest": {
+      "title": "Daily digest",
+      "none": "No digest yet. The first one is taken by the nightly check.",
+      "line": "{open} open, {fresh} new in 24 hours, {critical} critical, {high} high."
+    },
+    "banner": "{n, plural, one {# critical alert needs} other {# critical alerts need}} a QC decision.",
+    "bannerLink": "Open the inbox"
+  },
+  "volumes": {
+    "title": "Production volume",
+    "hint": "Produced m³ per month. Realized savings use these figures and nothing else. A month already recorded can only be corrected with a note; earlier entries are kept.",
+    "none": "No volume recorded yet.",
+    "month": "Month (YYYY-MM)",
+    "volume": "Volume (m³)",
+    "note": "Note (needed for a correction)",
+    "record": "Record volume",
+    "saved": "Volume recorded.",
+    "inForce": "in force",
+    "superseded": "replaced by a later entry"
   }
 }

@@ -388,3 +388,32 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Railway staging still awaits your go-ahead; QC must enter the moisture limits, the trial criteria, the real engineering parameters and JS values; the letterhead; Arabic review; real attested designs and volumes.
 
 **Next:** M5.1 (Savings pilot + proactive insights) — write `docs/plans/M5.1.md` when you say "Proceed".
+
+## 2026-10-03 — M5.1 Savings pilot and proactive insights (F-026, F-027)
+
+**Changed**
+
+- `packages/engine`: `savings/ledger.ts` (per-m³, monthly realized, annualised, opportunity thresholds, signed-safe decimal arithmetic) and `insights/rules.ts` (types, severities, dedupe parts, drift and re-evaluation severity).
+- `packages/db` (migrations 0022–0023): `insights`, `insight_events`, `daily_digests`; `savings_entries` extended to three states with period, volume, both costs, total; `production_volumes` gets note, author, manual source; append-only and no-delete triggers; the old theoretical-only constraints replaced.
+- `apps/api`: pg-boss workers (`worker.ts`, in-process mode, queue health at `/api/system/jobs`); triggers for price change (15-min debounce per plant), material test, rule change, strength result and the nightly sweep (expiry and stale-price nudges, month-close snapshots, realized savings, digest); insights API (list, digest, detail, dismiss, snooze, accept); production volumes API; approved ledger entry at approval; suspend and reinstate (e-signed); `/api/savings` and `/api/savings/blocked`.
+- `apps/web`: Insights inbox with digest, filters, theoretical-labelled savings, accept / snooze / dismiss with reason; critical-alert banner for QC managers; Savings screen as three state columns with per-state totals and the blocked-months list; production volume entry on live designs; suspend and reinstate on the design sheet.
+- ADR 0013; EN/AR strings (Arabic drafts in `docs/i18n-review.md`).
+
+**Commands run:** see the verification line below.
+
+**Deviations from the plan (and why)**
+
+- Realized months count from the replacement's approval month (the append-only ledger cannot be backdated and the approval date is the true start).
+- A theoretical entry on Accept is priced at a fresh snapshot (both designs), so market movement is never credited.
+- Month-close snapshots are taken at the nightly run date, not retroactively.
+- Negative realized and approved savings are allowed (the old positive-only constraints were replaced).
+- Accept re-runs the optimizer rather than trusting the stored candidate.
+- Queues use policy `short` (pg-boss otherwise ignored `singletonKey`).
+- The e2e seeds insight rows directly (labelled SYNTHETIC); the price-change → insight → accept → realized pipeline is covered by the API pilot test, which uses the real triggers.
+- Season-switch drafts and material-unavailable substitutes are deferred; no email.
+
+**Verification note:** tests prove the controlled SYNTHETIC pilot reconciles (baseline → trial → approval → volumes → two month snapshots → realized total equals an independent hand calculation, and a second run adds nothing), that debounce and dedupe hold, that cost-blind roles see no cost figures, that the database refuses non-graph status jumps, and that nothing suspends or approves by itself. They do **not** prove any real saving: no real attested designs, volumes or price history exist yet, and the Arabic wording is a draft.
+
+**Open items:** Railway staging still awaits your go-ahead; QC must enter the real engineering parameters, JS values, trial criteria, moisture limits and letterhead; real attested designs and monthly volumes; Arabic review.
+
+**Next:** M5.2 (strength intelligence) — only when you say "Proceed".

@@ -2,7 +2,8 @@ import { queryOptions } from '@tanstack/react-query';
 import { api } from '../lib/api';
 
 export type Target = 'trial_in_progress' | 'trial_passed' | 'approved';
-export type Action = 'start-trial' | 'pass-trial' | 'approve' | 'release' | 'retire';
+export type Action =
+  'start-trial' | 'pass-trial' | 'approve' | 'release' | 'retire' | 'suspend' | 'reinstate';
 
 export interface Gate {
   id: string;

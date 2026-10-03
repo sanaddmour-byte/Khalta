@@ -239,9 +239,10 @@ test('import → evaluate → attest → baseline → manual variant → THEORET
   await expect(out).toContainText('not approved, not realized');
 
   await page.goto('/savings');
-  const entry = page.getByTestId('entry-row').first();
+  const column = page.getByTestId('col-theoretical');
+  const entry = column.getByTestId('entry-row').first();
   await expect(entry).toHaveAttribute('data-state', 'theoretical');
-  await expect(entry).toContainText('Theoretical');
+  await expect(column).toContainText('Theoretical');
   await expectNoSeriousAxe(page, 'savings');
 
   // cost-blind roles: no ledger, no cost anywhere

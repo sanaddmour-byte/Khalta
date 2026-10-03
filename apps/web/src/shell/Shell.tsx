@@ -19,6 +19,7 @@ import { useMe } from '../lib/auth';
 import { visibleNav } from '../lib/nav';
 import { PlantProvider } from '../lib/plant';
 import { usePrefs } from '../lib/prefs';
+import { CriticalBanner } from './CriticalBanner';
 import { LanguageToggle, NotificationsButton, ThemeToggle, UserMenu } from './Controls';
 import { NavList } from './Nav';
 import { Palette } from './Palette';
@@ -77,6 +78,7 @@ export function Shell() {
                 {t('shell.demoBanner')}
               </p>
             )}
+            <CriticalBanner />
             <header
               className="flex h-14 items-center gap-2 border-b border-line bg-surface px-3 md:px-6"
               data-testid="topbar"

@@ -99,8 +99,8 @@ export interface Baseline {
 }
 export interface SavingsEntry {
   id: string;
-  state: 'theoretical';
-  reasonCode: 'manual_variant';
+  state: 'theoretical' | 'approved' | 'realized';
+  reasonCode: 'manual_variant' | 'insight' | 'approval' | 'month';
   baselineId: string;
   baselineDesignId: string;
   variantDesignId: string;
@@ -111,9 +111,20 @@ export interface SavingsEntry {
   monthlyVolumeM3: string | null;
   annualJod: string | null;
   provisional: boolean;
+  period: string | null;
+  producedVolumeM3: string | null;
+  baselineCostJodPerM3: string | null;
+  replacementCostJodPerM3: string | null;
+  totalJod: string | null;
   code: string;
   variantVersion: number;
   createdAt: string;
+}
+export interface BlockedMonth {
+  designId: string;
+  code: string;
+  month: string;
+  reason: 'no_volume' | 'no_snapshot' | 'cost_incomplete';
 }
 export interface Opportunity {
   eligible: boolean;
@@ -153,6 +164,10 @@ export const baselinesQuery = queryOptions({
 export const savingsQuery = queryOptions({
   queryKey: ['savings', 'entries'],
   queryFn: () => api<SavingsEntry[]>('/api/savings'),
+});
+export const blockedQuery = queryOptions({
+  queryKey: ['savings', 'blocked'],
+  queryFn: () => api<{ blocked: BlockedMonth[] }>('/api/savings/blocked'),
 });
 
 export const evaluateBatch = (body: {

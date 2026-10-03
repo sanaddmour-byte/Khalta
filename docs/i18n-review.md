@@ -1040,3 +1040,12 @@ All Arabic under `lab.*`, `settings.production*`, `settings.solutionWater*`, `se
 - **The PDF itself** (`submittal/strings.ts`): the title «مستند اعتماد الخلطة», the watermark «غير معتمد — للتجربة فقط», «مُستبدَل», «متوقف نهائياً», the disclaimer paragraph, and the approval block labels. This is the client-facing page.
 - **Production terms**: «الرطوبة الكلية», «الماء الحر», «الوزن المطلوب», «ماء محلول الإضافة», «خلطة إنتاج / أوزان خلطة تجريبية».
 - **Lab terms**: «خلطة تجريبية», «أسطوانة / مكعب», «رقم المجموعة», «متوسط ٣».
+
+## M5.1 — Insights, savings states, volumes, suspension (drafts for Sanad to review)
+
+All Arabic under `insights.*`, `volumes.*`, the new `savings.board|boardHint|entries|stateHint.*|noTotal|jodTotal|blocked.*` and `lifecycle.step|do|sign.*|meaning` entries for suspend and reinstate are drafts. Priority:
+
+- **Alert wording** (`insights.summary.*`, `insights.banner`): "المقاومة دون المستهدف", "تنبيه حرج يحتاج إلى قرار من مسؤول الجودة".
+- **Savings states** (`savings.boardHint`, `savings.stateHint.*`): "نظري / معتمد / متحقق" and the sentence that they are never added together.
+- **Suspension** (`lifecycle.sign.meaning.suspend|reinstate`): "تعليق" and "إعادة العمل", and that nothing suspends automatically.
+- **Terms**: "تأجيل" for snooze, "استبعاد" for dismiss, "مسودة تجربة" for trial draft, "حجم الإنتاج" for production volume.

@@ -30,12 +30,17 @@ import { usePlant } from '../lib/plant';
 import { usePrefs } from '../lib/prefs';
 import {
   baselinesQuery,
+  blockedQuery,
   createBaseline,
   portfolioQuery,
   savingsQuery,
 } from '../library/portfolioApi';
 import { snapshotsQuery } from '../prices/api';
 import { SectionPage } from '../pages/Section';
+
+/** Sum of 3-decimal JOD strings inside ONE state (never across states); integer thousandths avoid float drift. */
+const sum = (vs: (string | null)[]) =>
+  (vs.reduce((a, v) => a + (v === null ? 0 : Math.round(Number(v) * 1000)), 0) / 1000).toFixed(3);
 
 export function SavingsPage() {
   const { t } = useTranslation();
@@ -47,6 +52,7 @@ export function SavingsPage() {
   const canSee = caps.includes('cost.view');
   const baselines = useQuery({ ...baselinesQuery, enabled: canSee });
   const entries = useQuery({ ...savingsQuery, enabled: canSee });
+  const blocked = useQuery({ ...blockedQuery, enabled: canSee });
   const [create, setCreate] = useState(false);
   if (me && !canSee) return <SectionPage id="savings" />;
   const plantName = (id: string) => {
@@ -155,9 +161,9 @@ export function SavingsPage() {
         )}
       </section>
 
-      <section aria-label={t('savings.opportunities')} className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-heading">{t('savings.opportunities')}</h2>
-        <p className="max-w-3xl text-sm text-muted">{t('savings.opportunityHint')}</p>
+      <section aria-label={t('savings.board')} className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-heading">{t('savings.board')}</h2>
+        <p className="max-w-3xl text-sm text-muted">{t('savings.boardHint')}</p>
         {entries.isLoading && <Skeleton className="h-24 w-full" />}
         {entries.data?.length === 0 && (
           <EmptyState
@@ -166,56 +172,110 @@ export function SavingsPage() {
           />
         )}
         {entries.data && entries.data.length > 0 && (
-          <div className="overflow-x-auto">
-            <Table data-testid="entries-table">
-              <caption className="sr-only">{t('savings.opportunities')}</caption>
-              <thead>
-                <tr>
-                  <Th>{t('library.col.code')}</Th>
-                  <Th>{t('savings.col.state')}</Th>
-                  <Th>{t('savings.col.saving')}</Th>
-                  <Th className="hidden lg:table-cell">{t('savings.col.annual')}</Th>
-                  <Th className="hidden md:table-cell">{t('savings.col.snapshot')}</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.data.map((e) => (
-                  <tr
-                    key={e.id}
-                    className="border-t border-line"
-                    data-testid="entry-row"
-                    data-state={e.state}
-                  >
-                    <Td>
-                      <Ltr mono>{code(e.variantDesignId, `${e.code} v${e.variantVersion}`)}</Ltr>
-                    </Td>
-                    <Td>
-                      <SavingStateLabel state={e.state} />
-                      {e.provisional && (
-                        <span className="block text-xs text-muted">
-                          {t('evaluation.provisional')}
-                        </span>
-                      )}
-                    </Td>
-                    <Td className="whitespace-nowrap">
-                      <Ltr>{jod(e.savingJodPerM3)}</Ltr>
-                    </Td>
-                    <Td className="hidden whitespace-nowrap lg:table-cell">
-                      {e.annualJod ? (
-                        <>
-                          <Ltr>{t('savings.jodYear', { n: money(e.annualJod) })}</Ltr>
-                          <span className="block text-xs text-muted">{t('savings.estimate')}</span>
-                        </>
-                      ) : (
-                        '–'
-                      )}
-                    </Td>
-                    <Td className="hidden md:table-cell">{e.snapshotName}</Td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+          <div className="grid gap-4 lg:grid-cols-3" data-testid="savings-board">
+            {(['theoretical', 'approved', 'realized'] as const).map((state) => {
+              const rows = entries.data.filter((e) => e.state === state);
+              const kpi =
+                state === 'realized'
+                  ? sum(rows.map((e) => e.totalJod))
+                  : state === 'approved'
+                    ? sum(rows.map((e) => e.annualJod))
+                    : null;
+              return (
+                <div
+                  key={state}
+                  className="rounded-lg border border-line bg-surface p-3"
+                  data-testid={`col-${state}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <SavingStateLabel state={state} />
+                    <span className="text-xs text-muted" data-testid={`count-${state}`}>
+                      {t('savings.entries', { n: rows.length })}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted">{t(`savings.stateHint.${state}`)}</p>
+                  {kpi !== null && (
+                    <p
+                      className="mt-2 text-lg font-semibold text-heading"
+                      data-testid={`kpi-${state}`}
+                    >
+                      <Ltr>
+                        {t(state === 'realized' ? 'savings.jodTotal' : 'savings.jodYear', {
+                          n: money(kpi),
+                        })}
+                      </Ltr>
+                    </p>
+                  )}
+                  {state === 'theoretical' && rows.length > 0 && (
+                    <p className="mt-2 text-xs text-muted">{t('savings.noTotal')}</p>
+                  )}
+                  <ul className="mt-3 flex flex-col gap-2">
+                    {rows.map((e) => (
+                      <li
+                        key={e.id}
+                        className="rounded-md border border-line p-2 text-sm"
+                        data-testid="entry-row"
+                        data-state={e.state}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <Ltr mono>
+                            {code(e.variantDesignId, `${e.code} v${e.variantVersion}`)}
+                          </Ltr>
+                          {e.period && <Ltr>{e.period.slice(0, 7)}</Ltr>}
+                        </div>
+                        <p>
+                          <Ltr>{jod(e.savingJodPerM3)}</Ltr>
+                        </p>
+                        {e.producedVolumeM3 && (
+                          <p className="text-xs text-muted">
+                            <Ltr>
+                              {t('library.unit.m3', { n: f.number(Number(e.producedVolumeM3)) })}
+                            </Ltr>
+                            {e.totalJod && (
+                              <>
+                                {' → '}
+                                <Ltr>{t('savings.jodTotal', { n: money(e.totalJod) })}</Ltr>
+                              </>
+                            )}
+                          </p>
+                        )}
+                        {e.annualJod && state !== 'realized' && (
+                          <p className="text-xs text-muted">
+                            <Ltr>{t('savings.jodYear', { n: money(e.annualJod) })}</Ltr>{' '}
+                            {t('savings.estimate')}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted">{e.snapshotName}</p>
+                        {e.provisional && (
+                          <p className="text-xs text-warn-text">{t('evaluation.provisional')}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
+        )}
+      </section>
+
+      <section aria-label={t('savings.blocked.title')} className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold text-heading">{t('savings.blocked.title')}</h2>
+        <p className="max-w-3xl text-sm text-muted">{t('savings.blocked.hint')}</p>
+        {blocked.data && blocked.data.blocked.length === 0 && (
+          <p className="text-sm text-muted" data-testid="blocked-none">
+            {t('savings.blocked.none')}
+          </p>
+        )}
+        {blocked.data && blocked.data.blocked.length > 0 && (
+          <ul className="flex flex-col gap-1 text-sm" data-testid="blocked-list">
+            {blocked.data.blocked.map((b) => (
+              <li key={`${b.designId}-${b.month}`} data-testid="blocked-row" data-reason={b.reason}>
+                <Ltr mono>{b.code}</Ltr> · <Ltr>{b.month.slice(0, 7)}</Ltr> ·{' '}
+                {t(`savings.blocked.reason.${b.reason}`)}
+              </li>
+            ))}
+          </ul>
         )}
       </section>
       {create && <BaselineDialog onClose={() => setCreate(false)} />}
