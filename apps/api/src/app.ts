@@ -16,6 +16,7 @@ import { auditRoutes } from './routes/audit';
 import { attachmentRoutes } from './routes/attachments';
 import { designRoutes } from './routes/designs';
 import { insightRoutes } from './routes/insights';
+import { exportRoutes } from './routes/exports';
 import { strengthRoutes } from './routes/strength';
 import { volumeRoutes } from './routes/volumes';
 import { labRoutes } from './routes/lab';
@@ -106,6 +107,7 @@ export function createApp({
   insightRoutes(api);
   volumeRoutes(api);
   strengthRoutes(api);
+  exportRoutes(api);
   evaluationRoutes(api);
   portfolioRoutes(api);
   baselineRoutes(api);

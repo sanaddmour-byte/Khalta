@@ -2196,5 +2196,12 @@
     "curveLine": "ln f = {a} − {b}·w/cm",
     "r2": "R²",
     "betaLine": "β_FM = {fm} · β_75 = {p75}"
+  },
+  "exports": {
+    "designs": "Export approved designs (CSV)",
+    "batch": "Download CSV",
+    "note": "The file is a copy of the approved designs for your batching system. It is not an approval, it holds no prices or costs, and a design that is suspended, retired or not yet approved is never in it.",
+    "done": "Saved {name}.",
+    "failed": "The export did not finish."
   }
 }

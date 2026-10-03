@@ -33,6 +33,7 @@ import {
   type BatchResult,
   type Preview,
 } from './labApi';
+import { exportBatch } from '../exports/api';
 import { StrengthChart } from './StrengthChart';
 
 const TRIAL = ['trial_candidate', 'trial_in_progress'];
@@ -371,6 +372,8 @@ function BatchWeights({ design, lines }: { design: DesignCard; lines: DesignLine
   });
   const inst = useQuery(instancesQuery(design.id));
   const f = useFormat();
+  const { data: me } = useMe();
+  const caps = me?.capabilities ?? [];
   const err =
     (save.error ?? prev.error) instanceof ApiError
       ? ((save.error ?? prev.error) as ApiError).message
@@ -446,6 +449,22 @@ function BatchWeights({ design, lines }: { design: DesignCard; lines: DesignLine
                   })}
                 </>
               )}
+              {i.kind === 'production' &&
+                ['approved', 'in_production'].includes(design.status) &&
+                caps.includes('export.csv') && (
+                  <Button
+                    variant="ghost"
+                    className="ms-2"
+                    onClick={() =>
+                      exportBatch(i.id)
+                        .then((name) => toast.success(t('exports.done', { name })))
+                        .catch(() => toast.error(t('exports.failed')))
+                    }
+                    data-testid="export-batch"
+                  >
+                    {t('exports.batch')}
+                  </Button>
+                )}
             </li>
           ))}
         </ul>

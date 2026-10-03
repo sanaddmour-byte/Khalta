@@ -16,9 +16,10 @@ import {
   TabsTrigger,
   Td,
   Th,
+  toast,
 } from '@khalta/ui';
 import { useQuery } from '@tanstack/react-query';
-import { Library, Upload } from 'lucide-react';
+import { Download, Library, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
@@ -30,6 +31,7 @@ import { designsQuery } from './api';
 import { ApprovalChip, DesignStatusChip, RevalidationChip, VerdictChip } from './chips';
 import { DesignSheet } from './DesignSheet';
 import { DataQualityTab, PortfolioTab } from './PortfolioTab';
+import { exportDesigns } from '../exports/api';
 import { StrengthModelsTab } from '../strength/StrengthModelsTab';
 import { SectionPage } from '../pages/Section';
 
@@ -78,15 +80,36 @@ export function LibraryPage() {
           <h1 className="text-2xl font-semibold text-heading">{t('nav.library')}</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted">{t('library.intro')}</p>
         </div>
-        {caps.includes('import.run') && (
-          <Button asChild variant="secondary">
-            <Link to="/imports">
-              <Upload className="size-4" aria-hidden />
-              {t('library.import')}
-            </Link>
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {caps.includes('export.csv') && (
+            <Button
+              variant="secondary"
+              onClick={() =>
+                exportDesigns(selected && selected !== ALL ? selected : undefined)
+                  .then((name) => toast.success(t('exports.done', { name })))
+                  .catch(() => toast.error(t('exports.failed')))
+              }
+              data-testid="export-designs-csv"
+            >
+              <Download className="size-4" aria-hidden />
+              {t('exports.designs')}
+            </Button>
+          )}
+          {caps.includes('import.run') && (
+            <Button asChild variant="secondary">
+              <Link to="/imports">
+                <Upload className="size-4" aria-hidden />
+                {t('library.import')}
+              </Link>
+            </Button>
+          )}
+        </div>
       </header>
+      {caps.includes('export.csv') && (
+        <p className="-mt-3 max-w-3xl text-xs text-muted" data-testid="export-note">
+          {t('exports.note')}
+        </p>
+      )}
 
       <Tabs
         value={tab}

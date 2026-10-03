@@ -171,9 +171,13 @@ export class ApiRoutes {
   mutateFile<B = undefined>(
     path: string,
     o: Opts<B, unknown, never>,
-    handler: (
-      a: MutateArgs<B, unknown>,
-    ) => Promise<{ filename: string; contentType: string; data: Buffer }>,
+    handler: (a: MutateArgs<B, unknown>) => Promise<{
+      filename: string;
+      contentType: string;
+      data: Buffer;
+      /** Extra response headers (e.g. a file hash). */
+      headers?: Record<string, string>;
+    }>,
   ) {
     this.document('post', path, o);
     this.mutationRoutes.add(`POST ${path}`);
@@ -191,6 +195,7 @@ export class ApiRoutes {
           'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(f.filename)}`,
           'X-Content-Type-Options': 'nosniff',
           'Cache-Control': 'private, no-store',
+          ...f.headers,
         })
         .send(f.data);
     });

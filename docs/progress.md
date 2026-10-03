@@ -447,3 +447,28 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Railway staging still awaits your go-ahead; QC must enter the real engineering parameters, JS values (the JS acceptance criteria especially), trial criteria, moisture limits and letterhead; real strength results with their designs; Arabic review.
 
 **Next:** M6.1 — only when you say "Proceed".
+
+## 2026-10-03 — M6.1 Integration: CSV exchange (F-029)
+
+**Changed**
+
+- `packages/engine`: `exchange/` — the CSV writer (BOM, CRLF, RFC 4180, formula neutralisation, plain-decimal numbers) and the two frozen files, `khalta.designs.v1` and `khalta.batch-weights.v1`.
+- `packages/rbac`: capability `export.csv` (QC manager, QC engineer, plant manager).
+- `apps/api`: `POST /api/exports/designs.csv` and `POST /api/exports/batch-weights.csv` — audited, plant-scoped, with the SHA-256 in a header and in the file name; only `approved` / `in_production` designs and passing production batch instances of live designs; `mutateFile` can now return extra headers.
+- `apps/web`: "Export approved designs (CSV)" on the Library with an explanatory note; "Download CSV" on each saved production batch.
+- `docs/contracts/csv-exchange.md`; ADR 0015; ADR 0016 (ERP integration, **proposed**, no code); EN/AR strings (Arabic drafts in `docs/i18n-review.md`).
+
+**Commands run (green):** `typecheck`, `lint`, `test` (engine 383, validator 173, api 275, web 38, rbac 189, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (113 of 115 on the full run; the Prices keyboard-direction test and the Rules axe test timed out under load and pass alone, as before), `screens` (`docs/screens/M6.1/`, EN/AR × 1440/1024/390; Arabic 390 reviewed), `db:drift` (no schema change). **Phase gate:** the CSV contract tests pass; REST contract tests wait for an approved ADR.
+
+**Deviations from the plan (and why)**
+
+- Exports are `POST` (not `GET`), like the PDF submittal, so each is audited by the existing helper; the file hash is returned in `X-Khalta-Sha256` and the file name.
+- The batch-weights range export skips trial instances and designs that left production and counts the skipped ones in the audit entry (a single-instance request is refused with the reason instead).
+- `material_name` is the market name as stored (English); Arabic names are not exported.
+- No API-level import round trip test; the round trip is tested at engine level (the legacy parser reads the exported rows).
+
+**Verification note:** tests prove the files follow the documented contract (frozen headers, encoding, quoting, hostile names neutralised), match the stored designs and batch weights exactly (an independent reference parser rebuilds them), never include a suspended, retired, superseded, draft or trial design, never include a cost-like column or value, are identical across runs, and are audited with their hash. They do **not** prove that your batching system reads them: that needs your field mapping and a pilot.
+
+**Open items:** Railway staging still awaits your go-ahead; the ERP / batching-system field mapping and a pilot sign-off before ADR 0016 can be accepted; QC must enter the real engineering parameters, JS values, trial criteria, moisture limits and letterhead; real attested designs, strength results and volumes; Arabic review.
+
+**Next:** M6.2 (Production: environment, backups, restore drill, runbooks) — only when you say "Proceed".

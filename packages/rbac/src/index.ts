@@ -37,6 +37,7 @@ export const CAPABILITIES = [
   'suppliers.write',
   'import.run', // legacy designs, JS rule values
   'export.priceCost',
+  'export.csv', // approved-design and batch-weight CSV for batching systems (plant-scoped; never cost)
   'audit.read',
 ] as const;
 export type Capability = (typeof CAPABILITIES)[number];
@@ -81,6 +82,7 @@ const MATRIX: Record<Capability, Record<Role, Cell>> = {
   'profile.approve': row({ qc_manager: ALL }),
   'candidate.authorize': row({ qc_manager: ALL }),
   'production.release': row({ qc_manager: ALL, plant_manager: ALL }),
+  'export.csv': row({ qc_manager: ALL, qc_engineer: ALL, plant_manager: ALL }),
   'insight.accept': row({ qc_manager: ALL }),
   'insight.draft': row({ qc_manager: ALL, qc_engineer: ALL }),
   'library.read': row({

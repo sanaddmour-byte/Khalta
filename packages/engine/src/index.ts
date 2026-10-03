@@ -22,3 +22,4 @@ export * from './production/types';
 export * from './savings/ledger';
 export * from './insights/rules';
 export * from './strength';
+export * from './exchange';
