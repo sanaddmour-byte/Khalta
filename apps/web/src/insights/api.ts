@@ -8,7 +8,8 @@ export type InsightType =
   | 'test_drift'
   | 'rule_change'
   | 'low_strength'
-  | 'compliance_failure';
+  | 'compliance_failure'
+  | 'model_invalidated';
 export type Severity = 'info' | 'medium' | 'high' | 'critical';
 
 export interface Insight {

@@ -30,6 +30,7 @@ import { designsQuery } from './api';
 import { ApprovalChip, DesignStatusChip, RevalidationChip, VerdictChip } from './chips';
 import { DesignSheet } from './DesignSheet';
 import { DataQualityTab, PortfolioTab } from './PortfolioTab';
+import { StrengthModelsTab } from '../strength/StrengthModelsTab';
 import { SectionPage } from '../pages/Section';
 
 const ALL = 'all';
@@ -44,7 +45,7 @@ export function LibraryPage() {
   const caps = me?.capabilities ?? [];
   const canRead = caps.includes('library.read');
   const [tab, setTab] = useState<
-    'all' | 'portfolio' | 'quality' | 'queue' | 'revalidation' | 'trial' | 'awaiting'
+    'all' | 'portfolio' | 'quality' | 'queue' | 'revalidation' | 'trial' | 'awaiting' | 'strength'
   >('all');
   const [status, setStatus] = useState(ALL);
   const [q, setQ] = useState('');
@@ -62,7 +63,7 @@ export function LibraryPage() {
       ...(selected && selected !== ALL ? { plantId: selected } : {}),
       q: q.trim() || undefined,
     }),
-    enabled: canRead && tab !== 'portfolio' && tab !== 'quality',
+    enabled: canRead && tab !== 'portfolio' && tab !== 'quality' && tab !== 'strength',
   });
   if (me && !canRead) return <SectionPage id="library" />;
   const plantName = (id: string) => {
@@ -100,6 +101,9 @@ export function LibraryPage() {
           <TabsTrigger value="quality" data-testid="quality-tab">
             {t('dataQuality.title')}
           </TabsTrigger>
+          <TabsTrigger value="strength" data-testid="strength-tab-trigger">
+            {t('library.tabs.strength')}
+          </TabsTrigger>
           <TabsTrigger value="revalidation" data-testid="revalidation-tab">
             {t('library.tabs.revalidation')}
           </TabsTrigger>
@@ -120,6 +124,8 @@ export function LibraryPage() {
             <PortfolioTab onOpen={setOpen} />
           ) : tab === 'quality' ? (
             <DataQualityTab onOpen={setOpen} />
+          ) : tab === 'strength' ? (
+            <StrengthModelsTab />
           ) : (
             <>
               <div

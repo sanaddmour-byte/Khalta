@@ -7,6 +7,8 @@ import {
   DEFAULT_FIT_LIMITS,
   fitModel,
   groupKey,
+  groupOfParts,
+  kindOfMaterial,
   groupOf,
   invalidations,
   judgeAcceptance,
@@ -296,5 +298,38 @@ describe('combined 75 µm passing', () => {
     expect(combinedP75([{ kg: 600, sieve: [{ sieve_mm: 4.75, passing_pct: 50 }] }])).toBeNull();
     expect(combinedP75([{ kg: 600, sieve: undefined }])).toBeNull();
     expect(combinedP75([])).toBeNull();
+  });
+});
+
+describe('group from snapshot parts', () => {
+  const m = (id: string, category: GroupMaterial['category'], props: Record<string, unknown>) => ({
+    id,
+    category,
+    test: { properties: props },
+  });
+  const mats = [
+    m('c', 'cement', { cement_type: 'CEM I' }),
+    m('s', 'scm', { scm_type: 'fly_ash' }),
+    m('a', 'admixture', { type: 'F' }),
+    m('w', 'water', {}),
+    m('x', 'cement', {}),
+  ];
+  const lines = ['c', 's', 'a', 'w'].map((materialId) => ({ materialId }));
+  it('reads the kind of each material and builds the group from the design lines only', () => {
+    expect(kindOfMaterial('cement', { cement_type: 'CEM I' })).toBe('CEM I');
+    expect(kindOfMaterial('water', { x: 1 })).toBeNull();
+    expect(kindOfMaterial('scm', null)).toBeNull();
+    expect(kindOfMaterial('admixture', { type: '' })).toBeNull();
+    const g = groupOfParts('p', { basis: 'cylinder', testAgeDays: 28 }, lines, mats)!;
+    expect(groupKey(g)).toContain('cement:c:CEM I');
+    expect(groupKey(g)).toContain('scm:s:fly_ash');
+    expect(groupKey(g)).toContain('adm:a:F');
+  });
+  it('has no group for a b-grade basis, a missing age, or two cements', () => {
+    expect(groupOfParts('p', { basis: 'b_grade', testAgeDays: 28 }, lines, mats)).toBeNull();
+    expect(groupOfParts('p', { basis: 'cube', testAgeDays: null }, lines, mats)).toBeNull();
+    expect(
+      groupOfParts('p', { basis: 'cube', testAgeDays: 28 }, [...lines, { materialId: 'x' }], mats),
+    ).toBeNull();
   });
 });

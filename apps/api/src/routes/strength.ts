@@ -1,7 +1,14 @@
 // Strength models and proposals (F-028). Fitting is a proposal; approving or retiring a model is a QC manager's
 // e-signed decision; the s refit and the β calibration are read-only proposals (a person edits the Rules screen).
 import { schema } from '@khalta/db';
-import { betaProposal, combinedP75, sRefit, todayAmman, type BetaRow } from '@khalta/engine';
+import {
+  betaProposal,
+  combinedP75,
+  sRefit,
+  todayAmman,
+  type BetaRow,
+  type StrengthGroup,
+} from '@khalta/engine';
 import { canAccessPlant } from '@khalta/rbac';
 import { and, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { z } from 'zod';
@@ -74,7 +81,31 @@ export function strengthRoutes(api: ApiRoutes) {
       for (const p of query.plantId ? [query.plantId] : plants)
         if (canAccessPlant(auth.scope, p))
           un.push(...(await unassigned(db, auth.tenantId, p)).map((u) => ({ ...u, plantId: p })));
-      return { models: latest.map(shape), unassigned: un };
+      const ids = [
+        ...new Set(
+          latest.flatMap((m) => {
+            const g = m.grp as StrengthGroup;
+            return [g.cementId, ...g.scm.map((x) => x.id), ...g.admixtures.map((x) => x.id)];
+          }),
+        ),
+      ];
+      const names = ids.length
+        ? await db
+            .select({
+              id: schema.materials.id,
+              nameEn: schema.materials.marketNameEn,
+              nameAr: schema.materials.marketNameAr,
+            })
+            .from(schema.materials)
+            .where(inArray(schema.materials.id, ids))
+        : [];
+      return {
+        models: latest.map(shape),
+        unassigned: un,
+        materials: Object.fromEntries(
+          names.map((n) => [n.id, { nameEn: n.nameEn, nameAr: n.nameAr }]),
+        ),
+      };
     },
   );
 

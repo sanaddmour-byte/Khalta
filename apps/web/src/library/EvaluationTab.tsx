@@ -475,7 +475,13 @@ function StrengthSection({ r, n }: { r: EvaluationReport; n: N }) {
         <p className="mt-0.5 text-xs font-medium text-warn-text">
           {t('evaluation.adequacy.notCompliance')}
         </p>
-        <p className="mt-1 text-xs text-muted">{t('evaluation.adequacy.noModel')}</p>
+        <p className="mt-1 text-xs text-muted" data-testid="adequacy-model-note">
+          {a.model === 'plant'
+            ? t('evaluation.adequacy.plantModel')
+            : a.modelUse
+              ? t(`evaluation.adequacy.modelNot.${a.modelUse}`)
+              : t('evaluation.adequacy.noModel')}
+        </p>
         {a.baselineWc !== null ? (
           <dl className="mt-2 grid grid-cols-2 gap-3 text-sm">
             <div>
@@ -484,6 +490,14 @@ function StrengthSection({ r, n }: { r: EvaluationReport; n: N }) {
                 <Ltr>{n(a.baselineWc)}</Ltr>
               </dd>
             </div>
+            {a.model === 'plant' && (
+              <div>
+                <dt className="text-xs text-muted">{t('evaluation.adequacy.modelWc')}</dt>
+                <dd data-testid="adequacy-model-wc">
+                  <Ltr>{n(a.modelWc ?? null)}</Ltr>
+                </dd>
+              </div>
+            )}
             <div>
               <dt className="text-xs text-muted">{t('evaluation.fig.wcm')}</dt>
               <dd>
@@ -498,7 +512,11 @@ function StrengthSection({ r, n }: { r: EvaluationReport; n: N }) {
             </p>
           )
         )}
-        {a.comparison && <p className="mt-2 text-sm">{t(`evaluation.adequacy.${a.comparison}`)}</p>}
+        {a.comparison && (
+          <p className="mt-2 text-sm">
+            {t(`evaluation.adequacy.${a.model === 'plant' ? 'model_' : ''}${a.comparison}`)}
+          </p>
+        )}
         <div className="mt-2 flex flex-wrap gap-1">
           {a.evidence.map((e) => (
             <EvidenceChip key={e} status={e} />

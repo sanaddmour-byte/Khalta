@@ -1049,3 +1049,11 @@ All Arabic under `insights.*`, `volumes.*`, the new `savings.board|boardHint|ent
 - **Savings states** (`savings.boardHint`, `savings.stateHint.*`): "نظري / معتمد / متحقق" and the sentence that they are never added together.
 - **Suspension** (`lifecycle.sign.meaning.suspend|reinstate`): "تعليق" and "إعادة العمل", and that nothing suspends automatically.
 - **Terms**: "تأجيل" for snooze, "استبعاد" for dismiss, "مسودة تجربة" for trial draft, "حجم الإنتاج" for production volume.
+
+## M5.2 — Strength models (drafts for Sanad to review)
+
+All Arabic under `strength.*`, the new `evaluation.adequacy.plantModel|modelWc|modelNot.*|model_design_*`, `library.tabs.strength`, `insights.type.model_invalidated` and `insights.summary.low_acceptance|low_sequence|model_invalidated` in `ar.json` are drafts. Priority:
+
+- **What a model is** (`strength.intro`, `strength.sign.meaning.*`): a proposal until a QC manager approves it, valid only for its own group of materials and w/cm range, never a compliance result, a trial still required.
+- **Reasons** (`strength.reason.*`): why a model is provisional or invalidated (not enough results, too few w/cm levels, held-out check, a material or its type changed).
+- **Terms**: "نموذج مقاومة" for strength model, "الفحص بالبيانات المستبعدة" for held-out check, "الانحراف المعياري s", "معايرة الطلب على الماء (β)", "الحد الأدنى (1.64 s)" for the lower band.

@@ -17,7 +17,7 @@ const CRITERIA: Record<string, number> = {
   'eng.trial.temperature_max_c': 32,
 };
 
-async function as(email: string): Promise<APIRequestContext> {
+export async function as(email: string): Promise<APIRequestContext> {
   const ctx = await pwRequest.newContext({ baseURL: BASE });
   const res = await ctx.post('/api/auth/sign-in/email', { data: { email, password: PASSWORD } });
   expect(res.ok(), `sign in as ${email}`).toBe(true);
@@ -89,7 +89,7 @@ export async function trialCandidate(code: string): Promise<string> {
   return ((await res.json()) as { design: { id: string } }).design.id;
 }
 
-async function withDb<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
+export async function withDb<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   const c = new pg.Client({ connectionString: E2E_DATABASE_URL });
   await c.connect();
   try {

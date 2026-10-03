@@ -45,6 +45,7 @@ const TYPES = [
   'rule_change',
   'low_strength',
   'compliance_failure',
+  'model_invalidated',
 ];
 const SEV_STYLE: Record<Severity, { icon: typeof Info; cls: string }> = {
   critical: { icon: AlertOctagon, cls: 'border-fail bg-fail-bg text-fail-text' },
@@ -78,6 +79,10 @@ function useSummary() {
       case 'opportunity':
         return t('insights.summary.opportunity', { code });
       case 'low_strength':
+        if (p['criterion'] === 'acceptance')
+          return t('insights.summary.low_acceptance', { code, n: len(p['breaches']) });
+        if (p['criterion'] === 'sequence')
+          return t('insights.summary.low_sequence', { code, n: Number(p['sets'] ?? 0) });
         return t('insights.summary.low_strength', {
           code,
           avg: String(p['averageMpa'] ?? ''),
@@ -98,6 +103,8 @@ function useSummary() {
         return t('insights.summary.rule_change', { n: len(p['newFailures']) });
       case 'test_expired':
         return t('insights.summary.test_expired', { n: len(p['expired']) });
+      case 'model_invalidated':
+        return t('insights.summary.model_invalidated', { n: len(p['reasons']) });
       case 'prices_stale':
         return t('insights.summary.prices_stale', { n: len(p['stale']) });
     }

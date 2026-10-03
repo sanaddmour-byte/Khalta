@@ -774,7 +774,8 @@
       "queue": "Awaiting attestation",
       "revalidation": "Needs revalidation",
       "trial": "In trial",
-      "awaiting": "Awaiting approval"
+      "awaiting": "Awaiting approval",
+      "strength": "Strength models"
     },
     "queueHint": "Imported designs nobody has attested yet. Attesting records that the design was approved outside Khalta; a second QC manager (not the person who imported) must do it.",
     "search": "Search by code or name",
@@ -1083,7 +1084,15 @@
       "noModel": "No plant strength model exists yet. This compares the design with a published ACI 211.1 relationship; a trial batch is required before any approval.",
       "baseline": "ACI 211.1 baseline w/c for f′cr",
       "design_above_baseline": "The design w/cm is above the baseline: strength may fall short.",
-      "design_at_or_below_baseline": "The design w/cm is at or below the baseline."
+      "design_at_or_below_baseline": "The design w/cm is at or below the baseline.",
+      "plantModel": "This uses the plant strength model your QC manager approved for this group of materials, inside the model's own w/cm range. A trial batch is still required before any approval.",
+      "modelWc": "Plant model w/cm for f′cr",
+      "modelNot": {
+        "out_of_domain": "An approved plant model exists for this group, but f′cr falls outside its w/cm range, so the published ACI 211.1 baseline is shown instead.",
+        "age_or_basis_differs": "An approved plant model exists, but for another test age or specimen basis, so the published ACI 211.1 baseline is shown instead."
+      },
+      "model_design_above_baseline": "The design w/cm is above the plant model's value: strength may fall short.",
+      "model_design_at_or_below_baseline": "The design w/cm is at or below the plant model's value."
     },
     "water": {
       "title": "Water demand baseline",
@@ -2026,7 +2035,8 @@
       "test_drift": "Material test drift",
       "rule_change": "Rule change",
       "low_strength": "Strength below target",
-      "compliance_failure": "Compliance check failing"
+      "compliance_failure": "Compliance check failing",
+      "model_invalidated": "Strength model no longer holds"
     },
     "summary": {
       "opportunity": "A cheaper candidate exists for {code} at current prices.",
@@ -2035,7 +2045,10 @@
       "test_drift": "{name}: {n, plural, one {# value} other {# values}} moved; {designs, plural, one {# design is} other {# designs are}} affected.",
       "rule_change": "A rule change leaves {n, plural, one {# design} other {# designs}} failing or provisional.",
       "test_expired": "{n, plural, one {# material test has} other {# material tests have}} expired.",
-      "prices_stale": "{n, plural, one {# price is} other {# prices are}} older than the stale-price limit."
+      "prices_stale": "{n, plural, one {# price is} other {# prices are}} older than the stale-price limit.",
+      "low_acceptance": "{code}: the latest strength tests fail the acceptance criteria ({n, plural, one {# breach} other {# breaches}}).",
+      "low_sequence": "{code}: the last {n} tests are all below the model's lower band.",
+      "model_invalidated": "An approved strength model was taken out of use: {n, plural, one {# reason} other {# reasons}}; the ACI 211.1 baseline governs again."
     },
     "opportunityBasis": "Theoretical: at current prices, before any trial or approval. It is not a saving yet.",
     "allPlants": "All plants",
@@ -2079,5 +2092,109 @@
     "saved": "Volume recorded.",
     "inForce": "in force",
     "superseded": "replaced by a later entry"
+  },
+  "strength": {
+    "intro": "A plant strength model is fitted from your own results for one group of materials. It is a proposal: nothing uses it until a QC manager approves it, and only inside its own w/cm range. It is never a compliance result and a trial is still required.",
+    "refit": "Refit now",
+    "refitDone": "Refit finished for {n, plural, one {# group} other {# groups}}.",
+    "done": "Done.",
+    "empty": {
+      "title": "No strength models yet",
+      "description": "A model needs strength results of designs that share one cement, SCM and admixture set, at one test age, across at least three w/cm levels."
+    },
+    "group": "{age}-day, {basis}",
+    "groupLine": "Cement: {cement} · SCM: {scm} · Admixture: {adm}",
+    "none": "none",
+    "basis": {
+      "cylinder": "cylinders",
+      "cube": "cubes"
+    },
+    "status": {
+      "valid": "Valid",
+      "validProposal": "Valid, awaiting approval",
+      "provisional": "Provisional",
+      "invalidated": "Invalidated",
+      "inForce": "Approved, in force",
+      "retired": "Retired"
+    },
+    "col": {
+      "n": "Tests",
+      "levels": "w/cm levels",
+      "domain": "w/cm range",
+      "s": "Standard deviation s",
+      "curve": "Curve",
+      "se": "Standard errors",
+      "heldOut": "Held-out check"
+    },
+    "heldOutLine": "RMSE {rmse} MPa, worst miss {miss} MPa",
+    "noHeldOut": "Too few results to hold any out.",
+    "reason": {
+      "too_few_results": "Not enough results for a valid model.",
+      "too_few_levels": "Too few distinct w/cm levels.",
+      "span_too_narrow": "The w/cm range is too narrow.",
+      "slope_not_positive": "Strength does not fall as w/cm rises.",
+      "no_held_out": "Too few results to check against held-out data.",
+      "held_out_rmse": "The held-out error is too large compared with s.",
+      "held_out_miss": "A held-out result is missed by too much.",
+      "degenerate_fit": "The data cannot be fitted.",
+      "material_missing": "A material of the group is no longer available.",
+      "cement_type_changed": "The cement type changed.",
+      "scm_type_changed": "The SCM type changed.",
+      "admixture_type_changed": "The admixture type changed.",
+      "no_recent_results": "No results inside the time window."
+    },
+    "exclusion": {
+      "outside_window": "older than the time window",
+      "no_evaluation": "the design has no stored evaluation"
+    },
+    "excluded": "{n, plural, one {# result was} other {# results were}} left out:",
+    "show": "Show evidence",
+    "hide": "Hide evidence",
+    "approve": "Approve…",
+    "retire": "Retire…",
+    "notCompliance": "Not a compliance result. The durability and code limits still apply.",
+    "sign": {
+      "title": {
+        "approve": "Approve this strength model",
+        "retire": "Retire this strength model"
+      },
+      "meaning": {
+        "approve": "You approve this model for the evaluator and the optimizer, for its own group of materials and inside its w/cm range. A trial is still required for every design.",
+        "retire": "You take this model out of use. The published ACI 211.1 baseline governs again."
+      }
+    },
+    "unassigned": "{n, plural, one {# result was} other {# results were}} left out of every model because the materials of {designs, plural, one {# design} other {# designs}} cannot be identified (it needs exactly one cement).",
+    "chart": {
+      "title": "Strength against w/cm with the fitted curve",
+      "results": "Test results",
+      "curve": "Fitted curve",
+      "band": "Lower band (1.64 s)"
+    },
+    "proposals": {
+      "title": "Proposals",
+      "hint": "These are proposals for a person to decide. Khalta never changes a standard deviation or a calibration value by itself."
+    },
+    "s": {
+      "title": "Standard deviation s from recorded tests",
+      "none": "No design has enough recorded tests yet.",
+      "condition": "Sample",
+      "enough": "30 or more tests",
+      "notEnough": "Fewer than 30 tests: not enough for the code",
+      "higher": "Higher than the approved model's s"
+    },
+    "beta": {
+      "title": "Water-demand calibration (β)",
+      "pickPlant": "Choose a plant to see this proposal.",
+      "note": "A proposal only: a QC manager enters a value on the Rules screen if they accept it.",
+      "missing": {
+        "too_few_batches": "Not enough trial batches.",
+        "no_fm_variation": "The trial batches do not vary the fineness modulus enough.",
+        "no_p75_variation": "The trial batches do not vary the 75 µm content enough.",
+        "singular": "The batches do not separate the effects."
+      }
+    },
+    "curveLine": "ln f = {a} − {b}·w/cm",
+    "r2": "R²",
+    "betaLine": "β_FM = {fm} · β_75 = {p75}"
   }
 }

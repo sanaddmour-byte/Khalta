@@ -417,3 +417,33 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Railway staging still awaits your go-ahead; QC must enter the real engineering parameters, JS values, trial criteria, moisture limits and letterhead; real attested designs and monthly volumes; Arabic review.
 
 **Next:** M5.2 (strength intelligence) — only when you say "Proceed".
+
+## 2026-10-03 — M5.2 Strength intelligence (F-028)
+
+**Changed**
+
+- `packages/engine`: `strength/` — least-squares fit with standard errors, s, R², held-out diagnostics; the validity rules; group keys and invalidation; acceptance judging from rule values; the model-band sequence rule; s refit and β proposals. `strengthAdequacy` takes an optional approved model (`StrengthModelInput`) and reports `model`, `modelUse`, `governingWc`; `model_invalidated` insight type.
+- `packages/validator`: independent recomputation of the model w/cm, its use (`used` / `out_of_domain` / `age_or_basis_differs`) and the comparison; the candidate w/cm ceiling reads the governing value.
+- `packages/db` (0024–0025): `strength_models`, `strength_model_points`; approved rows must carry an approver and e-signature, retired rows a reason; append-only points; no hard delete.
+- `apps/api`: fitting, approval (e-signed), retirement; evaluator and optimizer use of an approved valid in-domain model of the design's own group; strength-result job (refit, acceptance and sequence alerts) and nightly (refit, revalidation, overstrength nudge into the M5.1 opportunity path); `GET/POST /api/strength-models…`, `GET /api/strength/s-proposal`, `GET /api/strength/beta-proposal`; strength limits as tenant settings.
+- `apps/web`: a **Strength models** tab in the Library (proposal cards with status, evidence, curve and band chart, held-out check, excluded results, e-signed approve / retire, s and β proposal panels); the design's adequacy block shows the plant model when used; inbox wording for the new alerts.
+- ADR 0014; EN/AR strings (Arabic drafts in `docs/i18n-review.md`).
+
+**Commands run (green):** `typecheck`, `lint`, `test` (engine 373, validator 173, api 266, web 38, rbac 182, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (109 of 111 on the full run; the Prices keyboard-direction test and, once, the Rules axe test timed out under load and pass alone, as before), `screens` (`docs/screens/M5.2/`, EN/AR × 1440/1024/390; Arabic 1440 evidence and English 1440 adequacy reviewed), `db:drift` after commit. **Phase gates:** the seeded low-strength sequence alert and the model-invalidation matrix pass.
+
+**Deviations from the plan (and why)**
+
+- A "result" is a **set average** (one ACI test), not each specimen.
+- Fit arithmetic is in doubles rounded to six decimals (statistics, not money); the validator recomputes the model w/cm with `Math.log` and a tolerance rather than exact rationals.
+- The optimizer attaches a model only when exactly one in-force model has all its group materials in the pool, and falls back to the baseline for the **whole run** if any candidate leaves the group (candidates often differ in admixture or SCM use).
+- Acceptance rule values are read per ruleset from the rules store; where the JS values are not on file the alert uses the ACI ruleset and names the gap.
+- The strength limits are tenant settings (API); there are no Settings-screen fields for them yet.
+- The Strength models screen is a Library tab (the spec's navigation is unchanged). The Dashboard tile is not built; low-strength alerts appear in the inbox and banner.
+- The cement-reduction nudge runs in the nightly sweep, not on every result.
+- The s proposal is compared with the approved model's s (the f′cr margin comes from the ACI table, not from an s).
+
+**Verification note:** tests prove the fit against hand-worked data and properties, every validity threshold on both sides, the invalidation cases, that only an approved valid in-domain model of the design's own group is used (and the validator agrees, and a tampered report is caught), that the seeded low-strength sequence raises one critical alert and recovery expires it, and that proposals never write a rule. They do **not** prove that a fitted curve describes your plants, that your results are clean, or that the SYNTHETIC data resembles yours.
+
+**Open items:** Railway staging still awaits your go-ahead; QC must enter the real engineering parameters, JS values (the JS acceptance criteria especially), trial criteria, moisture limits and letterhead; real strength results with their designs; Arabic review.
+
+**Next:** M6.1 — only when you say "Proceed".
