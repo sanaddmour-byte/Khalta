@@ -100,13 +100,21 @@ test('keyboard navigation follows the reading direction (Arabic reverses left/ri
   await open(page, 'admin', 'ar');
   await cell(page, 'Demo cement', 'AMM-01').click();
   const grid = page.getByTestId('price-grid');
-  await expect(grid).toHaveAttribute('aria-activedescendant', 'pg-0-0');
+  // other specs add materials, so the clicked cell is not always the first row: navigate relative to where it is
+  const at = async () => {
+    const id = (await grid.getAttribute('aria-activedescendant')) ?? '';
+    const m = /^pg-(\d+)-(\d+)$/.exec(id);
+    expect(m, id).not.toBeNull();
+    return { r: Number(m![1]), c: Number(m![2]) };
+  };
+  await expect(grid).toHaveAttribute('aria-activedescendant', /^pg-\d+-\d+$/);
+  const start = await at();
   await page.keyboard.press('ArrowLeft'); // visually toward the end edge = the next plant column in Arabic
-  await expect(grid).toHaveAttribute('aria-activedescendant', 'pg-0-1');
+  await expect(grid).toHaveAttribute('aria-activedescendant', `pg-${start.r}-${start.c + 1}`);
   await page.keyboard.press('ArrowRight');
-  await expect(grid).toHaveAttribute('aria-activedescendant', 'pg-0-0');
+  await expect(grid).toHaveAttribute('aria-activedescendant', `pg-${start.r}-${start.c}`);
   await page.keyboard.press('ArrowDown');
-  await expect(grid).toHaveAttribute('aria-activedescendant', 'pg-1-0');
+  await expect(grid).toHaveAttribute('aria-activedescendant', `pg-${start.r + 1}-${start.c}`);
   await expectNoSeriousAxe(page, 'prices ar');
 });
 

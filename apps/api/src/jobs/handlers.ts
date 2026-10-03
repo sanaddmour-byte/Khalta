@@ -6,6 +6,7 @@ import {
   onRuleChange,
   onStrengthResult,
 } from '../insights/triggers';
+import { backupJob } from '../backup/job';
 import { nightlyStrength, onStrengthIntel } from '../strength/intel';
 import type { Handler, JobName } from './index';
 
@@ -22,6 +23,9 @@ export function handlersFor(db: Db): Record<JobName, Handler> {
     'strength-result': async (d) => {
       await onStrengthResult(ctx, str(d['tenantId']), str(d['designId']));
       await onStrengthIntel(ctx, str(d['tenantId']), str(d['designId']));
+    },
+    backup: async () => {
+      await backupJob(db);
     },
     nightly: async () => {
       for (const t of await db.select({ id: schema.tenants.id }).from(schema.tenants)) {

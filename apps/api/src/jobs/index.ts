@@ -10,6 +10,7 @@ export const JOB_NAMES = [
   'rule-change',
   'strength-result',
   'nightly',
+  'backup',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -60,7 +61,7 @@ export interface Worker {
 }
 
 /**
- * Starts pg-boss, registers the queues and handlers, and schedules the nightly sweep (02:00 Asia/Amman).
+ * Starts pg-boss, registers the queues and handlers, and schedules the backup (01:30) and the nightly sweep (02:00 Asia/Amman).
  * `handlers` is injected so this module does not import the trigger code (and tests can stub it).
  */
 export async function startWorker(
@@ -87,6 +88,7 @@ export async function startWorker(
     });
   }
   await boss.schedule(queueNameOf('nightly'), '0 2 * * *', {}, { tz: 'Asia/Amman' });
+  await boss.schedule(queueNameOf('backup'), '30 1 * * *', {}, { tz: 'Asia/Amman' });
   return {
     boss,
     jobs: createBossJobs(boss),

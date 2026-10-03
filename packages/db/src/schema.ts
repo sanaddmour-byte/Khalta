@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   bigserial,
+  bigint,
   boolean,
   customType,
   date,
@@ -1213,4 +1214,31 @@ export const strengthModelPoints = pgTable(
     exclusion: text('exclusion'),
   },
   (t) => [index('strength_model_points_model_idx').on(t.modelId)],
+);
+
+/**
+ * One nightly backup attempt (M6.2): where the dump went, its hash and size, and why it failed if it did. System-wide
+ * (the dump is the whole database), never deleted; admins read it at `/api/system/backups`, `/ready` reads its age.
+ */
+export const backupRuns = pgTable(
+  'backup_runs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    startedAt: ts('started_at').notNull().defaultNow(),
+    finishedAt: ts('finished_at'),
+    status: text('status', { enum: ['running', 'ok', 'failed'] })
+      .notNull()
+      .default('running'),
+    storage: text('storage', { enum: ['s3', 'dir', 'none'] }).notNull(),
+    objectKey: text('object_key'),
+    manifestKey: text('manifest_key'),
+    bytes: bigint('bytes', { mode: 'number' }),
+    sha256: text('sha256'),
+    pgVersion: text('pg_version'),
+    appVersion: text('app_version'),
+    migrationCount: integer('migration_count'),
+    retentionDeleted: integer('retention_deleted'),
+    error: text('error'),
+  },
+  (t) => [index('backup_runs_started_idx').on(t.startedAt)],
 );

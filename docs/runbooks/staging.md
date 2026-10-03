@@ -1,5 +1,7 @@
 # Staging runbook (Railway)
 
+> M6.2: staging and production now share the compiled image and the `api` + `worker` services described in `production.md`. Staging sets `DEPLOY_ENV=staging` (not held to the production guard). Demo data: `node dist/demo.js` in a shell on `api`.
+
 Staging is one Railway project with an `api` service (built from the root `Dockerfile`, serving the web app from the same origin, ADR 0006) and a managed PostgreSQL. It auto-deploys from `main`.
 
 ## First-time setup
@@ -25,7 +27,7 @@ Staging is one Railway project with an `api` service (built from the root `Docke
 Open a shell on the service (Railway CLI `railway run` or the dashboard) and run, with the variables above plus a demo password:
 
 ```
-KHALTA_ALLOW_DEMO_SEED=1 DEMO_PASSWORD='<12+ characters>' pnpm db:seed:demo
+KHALTA_ALLOW_DEMO_SEED=1 DEMO_PASSWORD='<12+ characters>' node dist/demo.js
 ```
 
 It creates users `<role>@khalta.test` (+ `qc.manager2@khalta.test`), materials, prices, snapshots, legacy designs (four attested by the second QC manager) and volumes, all labelled SYNTHETIC. Running it again changes nothing. Do **not** run it against production.

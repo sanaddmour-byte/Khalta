@@ -472,3 +472,30 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Open items:** Railway staging still awaits your go-ahead; the ERP / batching-system field mapping and a pilot sign-off before ADR 0016 can be accepted; QC must enter the real engineering parameters, JS values, trial criteria, moisture limits and letterhead; real attested designs, strength results and volumes; Arabic review.
 
 **Next:** M6.2 (Production: environment, backups, restore drill, runbooks) — only when you say "Proceed".
+
+## 2026-10-03 — M6.2 Production: environment, backups, restore drill, runbooks
+
+**Changed**
+
+- **Build:** `apps/api/build.mjs` (esbuild) bundles `dist/server.js`, `worker.js`, `cli.js` (backup, list, restore, verify) and `demo.js`; third-party packages stay external and the build **fails** if the output imports one that is not a direct dependency (`pg` and `highs` became direct). `Dockerfile` rewritten: compiled bundle, `pnpm deploy --prod`, Chromium, PostgreSQL 17 client, non-root; `railway.worker.json`; a CI `image` job (build, boot, smoke, restore drill from the image).
+- **Guard and ops:** `DEPLOY_ENV=production` refuses unsafe configuration (non-https origins, placeholder secrets, demo flags, `TRUST_PROXY` off) and turns on `Secure` cookies and HSTS; security headers on every response; a CSP for the served app (its one inline script allowed by hash); `/ready` (database + every migration applied; backup freshness reported, never fatal); `GET /api/system/backups` (admin).
+- **Backups:** nightly worker job (01:30 Asia/Amman): one snapshot-consistent `pg_dump -Fc` with a manifest (hash, migrations, critical row counts), upload to an S3-compatible bucket (or a directory), read-back hash check, retention (30 days, never fewer than the 7 newest verified), run record (`backup_runs`, migrations 0026–0027) and audit entry.
+- **Restore:** `restore` / `verify` CLI: hash check, into a **new** database (the live one needs `--allow-live` and the typed name), counts compared with the manifest.
+- **Runbooks:** `production`, `backup`, `restore`, `incident`, `go-live`, and the **executed drill** `restore-drill-2026-10-03.md`; ADR 0017.
+- **Fixed on the way:** bundling made `@khalta/db`'s "migrate when run directly" guard fire for every entry point (it moved to `migrate-cli.ts`); `pnpm e2e` now runs the `rules` project after the `main` project (rule-editing specs raced the Rules screen spec), and the Prices keyboard test no longer assumes its cell is the first row. **The full e2e suite is green for the first time: 115 of 115.**
+
+**Commands run (green):** `typecheck`, `lint`, `test` (engine 383, validator 173, api 297, web 38, rbac 189, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (115), `db:drift` after commit. The drill ran twice with the compiled bundle (demo data; and 468 MB): backup, restore into a new database, 18 critical tables and 28 migrations equal to the manifest, the application and a PDF served from the restored copy, the worker scheduling both jobs. A Chromium session against the bundle with the CSP active showed no violations (inline bootstrap script ran, Arabic direction applied, signed in, Rules page rendered).
+
+**Deviations from the plan (and why)**
+
+- Restore timings are from a local cluster without `fsync` and no network: they prove the mechanics, not the RTO. The go-live drill on the real platform measures it (stated in the drill doc and `go-live.md`).
+- The compiled bundle was verified by running it from a `pnpm deploy --prod` directory (the image's layout). **The container image itself has not been built**: no container daemon exists in this environment; the CI `image` job and the first deploy will be its first build.
+- The S3 adapter is covered by construction tests only (a real bucket does not exist yet); the backup, retention, restore and verification logic is tested through the directory adapter, which shares the interface.
+- `/api/system/backups` and the runbook are the only operator views (no screen), as planned.
+- A restore re-creates the database from the dump without the `pgboss` schema; queues rebuild when the worker starts (checked in the drill).
+
+**Verification note:** tests and the drill prove the backup is complete against its own manifest (counts taken inside the dump's snapshot), that a restore reproduces it and the application runs on it, that a tampered dump, a live target, an existing target and a count mismatch are refused or reported, that retention never removes the last seven verified backups, that the unsafe production settings are refused, and that `/ready` fails when a migration is missing or the database is unreachable. They do **not** prove the container builds or runs on Railway, that your bucket accepts the upload, or what a restore costs in time on managed PostgreSQL.
+
+**Open items (all need you):** the **go-live approval** and a Railway go-ahead; the production origin, bucket provider and credentials, and who is on call (blanks in `go-live.md`); the ERP field mapping (ADR 0016 stays proposed); QC must enter the real engineering parameters, JS values, trial criteria, moisture limits and letterhead; real attested designs, strength results and volumes; Arabic review (`docs/i18n-review.md`).
+
+**Next:** none planned in `04-phases.md`: M6.2 is the last milestone. Decisions for you: go-live, the pilot plant and its data, and whether to start on the open items above.

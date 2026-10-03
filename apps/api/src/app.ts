@@ -2,7 +2,7 @@ import { createDb, type Db } from '@khalta/db';
 import { toNodeHandler } from 'better-auth/node';
 import express from 'express';
 import { randomUUID } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Logger } from 'pino';
 import { pinoHttp } from 'pino-http';
@@ -10,6 +10,7 @@ import { createAuth, type Auth } from './auth';
 import { createLogger } from './logger';
 import type { Config } from './config';
 import { errorHandler, notFound } from './errors';
+import { buildCsp, readyHandler, securityHeaders } from './ops';
 import { authenticate, originGuard } from './middleware';
 import { ApiRoutes } from './route';
 import { auditRoutes } from './routes/audit';
@@ -18,6 +19,7 @@ import { designRoutes } from './routes/designs';
 import { insightRoutes } from './routes/insights';
 import { exportRoutes } from './routes/exports';
 import { strengthRoutes } from './routes/strength';
+import { systemRoutes } from './routes/system';
 import { volumeRoutes } from './routes/volumes';
 import { labRoutes } from './routes/lab';
 import { RecordingJobs, type Jobs } from './jobs';
@@ -70,9 +72,12 @@ export function createApp({
   if (config.TRUST_PROXY === '1') app.set('trust proxy', 1);
   app.use(pinoHttp({ logger: log, genReqId: () => randomUUID() }));
 
+  app.use(securityHeaders(config));
+
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
+  app.get('/ready', readyHandler(db, config));
 
   app.use(originGuard([config.APP_BASE_URL, config.BETTER_AUTH_URL]));
 
@@ -108,6 +113,7 @@ export function createApp({
   volumeRoutes(api);
   strengthRoutes(api);
   exportRoutes(api);
+  systemRoutes(api, config.BACKUP_ENABLED === '1');
   evaluationRoutes(api);
   portfolioRoutes(api);
   baselineRoutes(api);
@@ -119,11 +125,13 @@ export function createApp({
   // Built web app, same origin (ADR 0006). Registered before the authenticated API router, but it only answers existing files and non-API GET paths.
   const webDir = config.WEB_DIST_DIR ? resolve(config.WEB_DIST_DIR) : null;
   if (webDir && existsSync(join(webDir, 'index.html'))) {
+    const CSP = buildCsp(readFileSync(join(webDir, 'index.html'), 'utf8'));
     app.use(
       express.static(webDir, {
         index: false,
         setHeaders: (res, file) => {
           res.setHeader('X-Content-Type-Options', 'nosniff');
+          if (file.endsWith('.html')) res.setHeader('Content-Security-Policy', CSP);
           res.setHeader(
             'Cache-Control',
             file.includes(`${join(webDir, 'assets')}`)
@@ -134,10 +142,13 @@ export function createApp({
       }),
     );
     app.use((req, res, next) => {
-      if ((req.method !== 'GET' && req.method !== 'HEAD') || /^\/(api|health)(\/|$)/.test(req.path))
+      if (
+        (req.method !== 'GET' && req.method !== 'HEAD') ||
+        /^\/(api|health|ready)(\/|$)/.test(req.path)
+      )
         return next();
       res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('Content-Security-Policy', CSP);
       res.sendFile(join(webDir, 'index.html'));
     });
   }

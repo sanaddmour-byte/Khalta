@@ -6,7 +6,12 @@ const executablePath = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
 
 export default defineConfig({
   testDir: 'e2e',
-  testMatch: /.*\.e2e\.ts/,
+  // `rules` edits and verifies rules; the other specs seed and verify them too. They must not overlap, so `pnpm e2e`
+  // runs `main` first and `rules` after it (scripts/e2e.mjs), each with its own workers.
+  projects: [
+    { name: 'main', testMatch: /.*\.e2e\.ts/, testIgnore: /rules\.e2e\.ts/ },
+    { name: 'rules', testMatch: /rules\.e2e\.ts/ },
+  ],
   reporter: 'list',
   workers: 2,
   timeout: 30_000,

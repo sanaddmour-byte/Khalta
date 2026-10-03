@@ -34,3 +34,51 @@ jobs:
       - run: pnpm db:drift
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm e2e
+
+  image:
+    # The first container build is a CI check, not a deploy surprise: build the production image, boot it, smoke-test
+    # it, and run the restore drill against the bundle taken out of the image.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: khalta
+          POSTGRES_PASSWORD: khalta
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U khalta" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: docker build -t khalta:ci .
+      - name: boot the image against PostgreSQL and smoke-test it
+        run: |
+          psql "postgres://khalta:khalta@localhost:5432/postgres" -c 'create database khalta_image'
+          docker run -d --name khalta --network host \
+            -e DATABASE_URL=postgres://khalta:khalta@localhost:5432/khalta_image \
+            -e DEPLOY_ENV=staging -e KHALTA_DEMO=1 \
+            -e BETTER_AUTH_SECRET="$(openssl rand -base64 48)" \
+            -e BETTER_AUTH_URL=http://localhost:3000 -e APP_BASE_URL=http://localhost:3000 \
+            -e BOOTSTRAP_ADMIN_EMAIL=ci@khalta.test -e BOOTSTRAP_ADMIN_PASSWORD=ci-password-123456 \
+            khalta:ci
+          for i in $(seq 1 60); do curl -fsS http://localhost:3000/ready && break; sleep 2; done
+          node scripts/smoke-staging.mjs http://localhost:3000 ci@khalta.test ci-password-123456
+      - name: the image has the tools and Chromium the production services need
+        run: |
+          docker exec khalta pg_dump --version
+          docker exec khalta psql --version
+          docker exec khalta /usr/bin/chromium --version
+      - name: restore drill with the bundle from the image
+        env:
+          PLAYWRIGHT_CHROMIUM_EXECUTABLE: /usr/bin/chromium
+        run: |
+          sudo apt-get install -y --no-install-recommends postgresql-client chromium-browser || true
+          docker cp khalta:/app ./bundle
+          pnpm install --frozen-lockfile
+          node scripts/restore-drill.mjs --bundle ./bundle --admin-url postgres://khalta:khalta@localhost:5432/postgres --web ./bundle/web

@@ -24,6 +24,24 @@ await check('/health is ok', async () => {
   const r = await fetch(url('/health'));
   must(r.ok && (await r.json()).status === 'ok', `status ${r.status}`);
 });
+await check('/ready: database reachable and every migration applied', async () => {
+  const r = await fetch(url('/ready'));
+  const b = await r.json();
+  must(
+    r.ok && b.status === 'ready' && b.migrations.applied === b.migrations.expected,
+    `status ${r.status} ${JSON.stringify(b)}`,
+  );
+});
+await check('the app is served with security headers and a Content-Security-Policy', async () => {
+  const r = await fetch(url('/'));
+  const csp = r.headers.get('content-security-policy') ?? '';
+  must(
+    csp.includes("default-src 'self'") && !/script-src[^;]*unsafe-inline/.test(csp),
+    `csp: ${csp}`,
+  );
+  must(r.headers.get('x-content-type-options') === 'nosniff', 'missing nosniff');
+  must(r.headers.get('x-frame-options') === 'DENY', 'missing X-Frame-Options');
+});
 await check('the web app is served', async () => {
   const r = await fetch(url('/'));
   const t = await r.text();

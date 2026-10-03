@@ -621,6 +621,7 @@ describe('the worker (pg-boss)', () => {
         'rule-change': stub,
         'strength-result': stub,
         nightly: stub,
+        backup: stub,
       },
     );
     try {

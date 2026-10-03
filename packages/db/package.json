@@ -9,7 +9,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "migrate": "tsx src/migrate.ts",
+    "migrate": "tsx src/migrate-cli.ts",
     "generate": "drizzle-kit generate",
     "drift": "drizzle-kit generate --name drift_check && git diff --quiet -- migrations && test -z \"$(git ls-files -o --exclude-standard migrations)\""
   },

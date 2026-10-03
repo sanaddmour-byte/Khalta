@@ -14,7 +14,7 @@
     "format": "prettier --write .",
     "test": "turbo run test",
     "test:rules": "turbo run test:rules",
-    "e2e": "playwright test",
+    "e2e": "node scripts/e2e.mjs",
     "screens": "playwright test --config playwright.screens.config.ts",
     "db:migrate": "pnpm --filter @khalta/db migrate",
     "db:seed:demo": "pnpm --filter @khalta/api seed:demo",
@@ -23,7 +23,9 @@
     "features:check": "pnpm --filter @khalta/features-check check",
     "rules:sync": "pnpm --filter @khalta/api rules:sync",
     "rules:export-seed": "pnpm --filter @khalta/api rules:export-seed",
-    "smoke:staging": "node scripts/smoke-staging.mjs"
+    "smoke:staging": "node scripts/smoke-staging.mjs",
+    "build:api": "pnpm --filter @khalta/api build",
+    "drill:restore": "node scripts/restore-drill.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "catalog:",
