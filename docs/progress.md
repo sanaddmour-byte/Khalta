@@ -399,7 +399,7 @@ Also verified by temporarily adding violating files: lint reported all three cus
 - `apps/web`: Insights inbox with digest, filters, theoretical-labelled savings, accept / snooze / dismiss with reason; critical-alert banner for QC managers; Savings screen as three state columns with per-state totals and the blocked-months list; production volume entry on live designs; suspend and reinstate on the design sheet.
 - ADR 0013; EN/AR strings (Arabic drafts in `docs/i18n-review.md`).
 
-**Commands run:** see the verification line below.
+**Commands run (green):** `typecheck`, `lint`, `test` (engine 339, validator 169, api 249, web 38, rbac 182, ui 120, rules 159), `test:rules`, `features:check`, `e2e` (106 of 107 on the full run; the Prices keyboard-direction test failed under load and passes alone, as before), `screens` (`docs/screens/M5.1/`, EN/AR × 1440/1024/390; Arabic 390 and English 1440 inbox reviewed), `db:drift` after commit.
 
 **Deviations from the plan (and why)**
 
