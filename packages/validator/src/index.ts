@@ -256,6 +256,30 @@ export function validateEvaluation(
       reported: adq?.baselineWc,
       recomputed: exp.adequacy.baselineWc,
     });
+  if (exp.adequacy.model) {
+    const em = exp.adequacy.model;
+    if (adq?.model !== (em.use === 'used' ? 'plant' : 'none'))
+      add({
+        key: 'strengthAdequacy.model',
+        kind: 'strength_mismatch',
+        reported: adq?.model,
+        recomputed: em.use === 'used' ? 'plant' : 'none',
+      });
+    if ((adq?.modelUse ?? null) !== em.use)
+      add({
+        key: 'strengthAdequacy.modelUse',
+        kind: 'strength_mismatch',
+        reported: adq?.modelUse ?? null,
+        recomputed: em.use,
+      });
+    if (!close(adq?.governingWc, em.governingWc))
+      add({
+        key: 'strengthAdequacy.governingWc',
+        kind: 'strength_mismatch',
+        reported: adq?.governingWc,
+        recomputed: em.governingWc,
+      });
+  }
   if ((adq?.comparison ?? null) !== exp.adequacy.comparison)
     add({
       key: 'strengthAdequacy.comparison',

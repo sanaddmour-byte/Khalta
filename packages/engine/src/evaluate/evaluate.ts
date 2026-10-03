@@ -143,7 +143,10 @@ export function evaluate(s: EvaluationSnapshot): EvaluationReport {
 
   // 4. checks, strength adequacy, water baseline, cost
   const built = buildChecks({ s, resolved, blend, strength, rules, tr });
-  const adequacy = strengthAdequacy(strength.fcrMpa, blend.wcm, rules, ctx, tr);
+  const adequacy = strengthAdequacy(strength.fcrMpa, blend.wcm, rules, ctx, tr, {
+    input: s.strengthModel,
+    request: s.request,
+  });
   const water = waterBaseline(s.request, blend, rules, ctx, tr);
   const cost = computeCost(s, tr);
 

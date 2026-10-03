@@ -9,6 +9,7 @@ export const INSIGHT_TYPES = [
   'rule_change', // a rule or project change affects designs
   'low_strength', // a result below the acceptance criterion
   'compliance_failure', // a re-evaluation now fails a check
+  'model_invalidated', // an approved strength model no longer holds (M5.2)
 ] as const;
 export type InsightType = (typeof INSIGHT_TYPES)[number];
 export const SEVERITIES = ['info', 'medium', 'high', 'critical'] as const;

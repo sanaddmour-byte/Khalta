@@ -6,8 +6,10 @@ import type {
   DesignRequestInput,
   SnapshotMaterial,
   StrengthAdequacy,
+  StrengthModelInput,
   WaterBaseline,
 } from './types';
+import { wcmForStrength } from '../strength/fit';
 import type { Blend } from './blend';
 import { propOf, round6, type RuleIndex, type Tracer } from './util';
 
@@ -75,6 +77,7 @@ export function strengthAdequacy(
   rules: RuleIndex,
   ctx: Context,
   tr: Tracer,
+  model?: { input: StrengthModelInput | null | undefined; request: DesignRequestInput },
 ): StrengthAdequacy {
   const base: StrengthAdequacy = {
     label: 'not_a_compliance_result',
@@ -115,6 +118,62 @@ export function strengthAdequacy(
     },
   );
   const wc = r.value;
+  const m = model?.input ?? null;
+  if (m && model) {
+    const sameRegime = model.request.testAgeDays === m.ageDays && model.request.basis === m.basis;
+    const mw = sameRegime ? wcmForStrength(m, fcr) : null;
+    const inDomain = mw !== null && mw >= m.wcmMin - 1e-9 && mw <= m.wcmMax + 1e-9;
+    if (inDomain && mw !== null) {
+      tr.add(
+        'model.wc',
+        mw,
+        'ratio',
+        "plant strength model: w/cm = (a − ln f'cr) / b, inside the model's w/cm domain",
+        { a: m.a, b: m.b, fcr, wcmMin: m.wcmMin, wcmMax: m.wcmMax },
+        { evidence: ['MODEL_IN_DOMAIN', 'TRIAL_REQUIRED'] },
+      );
+      const aboveM = designWcm !== null && designWcm > mw + 1e-9;
+      return {
+        ...base,
+        model: 'plant',
+        modelId: m.id,
+        modelWc: mw,
+        governingWc: mw,
+        modelUse: 'used',
+        baselineWc: wc,
+        clause: t.table.clause,
+        comparison:
+          designWcm === null
+            ? null
+            : aboveM
+              ? 'design_above_baseline'
+              : 'design_at_or_below_baseline',
+        evidence: aboveM
+          ? ['MODEL_IN_DOMAIN', 'TRIAL_REQUIRED', 'MODEL_PREDICTS_SHORTFALL']
+          : ['MODEL_IN_DOMAIN', 'TRIAL_REQUIRED'],
+      };
+    }
+    // a model was offered but does not apply: the ACI baseline governs, and the report says why
+    const above0 = designWcm !== null && designWcm > wc + 1e-9;
+    return {
+      ...base,
+      modelId: m.id,
+      modelWc: mw,
+      governingWc: wc,
+      modelUse: sameRegime ? 'out_of_domain' : 'age_or_basis_differs',
+      baselineWc: wc,
+      clause: t.table.clause,
+      comparison:
+        designWcm === null
+          ? null
+          : above0
+            ? 'design_above_baseline'
+            : 'design_at_or_below_baseline',
+      evidence: above0
+        ? ['MODEL_BASELINE', 'TRIAL_REQUIRED', 'MODEL_PREDICTS_SHORTFALL']
+        : ['MODEL_BASELINE', 'TRIAL_REQUIRED'],
+    };
+  }
   const above = designWcm !== null && designWcm > wc + 1e-9;
   return {
     ...base,

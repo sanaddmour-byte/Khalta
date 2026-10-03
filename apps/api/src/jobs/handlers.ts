@@ -6,6 +6,7 @@ import {
   onRuleChange,
   onStrengthResult,
 } from '../insights/triggers';
+import { nightlyStrength, onStrengthIntel } from '../strength/intel';
 import type { Handler, JobName } from './index';
 
 /** Job name → trigger. Data comes from the route that enqueued it (tenant, plants, ids). */
@@ -18,11 +19,15 @@ export function handlersFor(db: Db): Record<JobName, Handler> {
     'material-test': (d) =>
       onMaterialTest(ctx, str(d['tenantId']), str(d['materialId'])).then(() => {}),
     'rule-change': (d) => onRuleChange(ctx, str(d['tenantId'])).then(() => {}),
-    'strength-result': (d) =>
-      onStrengthResult(ctx, str(d['tenantId']), str(d['designId'])).then(() => {}),
+    'strength-result': async (d) => {
+      await onStrengthResult(ctx, str(d['tenantId']), str(d['designId']));
+      await onStrengthIntel(ctx, str(d['tenantId']), str(d['designId']));
+    },
     nightly: async () => {
-      for (const t of await db.select({ id: schema.tenants.id }).from(schema.tenants))
+      for (const t of await db.select({ id: schema.tenants.id }).from(schema.tenants)) {
         await nightly(ctx, t.id);
+        await nightlyStrength(ctx, t.id);
+      }
     },
   };
 }

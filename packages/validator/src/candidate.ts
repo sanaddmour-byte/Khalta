@@ -372,7 +372,8 @@ export function validateCandidate(rec: CandidateRecord): CandidateValidatorResul
   // It yields only to a user value that itself pins w/cm above it (fixed or minimum w/cm, or a fixed binder with a
   // fixed free water, whose ratio IS w/cm); otherwise a candidate above it was not produced by a sound search.
   const wcmFig = rec.report.figures['ratio.wcm'];
-  const baselineWc = rec.report.strengthAdequacy.baselineWc;
+  const baselineWc =
+    rec.report.strengthAdequacy.governingWc ?? rec.report.strengthAdequacy.baselineWc;
   const wcmMargin = rn('eng.margin.wcm');
   if (typeof wcmFig === 'number' && baselineWc !== null && wcmMargin !== null) {
     const hard = rec.report.checks.find((c) => c.id === 'max_wcm')?.limit;

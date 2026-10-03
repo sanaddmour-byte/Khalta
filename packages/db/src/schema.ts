@@ -1078,6 +1078,7 @@ export const insights = pgTable(
         'rule_change',
         'low_strength',
         'compliance_failure',
+        'model_invalidated',
       ],
     }).notNull(),
     severity: text('severity', { enum: ['info', 'medium', 'high', 'critical'] }).notNull(),
@@ -1141,4 +1142,75 @@ export const dailyDigests = pgTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('daily_digests_day_uq').on(t.tenantId, t.day)],
+);
+
+/**
+ * A plant strength model (M5.2): ln f = a − b·(w/cm) for ONE group (plant, cement source, SCM family, admixture
+ * family, specimen basis, test age). Every fit is a new row and a PROPOSAL; only a row a QC manager approved is used by
+ * the evaluator and the optimizer, and only while its status is `valid`.
+ */
+export const strengthModels = pgTable(
+  'strength_models',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    groupKey: text('group_key').notNull(),
+    /** The group's parts (material ids and types) at fit time: what invalidation compares against. */
+    grp: jsonb('grp').notNull(),
+    ageDays: integer('age_days').notNull(),
+    basis: text('basis', { enum: ['cylinder', 'cube'] }).notNull(),
+    a: numeric('a', { precision: 14, scale: 6 }).notNull(),
+    b: numeric('b', { precision: 14, scale: 6 }).notNull(),
+    seA: numeric('se_a', { precision: 14, scale: 6 }).notNull(),
+    seB: numeric('se_b', { precision: 14, scale: 6 }).notNull(),
+    n: integer('n').notNull(),
+    levels: integer('levels').notNull(),
+    wcmMin: numeric('wcm_min', { precision: 8, scale: 6 }).notNull(),
+    wcmMax: numeric('wcm_max', { precision: 8, scale: 6 }).notNull(),
+    sMpa: numeric('s_mpa', { precision: 14, scale: 6 }).notNull(),
+    r2: numeric('r2', { precision: 10, scale: 6 }).notNull(),
+    heldOut: jsonb('held_out'),
+    /** Why it is provisional (named), or why it was invalidated. */
+    reasons: jsonb('reasons').notNull().default([]),
+    status: text('status', { enum: ['valid', 'provisional', 'invalidated'] }).notNull(),
+    fittedAt: ts('fitted_at').notNull().defaultNow(),
+    fittedBy: text('fitted_by').references(() => users.id),
+    approvedBy: text('approved_by').references(() => users.id),
+    approvedAt: ts('approved_at'),
+    approvalSignature: jsonb('approval_signature'),
+    retiredAt: ts('retired_at'),
+    retiredBy: text('retired_by').references(() => users.id),
+    retiredReason: text('retired_reason'),
+  },
+  (t) => [
+    index('strength_models_group_idx').on(t.tenantId, t.groupKey, t.fittedAt),
+    // at most one model in force per group
+    uniqueIndex('strength_models_in_force_uq')
+      .on(t.tenantId, t.groupKey)
+      .where(sql`${t.approvedAt} is not null and ${t.retiredAt} is null`),
+  ],
+);
+
+/** Which results a fit used (and which it excluded, with the reason). Append-only. */
+export const strengthModelPoints = pgTable(
+  'strength_model_points',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    modelId: uuid('model_id')
+      .notNull()
+      .references(() => strengthModels.id),
+    resultId: uuid('result_id')
+      .notNull()
+      .references(() => strengthResults.id),
+    wcm: numeric('wcm', { precision: 8, scale: 6 }),
+    mpa: numeric('mpa', { precision: 8, scale: 2 }).notNull(),
+    included: boolean('included').notNull(),
+    exclusion: text('exclusion'),
+  },
+  (t) => [index('strength_model_points_model_idx').on(t.modelId)],
 );

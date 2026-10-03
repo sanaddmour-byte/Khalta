@@ -117,6 +117,8 @@ export interface EvaluationSnapshot {
   /** Layered, normalized and already checked against the hard limits (empty when none were given). */
   characteristics: ResolvedCharacteristic[];
   strengthRecords: StrengthRecordSummary | null;
+  /** M5.2: an approved valid model for this design's group (absent = the ACI 211.1 baseline). */
+  strengthModel?: StrengthModelInput | null;
 }
 
 // ---------------------------------------------------------------- report
@@ -222,10 +224,30 @@ export interface CostBlock {
   basis: { kind: 'live' | 'snapshot'; date: string; snapshotId: string | null };
 }
 
+/** An APPROVED, valid plant strength model (M5.2). The caller attaches it only for the model's own group. */
+export interface StrengthModelInput {
+  id: string;
+  /** ln f = a − b·(w/cm) */
+  a: number;
+  b: number;
+  wcmMin: number;
+  wcmMax: number;
+  ageDays: number;
+  basis: 'cylinder' | 'cube';
+  groupKey: string;
+  sMpa: number;
+}
+
 export interface StrengthAdequacy {
-  /** Never compliance: a published heuristic, not a prediction for this plant. */
+  /** Never compliance: a published heuristic or a plant fit, not a guarantee. */
   label: 'not_a_compliance_result';
-  model: 'none';
+  model: 'none' | 'plant';
+  /** Present only when a plant model was supplied. */
+  modelId?: string;
+  modelWc?: number | null;
+  /** The strength-governed w/cm: the model's inside its domain, else the ACI baseline. */
+  governingWc?: number | null;
+  modelUse?: 'used' | 'out_of_domain' | 'age_or_basis_differs';
   fcrMpa: number | null;
   baselineWc: number | null;
   designWcm: number | null;

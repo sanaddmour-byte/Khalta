@@ -169,6 +169,20 @@
       "when": 1790968951518,
       "tag": "0023_proactive_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791022133801,
+      "tag": "0024_strength_models",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791022134824,
+      "tag": "0025_strength_integrity",
+      "breakpoints": true
     }
   ]
 }

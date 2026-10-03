@@ -31,7 +31,15 @@ export interface Expected {
     governing: string | null;
     branches: Map<string, number | null>;
   };
-  adequacy: { baselineWc: number | null; comparison: string | null };
+  adequacy: {
+    baselineWc: number | null;
+    comparison: string | null;
+    /** Present only when the snapshot carries a plant strength model. */
+    model: {
+      governingWc: number | null;
+      use: 'used' | 'out_of_domain' | 'age_or_basis_differs';
+    } | null;
+  };
   water: {
     baseWaterKg: number | null;
     baselineWaterKg: number | null;
@@ -668,6 +676,29 @@ export function recompute(s: EvaluationSnapshot): Expected {
             : 'design_at_or_below_baseline';
     }
   }
+  // plant strength model (M5.2): w/cm = (a − ln f'cr) / b, only for the model's age and basis and inside its domain
+  let modelOut: Expected['adequacy']['model'] = null;
+  const sm = s.strengthModel ?? null;
+  if (sm && baselineWc !== null && fcrTotal !== null) {
+    const fcrN = fcrTotal.toNumber();
+    const same = rq.testAgeDays === sm.ageDays && rq.basis === sm.basis;
+    const mw = same ? (sm.a - Math.log(fcrN)) / sm.b : null;
+    const inside = mw !== null && mw >= sm.wcmMin - 1e-9 && mw <= sm.wcmMax + 1e-9;
+    if (inside && mw !== null) {
+      fig('model.wc', R(mw));
+      modelOut = { governingWc: mw, use: 'used' };
+      comparison =
+        wcm === null
+          ? null
+          : wcm.toNumber() > mw + 1e-9
+            ? 'design_above_baseline'
+            : 'design_at_or_below_baseline';
+    } else
+      modelOut = {
+        governingWc: baselineWc.toNumber(),
+        use: same ? 'out_of_domain' : 'age_or_basis_differs',
+      };
+  }
   let baseWater: Rat | null = null;
   let baselineWater: Rat | null = null;
   let reductionPct: Rat | null = null;
@@ -884,7 +915,7 @@ export function recompute(s: EvaluationSnapshot): Expected {
       governing,
       branches,
     },
-    adequacy: { baselineWc: baselineWc?.toNumber() ?? null, comparison },
+    adequacy: { baselineWc: baselineWc?.toNumber() ?? null, comparison, model: modelOut },
     water: {
       baseWaterKg: baseWater?.toNumber() ?? null,
       baselineWaterKg: baselineWater?.toNumber() ?? null,

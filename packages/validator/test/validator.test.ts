@@ -529,3 +529,41 @@ describe('agreement on every branch of the evaluator (scenario catalogue)', () =
     expect(v.mismatches).toEqual([]);
   });
 });
+
+describe('plant strength model recomputation (M5.2)', () => {
+  const model = (over: Partial<NonNullable<EvaluationSnapshot['strengthModel']>> = {}) => ({
+    id: 'm1',
+    a: Math.log(38.3) + 1,
+    b: 2,
+    wcmMin: 0.4,
+    wcmMax: 0.6,
+    ageDays: 28,
+    basis: 'cylinder' as const,
+    groupKey: 'g',
+    sMpa: 1.5,
+    ...over,
+  });
+  for (const [name, over] of [
+    ['inside the domain', {}],
+    ['outside the domain', { wcmMax: 0.45 }],
+    ['another age', { ageDays: 7 }],
+  ] as const) {
+    it(`agrees with the evaluator ${name}`, () => {
+      const s = makeSnapshot({ strengthModel: model(over) });
+      expect(validateEvaluation(s, evaluate(s)).mismatches).toEqual([]);
+    });
+  }
+  it('catches a report that claims the model governs when it does not, or a wrong governing w/cm', () => {
+    const s = makeSnapshot({ strengthModel: model() });
+    const r = evaluate(s);
+    const tampered = clone(r);
+    tampered.strengthAdequacy.governingWc = 0.6;
+    expect(kinds(s, tampered)).toContain('strength_mismatch:strengthAdequacy.governingWc');
+    const lying = clone(r);
+    lying.strengthAdequacy.model = 'none';
+    expect(kinds(s, lying)).toContain('strength_mismatch:strengthAdequacy.model');
+    const hidden = clone(r);
+    delete hidden.strengthAdequacy.modelUse;
+    expect(kinds(s, hidden)).toContain('strength_mismatch:strengthAdequacy.modelUse');
+  });
+});

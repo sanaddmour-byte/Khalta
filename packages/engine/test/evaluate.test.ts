@@ -855,3 +855,57 @@ describe('determinism and purity', () => {
     }
   });
 });
+
+describe('plant strength model in the adequacy block (M5.2)', () => {
+  const model = (over: Partial<NonNullable<EvaluationSnapshot['strengthModel']>> = {}) => ({
+    id: 'm1',
+    a: Math.log(38.3) + 1, // w/cm = 0.5 at f′cr 38.3
+    b: 2,
+    wcmMin: 0.4,
+    wcmMax: 0.6,
+    ageDays: 28,
+    basis: 'cylinder' as const,
+    groupKey: 'g',
+    sMpa: 1.5,
+    ...over,
+  });
+  it('uses the model inside its domain and says so', () => {
+    const r = run({ strengthModel: model() });
+    expect(r.strengthAdequacy).toMatchObject({
+      model: 'plant',
+      modelUse: 'used',
+      modelId: 'm1',
+      label: 'not_a_compliance_result',
+    });
+    expect(r.strengthAdequacy.governingWc).toBeCloseTo(0.5, 9);
+    expect(r.strengthAdequacy.baselineWc).toBeCloseTo(0.437, 9);
+    expect(r.strengthAdequacy.evidence).toContain('MODEL_IN_DOMAIN');
+    expect(r.strengthAdequacy.evidence).toContain('TRIAL_REQUIRED');
+    expect(r.trace.some((t) => t.key === 'model.wc')).toBe(true);
+  });
+  it('compares the design with the model w/cm, not the baseline', () => {
+    const lean = run({ strengthModel: model(), lines: lines({ water: '130.000' }) });
+    expect(lean.strengthAdequacy.comparison).toBe('design_at_or_below_baseline');
+    const loose = run({ strengthModel: model({ a: Math.log(38.3) + 0.7 }) });
+    expect(loose.strengthAdequacy.comparison).toBe('design_above_baseline');
+    expect(loose.strengthAdequacy.evidence).toContain('MODEL_PREDICTS_SHORTFALL');
+  });
+  it('falls back to the ACI baseline outside the domain or for another age or basis', () => {
+    const out = run({ strengthModel: model({ wcmMax: 0.45 }) });
+    expect(out.strengthAdequacy).toMatchObject({ model: 'none', modelUse: 'out_of_domain' });
+    expect(out.strengthAdequacy.governingWc).toBeCloseTo(0.437, 9);
+    expect(out.strengthAdequacy.evidence).toContain('MODEL_BASELINE');
+    expect(run({ strengthModel: model({ ageDays: 7 }) }).strengthAdequacy.modelUse).toBe(
+      'age_or_basis_differs',
+    );
+    expect(run({ strengthModel: model({ basis: 'cube' }) }).strengthAdequacy.modelUse).toBe(
+      'age_or_basis_differs',
+    );
+  });
+  it('without a model the report is exactly as before (no new keys)', () => {
+    const r = run();
+    expect(Object.keys(r.strengthAdequacy)).not.toContain('modelUse');
+    expect(Object.keys(r.strengthAdequacy)).not.toContain('governingWc');
+    expect(run({ strengthModel: null }).strengthAdequacy).toEqual(r.strengthAdequacy);
+  });
+});

@@ -11,8 +11,12 @@ import {
   type ResolvedCharacteristic,
   PRICE_PATTERN,
   todayAmman,
+  groupKey,
+  groupOfParts,
   type EvaluationSnapshot,
   type Properties,
+  type StrengthGroup,
+  type StrengthModelInput,
 } from '@khalta/engine';
 import { limitContextFor, selectRules } from '@khalta/engine/evaluate';
 import {
@@ -28,13 +32,14 @@ import {
 } from '@khalta/engine/optimizer';
 import { validateCandidate } from '@khalta/validator';
 import type { Mode, RuleRecord } from '@khalta/rules';
-import { and, eq, isNull, or } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError } from '../errors';
 import { loadSnapshotMaterials, runEvaluation as runEval } from '../evaluation/service';
 import { loadCurrentRecords } from '../rules/service';
 import { loadSettings, type Settings } from '../settings';
 import { applyProfiles } from '../profiles/service';
+import { toInput } from '../strength/service';
 
 export const requestBody = z.strictObject({
   plantId: z.uuid(),
@@ -269,16 +274,38 @@ export async function runOptimizer(
       rejected: resolved.rejected,
     });
   base.characteristics = resolved.characteristics;
+  const attached = await poolModel(db, tenantId, base, resolved.materials);
+  if (attached) base.strengthModel = attached;
+  const solver = await getSolver();
+  const run = (b: typeof base) =>
+    optimize(
+      {
+        base: b,
+        objective: body.objective,
+        ...(resolved.materials ? { materials: resolved.materials } : {}),
+        settings: optimizerSettings(settings),
+      } satisfies OptimizerInput,
+      { solver, validate: (rec) => validateCandidate(rec).status === 'pass' },
+    );
+  let result = await run(base);
+  // The model describes ONE group. A candidate that uses other SCMs or admixtures is outside it, so the whole run
+  // falls back to the ACI 211.1 baseline (stated in each report) rather than apply a model where it does not hold.
+  if (
+    attached &&
+    result.candidates.some((c) => {
+      const g = groupOfParts(base.design.plantId, base.request, c.lines, base.materials);
+      return !g || groupKey(g) !== attached.groupKey;
+    })
+  ) {
+    delete base.strengthModel;
+    result = await run(base);
+  }
   const input: OptimizerInput = {
     base,
     objective: body.objective,
     ...(resolved.materials ? { materials: resolved.materials } : {}),
     settings: optimizerSettings(settings),
   };
-  const result = await optimize(input, {
-    solver: await getSolver(),
-    validate: (rec) => validateCandidate(rec).status === 'pass',
-  });
   const validations = new Map(
     result.candidates.map((c) => [
       c.rank,
@@ -286,6 +313,44 @@ export async function runOptimizer(
     ]),
   );
   return { input, result, validations, resolved };
+}
+
+/** The in-force model whose cement is the request's only cement candidate (candidates are re-checked after the run). */
+async function poolModel(
+  db: Executor,
+  tenantId: string,
+  base: Omit<EvaluationSnapshot, 'lines'>,
+  pick: { include?: string[]; exclude?: string[] } | undefined,
+): Promise<StrengthModelInput | null> {
+  const { basis, testAgeDays } = base.request;
+  if ((basis !== 'cylinder' && basis !== 'cube') || testAgeDays === null) return null;
+  const allowed = (id: string) =>
+    !pick?.exclude?.includes(id) && (!pick?.include?.length || pick.include.includes(id));
+  const cements = base.materials.filter((m) => m.category === 'cement' && allowed(m.id));
+  if (cements.length !== 1) return null;
+  const rows = await db
+    .select()
+    .from(schema.strengthModels)
+    .where(
+      and(
+        eq(schema.strengthModels.tenantId, tenantId),
+        eq(schema.strengthModels.plantId, base.design.plantId),
+        eq(schema.strengthModels.ageDays, testAgeDays),
+        eq(schema.strengthModels.basis, basis),
+        isNotNull(schema.strengthModels.approvedAt),
+        isNull(schema.strengthModels.retiredAt),
+        eq(schema.strengthModels.status, 'valid'),
+      ),
+    );
+  // a model qualifies when every material of its group is in the pool; more than one qualifying model is ambiguous
+  const pool = new Set(base.materials.filter((m) => allowed(m.id)).map((m) => m.id));
+  const mine = rows.filter((m) => {
+    const g = m.grp as StrengthGroup;
+    return [g.cementId, ...g.scm.map((x) => x.id), ...g.admixtures.map((x) => x.id)].every((id) =>
+      pool.has(id),
+    );
+  });
+  return mine.length === 1 ? toInput(mine[0]!) : null;
 }
 
 /** The exact snapshot a stored candidate was judged on, rebuilt from the request and its overrides. */

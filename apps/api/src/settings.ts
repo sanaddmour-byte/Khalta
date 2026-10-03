@@ -12,6 +12,17 @@ export const settingsSchema = z.strictObject({
   stalePriceDays: z.number().int().positive().nullable().default(null), // null = not configured
   insightMinSavingJodPerM3: z.number().nonnegative().default(0.25),
   insightMinAnnualJod: z.number().nonnegative().default(1000),
+  // Strength models (M5.2): validity limits (01-domain §3) and the alert / opportunity margins.
+  strengthModelMinResults: z.number().int().min(3).default(30),
+  strengthModelMinLevels: z.number().int().min(2).default(3),
+  strengthModelMinSpan: z.number().positive().default(0.1),
+  strengthModelWindowMonths: z.number().int().min(1).default(12),
+  strengthHeldOutRmseFactor: z.number().positive().default(1.5),
+  strengthHeldOutMissS: z.number().positive().default(3),
+  strengthOverMarginPct: z.number().positive().default(10),
+  strengthOverMinSets: z.number().int().min(3).default(10),
+  strengthSequenceSets: z.number().int().min(2).default(3),
+  strengthBetaMinBatches: z.number().int().min(4).default(12),
   // Evaluation (M2.1). Null = not configured: no near-limit warnings / no safety margin, both stated in reports.
   nearLimitPct: z.number().positive().max(50).nullable().default(null),
   safetyMarginMpa: z.number().min(0).max(20).nullable().default(null),

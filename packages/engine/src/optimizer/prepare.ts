@@ -166,14 +166,17 @@ export function prepare(input: OptimizerInput): PrepareResult {
 
   let baselineWc = 0;
   if (strength.fcrMpa !== null) {
-    const ad = strengthAdequacy(strength.fcrMpa, null, rules, ctx, new Tracer());
+    const ad = strengthAdequacy(strength.fcrMpa, null, rules, ctx, new Tracer(), {
+      input: base.strengthModel,
+      request: base.request,
+    });
     if (ad.baselineWc === null)
       block({
         code: ad.blocker?.code === 'out_of_domain' ? 'out_of_domain' : 'rule_not_on_file',
         subject: 'prop.wc_strength',
         detail: `The ACI 211.1 w/c baseline for f'cr is unavailable: ${ad.blocker?.detail ?? 'unknown reason'}`,
       });
-    else baselineWc = ad.baselineWc;
+    else baselineWc = ad.governingWc ?? ad.baselineWc;
   }
 
   // ---- limits that bind the mix; every one that applies must be usable

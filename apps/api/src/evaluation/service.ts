@@ -23,6 +23,7 @@ import { loadMaterialParams } from '../materials/service';
 import { loadCurrentRecords } from '../rules/service';
 import { loadSettings } from '../settings';
 import { toPriceRow } from '../prices/service';
+import { modelForSnapshot } from '../strength/service';
 
 export type DesignRow = typeof schema.mixDesigns.$inferSelect;
 
@@ -207,6 +208,9 @@ export async function buildSnapshot(
     characteristics: [],
     strengthRecords: null,
   };
+  // M5.2: an APPROVED valid plant model of this design's own group (absent: the ACI 211.1 baseline)
+  const model = await modelForSnapshot(db, tenantId, snapshot);
+  if (model) snapshot.strengthModel = model;
   return snapshot;
 }
 

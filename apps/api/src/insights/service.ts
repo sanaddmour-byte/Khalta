@@ -130,6 +130,33 @@ export async function expireUnseen(
   return rows.length;
 }
 
+/** Expire the open insight with this dedupe key (a criterion that has recovered). */
+export async function expireByKey(
+  tx: Executor,
+  tenantId: string,
+  type: InsightType,
+  keyParts: (string | number | null)[],
+  reason: string,
+) {
+  const key = hashKey(dedupeParts(type, keyParts));
+  const rows = await tx
+    .update(schema.insights)
+    .set({ status: 'expired', resolvedAt: new Date(), resolvedReason: reason })
+    .where(
+      and(
+        eq(schema.insights.tenantId, tenantId),
+        eq(schema.insights.dedupeKey, key),
+        inArray(schema.insights.status, ['open', 'snoozed']),
+      ),
+    )
+    .returning({ id: schema.insights.id });
+  for (const r of rows)
+    await tx
+      .insert(schema.insightEvents)
+      .values({ tenantId, insightId: r.id, kind: 'expired', detail: { reason } });
+  return rows.length;
+}
+
 /** Expire one specific insight (an accepted opportunity that no longer holds). */
 export async function expireOne(tx: Executor, tenantId: string, id: string, reason: string) {
   await tx
