@@ -1,0 +1,127 @@
+[
+  {
+    "file": "01-sign-in.png",
+    "title": "Sign in",
+    "text": "Every user signs in with an email and password. There is no self-registration: an admin creates accounts."
+  },
+  {
+    "file": "02-dashboard.png",
+    "title": "Dashboard",
+    "text": "The home screen. The sidebar lists only what your role may use; the top bar has the plant switcher, search/command palette, language, theme and your account."
+  },
+  {
+    "file": "03-studio-requirements.png",
+    "title": "Design Studio: requirements",
+    "text": "Stage 1 of 4. Choose a plant and code (ACI, JS or both), the strength, slump and exposure, and what the optimizer may use. Candidates are trial proposals, never approved mixes."
+  },
+  {
+    "file": "04-studio-candidates.png",
+    "title": "Design Studio: candidates",
+    "text": "Stage 2. Ranked trial candidates with cost per m³, the evidence behind each and what governs it. Pin two to compare."
+  },
+  {
+    "file": "05-studio-inspect.png",
+    "title": "Design Studio: inspect and validate",
+    "text": "Stage 3. Every figure with its trace, the combined grading, and the independent validator's verdict. From here you request a trial, which saves the design as TRIAL CANDIDATE."
+  },
+  {
+    "file": "06-library.png",
+    "title": "Mix Library",
+    "text": "All designs with their lifecycle state (draft, evaluated, trial, approved, in production, suspended, retired). Tabs below filter by what needs attention. Admin-only actions are hidden for roles that cannot use them."
+  },
+  {
+    "file": "07-design-details.png",
+    "title": "A design: details",
+    "text": "The design sheet: proportions, the author and approval, lifecycle actions (suspend, release, retire), trial batches and strength results, batch weights (with the independent check), production volumes and the PDF submittal."
+  },
+  {
+    "file": "08-design-evaluation.png",
+    "title": "A design: evaluation",
+    "text": "Compliance checks with clause references and evidence chips, the f′cr derivation, strength adequacy, cost per m³, data quality, and the validator result. Nothing here approves a design."
+  },
+  {
+    "file": "09-library-portfolio.png",
+    "title": "Library: portfolio",
+    "text": "Every design at a glance: verdict counts, filters, evaluate all, and export of the portfolio (prices and costs, logged)."
+  },
+  {
+    "file": "10-library-quality.png",
+    "title": "Library: data quality",
+    "text": "What is blocking or weakening designs: missing tests, stale prices, unverified rules, grouped by cause."
+  },
+  {
+    "file": "11-library-strength.png",
+    "title": "Library: strength models",
+    "text": "Plant strength models fitted from your own results: proposals with their evidence, approved by a QC manager with an e-signature. Also the proposals for s and β."
+  },
+  {
+    "file": "12-library-trial.png",
+    "title": "Library: in trial",
+    "text": "Designs at TRIAL CANDIDATE or TRIAL IN PROGRESS."
+  },
+  {
+    "file": "13-library-awaiting.png",
+    "title": "Library: awaiting approval",
+    "text": "Designs whose trial passed. A different QC manager than the author approves them (four-eyes)."
+  },
+  {
+    "file": "14-profiles.png",
+    "title": "Profiles",
+    "text": "Characteristic profiles: reusable sets of your own preferences (sand ratio, minimum binder, admixture choices, material preferences) that tighten, and never loosen, code limits. Versioned and approved by a QC manager."
+  },
+  {
+    "file": "15-insights.png",
+    "title": "Insights",
+    "text": "The proactive inbox: cost opportunities (theoretical, trial-only), expired tests, stale prices, drift, rule changes and strength alerts. Accept creates a trial draft; snooze and dismiss need no code change. Critical alerts also show a banner at the top."
+  },
+  {
+    "file": "16-savings.png",
+    "title": "Savings",
+    "text": "Cost baselines at a named price snapshot, then savings in three separate states: theoretical, approved and realized. They are never added together. Months that cannot be measured yet are listed with the reason."
+  },
+  {
+    "file": "17-materials.png",
+    "title": "Materials",
+    "text": "Every material with its current test and price freshness. Tests are versioned; a new test never overwrites an old one."
+  },
+  {
+    "file": "18-material-sheet.png",
+    "title": "A material: tests and history",
+    "text": "The latest test values with their source (lab report, supplier datasheet, or declared by a user), the grading chart and the version history."
+  },
+  {
+    "file": "19-prices.png",
+    "title": "Prices",
+    "text": "The price matrix: materials by plant, edited like a spreadsheet and saved with a reason. Tools: bulk change, copy between plants, import, snapshots and export."
+  },
+  {
+    "file": "20-rules.png",
+    "title": "Rules",
+    "text": "Every code value (ACI 318, ACI 211.1, JS) and engineering parameter, with its clause, class and verification state. Unverified rules make results provisional until a QC manager checks them against the licensed document."
+  },
+  {
+    "file": "21-rule-sheet.png",
+    "title": "A rule",
+    "text": "One rule: value or table, applicability, source clause, version history and the verify action with a signed note."
+  },
+  {
+    "file": "22-imports.png",
+    "title": "Imports",
+    "text": "Bring in legacy mix designs (a CSV or Excel file) or JS rule values. You map columns, confirm material matches (Arabic names first) and see a validation preview before anything is created. Imported designs are legacy and need attestation."
+  },
+  {
+    "file": "23-plants.png",
+    "title": "Plants",
+    "text": "Create and edit plants (Arabic and English names, code). Users are assigned to plants; most roles only see their own."
+  },
+  {
+    "file": "24-settings.png",
+    "title": "Settings: general",
+    "text": "Organisation settings: number format, whether sales may see cost, stale-price and near-limit thresholds, production and letterhead settings, insight thresholds."
+  },
+  {
+    "file": "25-settings-users.png",
+    "title": "Settings: users",
+    "text": "Create users, set their role and plants, deactivate them. Every change is audited."
+  }
+]
