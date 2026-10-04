@@ -1,7 +1,7 @@
 import { schema } from '@khalta/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildDemoPlan, DEMO_SEED, planHash, SYNTHETIC } from '../src/demo/plan';
-import { seedDemo, seedDemoRules } from '../src/demo/seed';
+import { seedDemo, seedDemoRules, upgradeDemoData } from '../src/demo/seed';
 import { createTestEnv, type TestEnv } from './helpers';
 
 describe('demo plan', () => {
@@ -154,5 +154,60 @@ describe('demo seed against a real database', () => {
         expect(res.body.status, `${mode} ${p.code}`).toBe('candidates');
         expect(res.body.candidates.length).toBeGreaterThan(0);
       }
+  });
+
+  it('upgrades an older demo database in place: a material missing new fields and a water price in JOD/m3', async () => {
+    const deps = {
+      db: env.db,
+      auth: env.auth,
+      config: env.config,
+      tenantId: env.tenantId,
+      password: 'demo-password-change-me',
+    };
+    expect(await upgradeDemoData(deps)).toBe(0); // already current
+    const admin = await env.login('admin@khalta.test', 'demo-password-change-me');
+    const mgr = await env.login('qc.manager@khalta.test', 'demo-password-change-me');
+    const mats = (await admin.get('/api/materials')).body as {
+      id: string;
+      marketNameEn: string;
+      category: string;
+    }[];
+    const sand = mats.find((x) => x.marketNameEn.startsWith('Raml (washed sand)'))!;
+    const cur = (await admin.get(`/api/materials/${sand.id}`)).body.current.properties;
+    const { chlorides_pct: _c, sulfates_pct: _s, ...old } = cur;
+    const r = await mgr.post(`/api/materials/${sand.id}/tests`).send({
+      properties: old,
+      source: 'user_declared',
+      declaredReason: 'older demo data',
+      testedAt: '2026-09-20',
+    });
+    expect(r.status).toBe(201);
+    const water = mats.find((x) => x.category === 'water')!;
+    const grid = (await admin.get('/api/prices')).body as {
+      cells: { materialId: string; plantId: string; supplierId: string; unit: string }[];
+    };
+    const wc = grid.cells.find((c) => c.materialId === water.id)!;
+    const pr = await admin.post('/api/prices').send({
+      entries: [
+        {
+          materialId: water.id,
+          plantId: wc.plantId,
+          supplierId: wc.supplierId,
+          price: '0.9',
+          unit: 'JOD/m3',
+        },
+      ],
+      effectiveFrom: '2026-10-04',
+      reason: 'older demo data',
+    });
+    expect(pr.status).toBe(201);
+    expect(await upgradeDemoData(deps)).toBeGreaterThan(1);
+    const after = (await admin.get('/api/prices')).body as typeof grid;
+    expect(
+      after.cells.find((c) => c.materialId === water.id && c.plantId === wc.plantId)!.unit,
+    ).toBe('JOD/ton');
+    const back = (await admin.get(`/api/materials/${sand.id}`)).body.current.properties;
+    expect(back.chlorides_pct).toBe(0.01);
+    expect(await upgradeDemoData(deps)).toBe(0); // idempotent
   });
 });

@@ -285,3 +285,102 @@ export async function seedDemoRules(d: SeedDeps): Promise<number> {
     await new Promise((r) => server.close(r));
   }
 }
+
+const canon = (v: unknown): unknown => {
+  if (Array.isArray(v))
+    return v.map(canon).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  if (v && typeof v === 'object')
+    return Object.fromEntries(
+      Object.entries(v as Record<string, unknown>)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, x]) => [k, canon(x)]),
+    );
+  return v;
+};
+const same = (a: unknown, b: unknown) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
+
+/**
+ * Brings an EXISTING demo database in line with the current demo plan (the full seed is skipped once the marker
+ * design exists): a demo material whose current test lacks or differs on any field of the plan gets a new test
+ * version, and a demo price whose unit differs gets a new price row. Idempotent. Returns how many were changed.
+ */
+export async function upgradeDemoData(d: SeedDeps): Promise<number> {
+  const log = d.log ?? (() => undefined);
+  const plan = buildDemoPlan();
+  const app = createApp({ config: d.config, db: d.db, auth: d.auth });
+  const server: Server = await new Promise((resolve) => {
+    const s = app.listen(0, '127.0.0.1', () => resolve(s));
+  });
+  try {
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const login = async (email: string) => {
+      const c = new Client(base, d.config.BETTER_AUTH_URL);
+      await c.post('/api/auth/sign-in/email', { email, password: d.password });
+      return c;
+    };
+    const admin = await login('admin@khalta.test');
+    const mgr = await login('qc.manager@khalta.test');
+    const today = todayAmman();
+    let changed = 0;
+
+    const mats = await admin.get<{ id: string; marketNameEn: string }[]>('/api/materials');
+    const idOf = new Map(mats.map((m) => [m.marketNameEn, m.id]));
+    for (const m of plan.materials) {
+      const id = idOf.get(m.nameEn);
+      if (!id) continue;
+      const cur = await admin.get<{ current: { properties: Record<string, unknown> } | null }>(
+        `/api/materials/${id}`,
+      );
+      const have = cur.current?.properties ?? {};
+      const stale = Object.entries(m.properties).some(([k, v]) => !same(v, have[k]));
+      if (!stale) continue;
+      const att =
+        m.source === 'lab_report'
+          ? await mgr.upload<{ id: string }>(
+              `/api/attachments?filename=${encodeURIComponent('synthetic-lab-report.pdf')}`,
+              SYNTHETIC_PDF,
+            )
+          : null;
+      await mgr.post(`/api/materials/${id}/tests`, {
+        properties: m.properties,
+        source: m.source,
+        testedAt: addDays(today, -m.testedDaysAgo),
+        labRef: `${SYNTHETIC}-${m.key}`,
+        ...(att && { attachmentId: att.id }),
+        ...(m.source === 'user_declared' && { declaredReason: `${SYNTHETIC} demo value` }),
+      });
+      changed += 1;
+    }
+
+    // prices whose unit changed (water: JOD/m3 could not be converted to JOD/kg)
+    const matIdByKey = new Map(plan.materials.map((m) => [m.key, idOf.get(m.nameEn)]));
+    const grid = await admin.get<{
+      cells: { materialId: string; plantId: string; unit?: string }[];
+      plants: { id: string; code: string }[];
+    }>('/api/prices');
+    const plantIdOf = new Map(grid.plants.map((p) => [p.code, p.id]));
+    const suppliers = await admin.get<{ id: string; nameEn: string }[]>('/api/suppliers');
+    const supplierIdOf = new Map(suppliers.map((s) => [s.nameEn, s.id]));
+    const entries = plan.prices.flatMap((p) => {
+      const materialId = matIdByKey.get(p.material);
+      const plantId = plantIdOf.get(p.plant);
+      const supplierId = supplierIdOf.get(p.supplier);
+      if (!materialId || !plantId || !supplierId) return [];
+      const cell = grid.cells.find((c) => c.materialId === materialId && c.plantId === plantId);
+      if (!cell || cell.unit === p.unit) return [];
+      return [{ materialId, plantId, supplierId, price: p.wave2 ?? p.wave1, unit: p.unit }];
+    });
+    if (entries.length > 0) {
+      await admin.post('/api/prices', {
+        entries,
+        effectiveFrom: today,
+        reason: `${SYNTHETIC} price unit corrected so every price converts to JOD/kg`,
+      });
+      changed += entries.length;
+    }
+    if (changed > 0) log(`${changed} demo records upgraded to the current plan`);
+    return changed;
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+}
