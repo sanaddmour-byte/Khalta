@@ -530,3 +530,13 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Tests:** engine 435, api (see the final report), web 38, rbac 210.
 
 **Pre-existing defects found and fixed:** `PATCH /api/settings` reset every other key; the earlier admin-role change left a failing web unit test and an e2e expectation; transitions recorded in one transaction had equal timestamps.
+
+## 2026-10-04 — Improvement set, phase 3: batch preparation and export safeguards
+
+**Changed** (ADR 0022, `docs/calc/batch-moisture.md`): batch size, equipment-resolution rounding and reconciliation (`planBatch`), an independent `validatePlan`, `eng.batch.*` parameters that ship empty and block, plans stored append-only and bound to the design version hash, material test versions, moisture readings and calculation versions, a preview/save API, a side-by-side Batch preparation panel (EN/AR), and `khalta.batch-weights.v2` export that re-checks everything at export time and refuses with every reason named. Migrations 0032, 0033.
+
+**Tests:** engine 441, validator 177, api 324 (new `batch-plans.test.ts`: missing parameters named, reconciliation, over-limit batch, plant isolation, export refusals for missing parameter, stale moisture, version-hash mismatch, material change), web 38, rbac 210, rules 159; e2e main 103 and rules 15 after the two fixes below.
+
+**Fixed along the way:** validator candidate fixtures regenerated (the new null `eng.batch.*` seeds); the user-menu axe check ran mid-animation and failed intermittently, it now waits for `settled`. The insights volume axe check failed once on a toast and passed on re-run; watch it.
+
+**Not verified:** the formulas against a plant's own procedure; real equipment resolutions; no e2e for the new panel yet (API tests cover the logic).

@@ -208,3 +208,121 @@ export function batchCsv(batches: readonly ExportBatch[]): string {
       ]);
   return toCsv(BATCH_HEADER, rows);
 }
+
+// ---- khalta.batch-weights.v2: production batch PLANS (batch size, rounded weights, reconciliation) ---------------
+// v1 is frozen (its header never changes). v2 is a different file for a different job: what to WEIGH for a batch,
+// bound to the exact design version, with the age of every moisture reading at the time of export. No cost, ever.
+
+export const BATCH_V2_SCHEMA = 'khalta.batch-weights.v2';
+
+export const BATCH_V2_HEADER = [
+  'schema',
+  'batch_plan_id',
+  'design_code',
+  'design_version',
+  'design_hash',
+  'plant_code',
+  'requirements_ref',
+  'prepared_at',
+  'prepared_by',
+  'calc_version',
+  'check_versions',
+  'batch_size_m3',
+  'line_no',
+  'material_id',
+  'material_name',
+  'material_category',
+  'material_test_version',
+  'design_kg_per_m3_ssd',
+  'corrected_kg_per_m3',
+  'exact_kg',
+  'resolution_kg',
+  'weigh_kg',
+  'rounding_error_kg',
+  'total_moisture_pct',
+  'absorption_pct',
+  'moisture_source',
+  'moisture_measured_at',
+  'moisture_age_hours_at_export',
+  'plan_exact_total_kg',
+  'plan_rounded_total_kg',
+  'basis',
+] as const;
+
+export interface ExportBatchPlan {
+  id: string;
+  designCode: string;
+  designVersion: number;
+  designHash: string;
+  plantCode: string;
+  /** "<project ref> r<revision>" or empty when the design froze none. */
+  requirementsRef: string;
+  preparedAt: string;
+  preparedBy: string | null;
+  calcVersion: string;
+  checkVersions: string;
+  batchSizeM3: number;
+  exactTotalKg: number;
+  roundedTotalKg: number;
+  lines: {
+    lineNo: number;
+    materialId: string;
+    materialName: string;
+    category: string;
+    testVersion: number | null;
+    designKgPerM3: number;
+    correctedKgPerM3: number;
+    exactKg: number;
+    resolutionKg: number;
+    weighKg: number;
+    errorKg: number;
+    totalMoisturePct: number | null;
+    absorptionPct: number | null;
+    moistureSource: string | null;
+    moistureMeasuredAt: string | null;
+    moistureAgeHoursAtExport: number | null;
+  }[];
+}
+
+export function batchPlanCsv(plans: readonly ExportBatchPlan[]): string {
+  const ordered = [...plans].sort(
+    (a, b) => a.preparedAt.localeCompare(b.preparedAt) || a.id.localeCompare(b.id),
+  );
+  const rows: string[][] = [];
+  for (const b of ordered)
+    for (const l of [...b.lines].sort((x, y) => x.lineNo - y.lineNo))
+      rows.push([
+        BATCH_V2_SCHEMA,
+        b.id,
+        text(b.designCode),
+        String(b.designVersion),
+        b.designHash,
+        text(b.plantCode),
+        text(b.requirementsRef),
+        b.preparedAt,
+        text(b.preparedBy),
+        text(b.calcVersion),
+        text(b.checkVersions),
+        n(b.batchSizeM3),
+        String(l.lineNo),
+        l.materialId,
+        text(l.materialName),
+        text(l.category),
+        l.testVersion === null ? '' : String(l.testVersion),
+        n(l.designKgPerM3),
+        n(l.correctedKgPerM3),
+        n(l.exactKg),
+        n(l.resolutionKg),
+        n(l.weighKg),
+        n(l.errorKg),
+        n(l.totalMoisturePct),
+        n(l.absorptionPct),
+        text(l.moistureSource),
+        l.moistureMeasuredAt ?? '',
+        n(l.moistureAgeHoursAtExport),
+        n(b.exactTotalKg),
+        n(b.roundedTotalKg),
+        'kg for the whole batch',
+      ]);
+  return toCsv(BATCH_V2_HEADER, rows);
+}

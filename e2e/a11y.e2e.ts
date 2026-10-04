@@ -42,6 +42,7 @@ test('open overlays have no serious axe violations (palette, user menu, dialog)'
   await expectNoSeriousAxe(page, 'palette');
   await page.keyboard.press('Escape');
   await page.getByTestId('user-menu').click();
+  await settled(page);
   await expectNoSeriousAxe(page, 'user menu');
   await page.keyboard.press('Escape');
   await page.goto('/dev/components');

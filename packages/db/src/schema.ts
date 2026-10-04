@@ -1114,6 +1114,19 @@ export const batchInstances = pgTable(
     result: jsonb('result').notNull(),
     validator: jsonb('validator').notNull(),
     validatorStatus: text('validator_status', { enum: ['pass', 'fail'] }).notNull(),
+    /** Batch preparation (khalta.batch-weights.v2): null on instances saved before it existed (legacy, v1 only). */
+    batchSizeM3: numeric('batch_size_m3', { precision: 8, scale: 3 }),
+    /** The rounded plan and its reconciliation to the design. */
+    plan: jsonb('plan'),
+    planValidator: jsonb('plan_validator'),
+    /** Hash of the exact design version (lines, requirements, plant) the plan was prepared for. */
+    designVersionHash: text('design_version_hash'),
+    /** Calculation versions: conversion, plan, and the two independent checks. */
+    calcVersion: jsonb('calc_version'),
+    /** materialId → current test version at preparation time. */
+    materialTestVersions: jsonb('material_test_versions'),
+    /** The equipment and tolerance parameters in force: resolutions, tolerance, mixer limit. */
+    rounding: jsonb('rounding'),
     createdBy: text('created_by').references(() => users.id),
     createdAt: createdAt(),
   },

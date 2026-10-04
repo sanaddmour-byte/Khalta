@@ -8,7 +8,7 @@ import { ApiError, notFound } from '../errors';
 import { loadDesign } from '../evaluation/run';
 import { loadSettings } from '../settings';
 import { gatherSubmittal, renderPdf, submittalHtml } from '../submittal/render';
-import { convert, moistureBody } from '../lab/service';
+import { convert, moistureBody, planBody, prepare } from '../lab/service';
 import type { ApiRoutes } from '../route';
 
 const idParam = z.object({ id: z.uuid() });
@@ -206,6 +206,114 @@ export function labRoutes(api: ApiRoutes) {
     },
   );
 
+  api.readPost(
+    '/api/designs/:id/batch-plans/preview',
+    {
+      summary:
+        'Batch preparation (nothing stored): the reference design and the moisture-corrected, rounded weights side by side, with the reconciliation and every blocker named',
+      capability: 'lab.enter',
+      body: planBody,
+    },
+    async ({ auth, params, body, db }) => {
+      const d = await loadDesign(db, auth, idParam.parse(params).id);
+      const p = await prepare(db, auth.tenantId, d, body);
+      return {
+        design: {
+          id: d.id,
+          code: d.code,
+          version: d.version,
+          plantId: d.plantId,
+          status: d.status,
+        },
+        conversion: { result: p.conversion.result, validator: p.conversion.validator },
+        plan: p.plan,
+        planValidator: p.planValidator,
+        binding: p.binding,
+      };
+    },
+  );
+
+  api.mutate(
+    'post',
+    '/api/designs/:id/batch-plans',
+    {
+      summary:
+        'Save a batch plan for an approved, in-production or trial design: bound to the exact design version, plant, material test versions, moisture readings, calculation versions and the preparer. Refused unless both independent checks pass and every equipment parameter is on file',
+      capability: 'lab.enter',
+      params: idParam,
+      body: planBody,
+      status: 201,
+    },
+    async ({ auth, params, body, tx, audit }) => {
+      const d = await loadDesign(tx, auth, params.id, true);
+      const kind = ['approved', 'in_production'].includes(d.status)
+        ? 'production'
+        : TRIAL_STATES.includes(d.status)
+          ? 'trial'
+          : null;
+      if (!kind)
+        throw new ApiError(
+          409,
+          'conflict',
+          `A batch plan is not available for a ${d.status} design`,
+        );
+      const p = await prepare(tx, auth.tenantId, d, body);
+      if (!p.conversion.result.ok)
+        throw new ApiError(409, 'batch_blocked', 'The moisture conversion is blocked', {
+          blockers: p.conversion.result.blockers,
+        });
+      if (p.conversion.validator.status !== 'pass')
+        throw new ApiError(409, 'validator_failed', 'The independent conversion check disagrees', {
+          mismatches: p.conversion.validator.mismatches,
+        });
+      if (!p.plan || !p.plan.ok)
+        throw new ApiError(409, 'plan_blocked', 'The batch plan is blocked', {
+          blockers: p.plan && !p.plan.ok ? p.plan.blockers : [],
+        });
+      if (p.planValidator?.status !== 'pass')
+        throw new ApiError(409, 'plan_validator_failed', 'The independent plan check disagrees', {
+          mismatches: p.planValidator?.mismatches ?? [],
+        });
+      const [row] = await tx
+        .insert(schema.batchInstances)
+        .values({
+          tenantId: auth.tenantId,
+          designId: d.id,
+          designVersion: d.version,
+          plantId: d.plantId,
+          kind,
+          moisture: p.conversion.moisture,
+          config: p.conversion.config,
+          result: p.conversion.result,
+          validator: p.conversion.validator,
+          validatorStatus: 'pass',
+          batchSizeM3: String(body.batchSizeM3),
+          plan: p.plan,
+          planValidator: p.planValidator,
+          designVersionHash: p.binding.designVersionHash,
+          calcVersion: p.binding.calcVersion,
+          materialTestVersions: p.binding.materialTestVersions,
+          rounding: p.config,
+          createdBy: auth.user.id,
+        })
+        .returning({ id: schema.batchInstances.id });
+      await audit.record({
+        action: 'batch_plan.create',
+        entityType: 'batch_instance',
+        entityId: row!.id,
+        after: {
+          designId: d.id,
+          designVersion: d.version,
+          designVersionHash: p.binding.designVersionHash,
+          kind,
+          batchSizeM3: body.batchSizeM3,
+          roundedTotalKg: p.plan.reconciliation.roundedTotalKg,
+        },
+      });
+      return { id: row!.id, kind, designVersionHash: p.binding.designVersionHash };
+    },
+  );
+
   api.mutate(
     'post',
     '/api/designs/:id/batch-instances',
@@ -286,6 +394,9 @@ export function labRoutes(api: ApiRoutes) {
           designVersion: schema.batchInstances.designVersion,
           moisture: schema.batchInstances.moisture,
           result: schema.batchInstances.result,
+          batchSizeM3: schema.batchInstances.batchSizeM3,
+          plan: schema.batchInstances.plan,
+          designVersionHash: schema.batchInstances.designVersionHash,
           validatorStatus: schema.batchInstances.validatorStatus,
           createdAt: schema.batchInstances.createdAt,
           actor: schema.users.name,

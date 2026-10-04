@@ -33,3 +33,5 @@ export const exportDesigns = (plantId?: string) =>
   downloadCsv('/api/exports/designs.csv', plantId ? { plantId } : {}, 'khalta-designs.csv');
 export const exportBatch = (instanceId: string) =>
   downloadCsv('/api/exports/batch-weights.csv', { instanceId }, 'khalta-batch-weights.csv');
+export const exportBatchPlan = (instanceId: string) =>
+  downloadCsv('/api/exports/batch-plans.csv', { instanceId }, 'khalta-batch-plans.csv');

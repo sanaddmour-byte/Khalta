@@ -116,3 +116,48 @@ export async function downloadSubmittal(id: string, code: string, lang: 'en' | '
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
+
+export interface PlanLineView {
+  materialId: string;
+  category: string;
+  designKgPerM3: number;
+  correctedKgPerM3: number;
+  exactKg: number;
+  resolutionKg: number;
+  roundedKg: number;
+  errorKg: number;
+  deviationPct: number;
+}
+export interface PlanBlockerView {
+  code: string;
+  subject: string;
+  detail: string;
+}
+export type PlanView =
+  | {
+      ok: true;
+      batchSizeM3: number;
+      lines: PlanLineView[];
+      reconciliation: {
+        designTotalKg: number;
+        exactTotalKg: number;
+        roundedTotalKg: number;
+        roundedMinusExactKg: number;
+        maxLineDeviationPct: number;
+      };
+    }
+  | { ok: false; blockers: PlanBlockerView[] };
+export interface PlanPreview {
+  conversion: { result: BatchResult; validator: { status: 'pass' | 'fail' } };
+  plan: PlanView | null;
+  planValidator: { status: 'pass' | 'fail' } | null;
+  binding: { designVersionHash: string };
+  design: { code: string; version: number };
+}
+export const previewPlan = (id: string, moisture: MoistureRow[], batchSizeM3: number) =>
+  post<PlanPreview>(`/api/designs/${id}/batch-plans/preview`, { moisture, batchSizeM3 });
+export const savePlan = (id: string, moisture: MoistureRow[], batchSizeM3: number) =>
+  post<{ id: string; kind: string; designVersionHash: string }>(`/api/designs/${id}/batch-plans`, {
+    moisture,
+    batchSizeM3,
+  });

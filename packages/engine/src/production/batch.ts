@@ -11,6 +11,9 @@ import type {
   MoistureInput,
 } from './types';
 
+/** Version of the moisture-correction arithmetic; stored with every batch plan. */
+export const CONVERSION_VERSION = '1.0.0';
+
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 const isAgg = (c: string) => c === 'fine_agg' || c === 'coarse_agg';
 
@@ -178,3 +181,4 @@ export function toBatchWeights(
     convention: { admixtureSolutionWater: cfg.admixtureSolutionWater },
   };
 }
+export * from './plan';

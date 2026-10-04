@@ -2085,6 +2085,40 @@
       "both": "Arabic and English",
       "download": "Download submittal PDF",
       "watermark": "This design is not approved: the PDF carries a NOT APPROVED — TRIAL ONLY watermark."
+    },
+    "plan": {
+      "title": "Batch preparation",
+      "hint": "Pick a batch size and enter today's moisture. The reference design (SSD, per m³) is corrected for moisture and rounded to your equipment resolution. A saved plan is bound to this exact design version; the export refuses it if anything has changed.",
+      "size": "Batch size (m³)",
+      "prepare": "Prepare plan",
+      "save": "Save plan",
+      "export": "Export plan (CSV)",
+      "material": "Material",
+      "design": "Design kg/m³ (SSD)",
+      "corrected": "Corrected kg/m³",
+      "exact": "Exact kg",
+      "resolution": "Resolution kg",
+      "weigh": "Weigh kg",
+      "error": "Rounding kg",
+      "reconciliation": "Design {design} kg · exact {exact} kg · to weigh {rounded} kg.",
+      "checksPass": "Both independent checks agree.",
+      "checksFail": "An independent check disagrees: do not use these weights.",
+      "bound": "Bound to {code} v{version} (hash {hash}).",
+      "blocker": {
+        "batch_size_invalid": "The batch size is not valid",
+        "parameter_missing": "A QC equipment parameter is not on file",
+        "batch_size_over_limit": "The batch is larger than the mixer allows",
+        "rounding_deviation_exceeded": "Rounding deviates too much",
+        "totals_deviation_exceeded": "The rounded total deviates too much",
+        "moisture_missing": "No moisture reading for this aggregate",
+        "absorption_missing": "The aggregate has no absorption on file",
+        "moisture_impossible": "The moisture reading is impossible",
+        "moisture_stale": "The moisture reading is too old",
+        "moisture_future": "The reading time is invalid",
+        "no_water_line": "The design has no water line",
+        "solids_missing": "Admixture solids are not on file",
+        "other": "Blocked"
+      }
     }
   },
   "insights": {

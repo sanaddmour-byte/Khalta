@@ -34,6 +34,7 @@ import {
   type Preview,
 } from './labApi';
 import { exportBatch } from '../exports/api';
+import { BatchPlanPanel } from './BatchPlanPanel';
 import { StrengthChart } from './StrengthChart';
 
 const TRIAL = ['trial_candidate', 'trial_in_progress'];
@@ -581,7 +582,10 @@ export function LabSection({ design, lines }: { design: DesignCard; lines: Desig
         </section>
       )}
       {canEnter && CONVERT.includes(design.status) && (
-        <BatchWeights design={design} lines={lines} />
+        <>
+          <BatchWeights design={design} lines={lines} />
+          <BatchPlanPanel design={design} lines={lines} />
+        </>
       )}
       <section
         className="mt-6 flex flex-wrap items-end gap-2"

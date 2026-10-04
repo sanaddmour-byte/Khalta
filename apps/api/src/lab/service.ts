@@ -9,13 +9,29 @@ import type {
   BatchValidation,
   MoistureInput,
 } from '@khalta/engine';
-import { toBatchWeights } from '@khalta/engine/production';
-import { validateBatch } from '@khalta/validator';
+import {
+  CONVERSION_VERSION,
+  PLAN_VERSION,
+  planBatch,
+  toBatchWeights,
+} from '@khalta/engine/production';
+import {
+  PLAN_CATEGORIES,
+  type BatchPlan,
+  type PlanConfig,
+  type PlanValidation,
+} from '@khalta/engine';
+import {
+  BATCH_VALIDATOR_VERSION,
+  PLAN_VALIDATOR_VERSION,
+  validateBatch,
+  validatePlan,
+} from '@khalta/validator';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError } from '../errors';
 import type { DesignRow } from '../evaluation/service';
-import { ruleNumber } from '../lifecycle/service';
+import { designLines, ruleNumber, versionHash } from '../lifecycle/service';
 import { loadCurrentRecords } from '../rules/service';
 import { loadSettings } from '../settings';
 
@@ -27,6 +43,8 @@ export const moistureBody = z.strictObject({
         totalMoisturePct: z.number().min(0).max(100),
         /** ISO time of the reading; defaults to now (a reading entered at the batching desk). */
         measuredAt: z.iso.datetime().optional(),
+        /** Where the reading came from; recorded with it and exported (never judged). */
+        source: z.enum(['batching_desk', 'lab_test', 'probe']).optional(),
       }),
     )
     .max(20),
@@ -97,6 +115,7 @@ export async function convert(
     totalMoisturePct: m.totalMoisturePct,
     absorptionPct: prop(m.materialId, 'absorption_pct'),
     measuredAt: m.measuredAt ?? now.toISOString(),
+    source: m.source ?? 'batching_desk',
   }));
   const rules = await loadCurrentRecords(db, tenantId);
   const settings = await loadSettings(db, tenantId);
@@ -113,5 +132,94 @@ export async function convert(
     config,
     result,
     validator: validateBatch(design, moisture, config, result),
+  };
+}
+
+export const planBody = moistureBody.extend({
+  /** The batch size in m³. */
+  batchSizeM3: z.number().positive().max(100),
+});
+export type PlanBody = z.infer<typeof planBody>;
+
+/** The equipment parameters from the rules; every one is null until QC enters it. */
+export function planConfigFrom(
+  rules: { ruleset: string; key: string; value: unknown }[],
+  batchSizeM3: number,
+): PlanConfig {
+  return {
+    batchSizeM3,
+    resolutionKg: Object.fromEntries(
+      PLAN_CATEGORIES.map((c) => [c, ruleNumber(rules, `eng.batch.resolution_kg.${c}`)]),
+    ),
+    maxRoundingDeviationPct: ruleNumber(rules, 'eng.batch.max_rounding_deviation_pct'),
+    maxBatchSizeM3: ruleNumber(rules, 'eng.batch.max_size_m3'),
+  };
+}
+
+export interface Preparation {
+  conversion: Conversion;
+  plan: BatchPlan | null;
+  planValidator: PlanValidation | null;
+  config: PlanConfig | null;
+  binding: {
+    designVersionHash: string;
+    materialTestVersions: Record<string, number | null>;
+    calcVersion: Record<string, string>;
+  };
+}
+
+/** Moisture-corrected weights, then the rounded plan for a batch size, each independently checked. */
+export async function prepare(
+  db: Executor,
+  tenantId: string,
+  d: DesignRow,
+  body: PlanBody,
+  now = new Date(),
+): Promise<Preparation> {
+  const conversion = await convert(db, tenantId, d, body, now);
+  const lines = await designLines(db, d.id);
+  const tests = lines.length
+    ? await db
+        .select({
+          materialId: schema.materialTests.materialId,
+          version: schema.materialTests.version,
+        })
+        .from(schema.materialTests)
+        .where(
+          and(
+            eq(schema.materialTests.tenantId, tenantId),
+            inArray(
+              schema.materialTests.materialId,
+              lines.map((l) => l.materialId),
+            ),
+            eq(schema.materialTests.isCurrent, true),
+          ),
+        )
+    : [];
+  const binding = {
+    designVersionHash: versionHash(d, lines),
+    materialTestVersions: Object.fromEntries(
+      lines.map((l) => [
+        l.materialId,
+        tests.find((t) => t.materialId === l.materialId)?.version ?? null,
+      ]),
+    ),
+    calcVersion: {
+      conversion: CONVERSION_VERSION,
+      plan: PLAN_VERSION,
+      batchValidator: BATCH_VALIDATOR_VERSION,
+      planValidator: PLAN_VALIDATOR_VERSION,
+    },
+  };
+  if (!conversion.result.ok)
+    return { conversion, plan: null, planValidator: null, config: null, binding };
+  const config = planConfigFrom(await loadCurrentRecords(db, tenantId), body.batchSizeM3);
+  const plan = planBatch(conversion.result, config);
+  return {
+    conversion,
+    plan,
+    planValidator: validatePlan(conversion.result, config, plan),
+    config,
+    binding,
   };
 }

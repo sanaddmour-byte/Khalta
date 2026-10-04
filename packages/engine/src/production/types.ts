@@ -11,6 +11,8 @@ export interface MoistureInput {
   absorptionPct: number | null;
   /** ISO timestamp the reading was taken. */
   measuredAt: string;
+  /** Where the reading came from (recorded, never judged): a lab test, a probe, the batching desk. */
+  source?: string;
 }
 
 export interface BatchDesignLine {
@@ -94,6 +96,87 @@ export interface BatchMismatch {
   recomputed: unknown;
 }
 export interface BatchValidation {
+  validatorVersion: string;
+  status: 'pass' | 'fail';
+  mismatches: BatchMismatch[];
+}
+
+// ---- batch preparation (batch size, equipment resolution, rounding, reconciliation) -----------------------------
+
+export const PLAN_CATEGORIES = [
+  'cement',
+  'scm',
+  'fine_agg',
+  'coarse_agg',
+  'water',
+  'admixture',
+  'fiber',
+  'pigment',
+] as const;
+
+/** Engineering parameters of a batch plan. Every one ships empty: null blocks the plan and is named. */
+export interface PlanConfig {
+  batchSizeM3: number;
+  /** The weigh-hopper resolution in kg for each category (rules `eng.batch.resolution_kg.<category>`). */
+  resolutionKg: Readonly<Record<string, number | null>>;
+  /** Largest permitted rounding deviation of a line, % of its exact mass (`eng.batch.max_rounding_deviation_pct`). */
+  maxRoundingDeviationPct: number | null;
+  /** Largest batch the mixer takes, m³ (`eng.batch.max_size_m3`). */
+  maxBatchSizeM3: number | null;
+}
+
+export interface PlanBlocker {
+  code:
+    | 'batch_size_invalid'
+    | 'parameter_missing'
+    | 'batch_size_over_limit'
+    | 'rounding_deviation_exceeded'
+    | 'totals_deviation_exceeded';
+  subject: string;
+  detail: string;
+}
+
+export interface PlanLine {
+  materialId: string;
+  category: string;
+  /** The reference design quantity (SSD basis), kg per m³. */
+  designKgPerM3: number;
+  /** The moisture-corrected quantity to weigh, kg per m³ (from the batch conversion). */
+  correctedKgPerM3: number;
+  /** corrected × batch size. */
+  exactKg: number;
+  resolutionKg: number;
+  /** The mass to weigh, rounded to the equipment resolution. */
+  roundedKg: number;
+  /** rounded − exact. */
+  errorKg: number;
+  /** |error| as a percentage of the exact mass. */
+  deviationPct: number;
+}
+
+export type BatchPlan =
+  | {
+      ok: true;
+      batchSizeM3: number;
+      lines: PlanLine[];
+      reconciliation: {
+        /** Σ design (SSD) quantities × batch size. */
+        designTotalKg: number;
+        /** Σ exact corrected masses. */
+        exactTotalKg: number;
+        /** Σ rounded masses (what the batcher will weigh). */
+        roundedTotalKg: number;
+        /** rounded total − exact total. */
+        roundedMinusExactKg: number;
+        /** exact total − design total (the admixture solution water counted, if the plant opted in). */
+        exactMinusDesignKg: number;
+        maxLineDeviationPct: number;
+      };
+      limits: { maxRoundingDeviationPct: number; maxBatchSizeM3: number };
+    }
+  | { ok: false; blockers: PlanBlocker[] };
+
+export interface PlanValidation {
   validatorVersion: string;
   status: 'pass' | 'fail';
   mismatches: BatchMismatch[];
