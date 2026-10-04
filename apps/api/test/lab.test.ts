@@ -137,6 +137,38 @@ const moisture = async (id: string, totals: number[], measuredAt?: string) =>
   }));
 
 describe('trial batches and strength results', () => {
+  it('stores the optional observations and refuses impossible ones', async () => {
+    const id = await trialCandidate('LAB-OPT');
+    const lab = await as('qc_engineer', [plantA]);
+    const ok = await lab.post(`/api/designs/${id}/trial-batches`).send({
+      batchedOn: '2026-10-01',
+      retainedSlumpMm: 80,
+      retentionMinutes: 60,
+      stability: 'stable',
+      placementAcceptable: true,
+    });
+    expect(ok.status, JSON.stringify(ok.body)).toBe(201);
+    const got = (await lab.get(`/api/designs/${id}/trial-batches`)).body.batches[0];
+    expect(got).toMatchObject({
+      retainedSlumpMm: '80.0',
+      retentionMinutes: 60,
+      stability: 'stable',
+      placementAcceptable: true,
+    });
+    for (const bad of [
+      { stability: 'wobbly' },
+      { retentionMinutes: 0 },
+      { placementAcceptable: 'yes' },
+    ])
+      expect(
+        (
+          await lab
+            .post(`/api/designs/${id}/trial-batches`)
+            .send({ batchedOn: '2026-10-01', ...bad })
+        ).status,
+      ).toBe(400);
+  });
+
   it('RBAC, plant scope and states; append-only; results judged only at the test age', async () => {
     const id = await trialCandidate('LAB-1');
     const payload = { batchedOn: '2026-10-01', slumpMm: 100, temperatureC: 25 };

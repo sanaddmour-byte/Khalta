@@ -35,7 +35,11 @@ describe('trial acceptance (§14.4)', () => {
   it('passes when every criterion is met', () => {
     const r = evaluateTrialAcceptance(CRIT, TARGET, [batch()]);
     expect(r.ok).toBe(true);
-    expect(r.criteria.map((c) => c.status)).toEqual(Array(6).fill('pass'));
+    // the six measured criteria pass; the three optional ones are not configured, so they are not applied
+    expect(r.criteria.map((c) => c.status)).toEqual([
+      ...Array(6).fill('pass'),
+      ...Array(3).fill('not_applicable'),
+    ]);
   });
   it('names each failed criterion', () => {
     const r = evaluateTrialAcceptance(CRIT, TARGET, [

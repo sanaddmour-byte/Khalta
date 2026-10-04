@@ -1454,7 +1454,7 @@
       "pumpable": "Must be pumpable",
       "objectiveLabel": "Objective",
       "objective": {
-        "cheapest": "Cheapest",
+        "cheapest": "Lowest cost",
         "closest": "Closest to my targets"
       },
       "cementColour": "Cement colour",
@@ -1788,6 +1788,36 @@
       "draftBlocks": "A selected profile is still a draft. You can evaluate with it, but trial candidates need an approved profile.",
       "saveAs": "Save these characteristics as a profile…",
       "applied": "Applied profiles: {names}"
+    },
+    "trans": {
+      "title": "How this result was produced",
+      "kind": {
+        "optimal_within_search": "Every configuration was solved; this is the lowest cost found.",
+        "feasible_unproven": "The search was cut short; these candidates are valid but a cheaper one may exist.",
+        "timed_out": "The time budget ended the search before anything was solved. This is not a finding of infeasibility.",
+        "infeasible": "Every configuration was proven infeasible for the stated hard rows.",
+        "invalid_input": "The request cannot be run until the named inputs are on file.",
+        "solver_failure": "The solver failed. This is not a finding of infeasibility; try again or report it.",
+        "no_valid_candidate": "Solutions were found, but none passed every check after rounding.",
+        "cancelled": "The search was cancelled."
+      },
+      "statement": {
+        "lowest_cost_found": "Lowest-cost candidate found within the selected constraints.",
+        "closest_to_targets_found": "Candidate closest to your targets found within the selected constraints."
+      },
+      "configs": "{solved} of {total} configurations solved · {infeasible} infeasible · {errors} solver errors · {skipped} not attempted.",
+      "validator": "Independent validator after rounding: {accepted} accepted, {rejected} rejected.",
+      "gap": "Rounding to practical quantities added at most {jod} JOD/m³ over the solver's own optimum.",
+      "notProven": "A candidate is a trial proposal, not an approved mix, and it is not proven globally cheapest."
+    },
+    "sens": {
+      "title": "Price sensitivity",
+      "hint": "The candidates above are re-priced; nothing is re-solved and no constraint changes, so a different mix is never found here.",
+      "stable": "No single material's price change within range reorders these candidates.",
+      "breakeven": "If the price of {material} {direction} by {pct} %, another candidate becomes the cheapest.",
+      "rises": "rises",
+      "falls": "falls",
+      "flips": "{n, plural, one {1 tested scenario changes} other {# tested scenarios change}} which candidate is cheapest."
     }
   },
   "profiles": {
@@ -1923,7 +1953,10 @@
       "criterion_temperature": "Concrete temperature within the limit",
       "criterion_strength": "Average strength at least f′cr",
       "assumptions_accepted": "Assumptions that stand in for missing values are accepted by QC",
-      "project_requirements": "The project requirements this design froze are verified and current"
+      "project_requirements": "The project requirements this design froze are verified and current",
+      "criterion_retention": "Slump retained after the required time",
+      "criterion_stability": "No bleeding or segregation",
+      "criterion_placement": "Pumps and finishes acceptably"
     },
     "code": {
       "ok": "Met",
@@ -2032,7 +2065,21 @@
       "waterLine": "Water to add: {batch} kg (design {design} kg − aggregate free water {free} kg).",
       "balance": "Mass balance: design {ssd} kg, batch {batch} kg.",
       "solutionOn": "Admixture solution water {kg} kg was subtracted (opt-in convention).",
-      "solutionOff": "Admixture solution water is not subtracted (default convention)."
+      "solutionOff": "Admixture solution water is not subtracted (default convention).",
+      "retainedSlump": "Slump after the retention time (mm)",
+      "retentionMinutes": "Minutes after mixing at that measurement",
+      "stability": "Stability (bleeding / segregation)",
+      "placement": "Pumping and finishing",
+      "notObserved": "Not observed",
+      "placementYes": "Acceptable",
+      "placementNo": "Not acceptable",
+      "optionalHint": "These four are judged only when QC has configured the matching criterion. A pumpable design cannot pass its trial until the placement criterion is configured.",
+      "stabilityOptions": {
+        "stable": "Stable",
+        "bleeding": "Bleeding",
+        "segregation": "Segregation",
+        "bleeding_and_segregation": "Bleeding and segregation"
+      }
     },
     "results": {
       "add": "Add results",
@@ -2305,5 +2352,51 @@
     "note": "The file is a copy of the approved designs for your batching system. It is not an approval, it holds no prices or costs, and a design that is suspended, retired or not yet approved is never in it.",
     "done": "Saved {name}.",
     "failed": "The export did not finish."
+  },
+  "impact": {
+    "title": "Change impact",
+    "intro": "When a price, test, rule, requirement or strength result changes, the approved designs it touches are assessed. Nothing is altered or suspended automatically: a person records the decision.",
+    "none": "No change needs a decision.",
+    "decide": "Record a decision",
+    "decideHint": "This records your decision and reason. It does not change or suspend the design; that stays a separate, signed lifecycle move.",
+    "decision": "Decision",
+    "reason": "Reason (at least 10 characters)",
+    "save": "Save decision",
+    "decided": "Decision recorded.",
+    "failed": "The assessment failed after {n} attempt(s) and will be retried.",
+    "trigger": {
+      "price_change": "Price change",
+      "test_expiry": "Test expiry",
+      "material_change": "Material test changed",
+      "rule_revision": "Rule revision",
+      "requirements_revision": "Project requirements revised",
+      "strength_deterioration": "Strength result"
+    },
+    "state": {
+      "pending": "waiting",
+      "running": "running",
+      "failed": "failed",
+      "completed": "assessed"
+    },
+    "class": {
+      "no_action": "No action",
+      "review": "Review",
+      "revalidate": "Revalidate",
+      "requalify": "Requalify (new trial)",
+      "suspend_recommended": "Suspension recommended"
+    },
+    "disposition": {
+      "revalidation_started": "Revalidation started",
+      "requalification_required": "Requalification required",
+      "accepted_risk": "Risk accepted",
+      "dismissed": "Dismissed"
+    },
+    "reason_strength_below_fcr": "strength below the required average",
+    "reason_source_changed": "source changed",
+    "reason_test_expired": "a test expired",
+    "reason_new_check_failures": "new failing checks",
+    "reason_drift_exceeded": "test drift beyond tolerance",
+    "reason_requirements_superseded": "its project requirements were superseded",
+    "version": "v{n}"
   }
 }

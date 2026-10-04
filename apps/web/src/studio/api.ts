@@ -140,7 +140,48 @@ export interface Conflict {
   category?: string;
   adjustable?: boolean;
 }
+export type TerminationKind =
+  | 'optimal_within_search'
+  | 'feasible_unproven'
+  | 'timed_out'
+  | 'infeasible'
+  | 'invalid_input'
+  | 'solver_failure'
+  | 'no_valid_candidate'
+  | 'cancelled';
+export interface Termination {
+  kind: TerminationKind;
+  searchComplete: boolean;
+  configurations: {
+    enumerated: number;
+    solved: number;
+    infeasible: number;
+    solverErrors: number;
+    notAttempted: number;
+  };
+  objective: { name: Objective; statement: 'lowest_cost_found' | 'closest_to_targets_found' };
+  constraints: Record<string, number>;
+  /** A money figure: absent without cost.view. */
+  maxRoundingGapJod?: number | null;
+  validator: { checked: number; accepted: number; rejected: number };
+}
+export interface SensitivityReport {
+  requestId: string;
+  reSolved: false;
+  note: string;
+  changes: number[];
+  baseline: { ranking: string[]; costs: Record<string, number> };
+  scenarios: {
+    materialId: string;
+    change: number;
+    ranking: string[];
+    topChanged: boolean;
+    costs: Record<string, number>;
+  }[];
+  breakeven: { materialId: string; change: number | null; overtakenBy: string | null }[];
+}
 export interface Outcome {
+  termination?: Termination;
   blockers: Blocker[];
   conflicts: { kind: 'user_specified' | 'hard_rows'; items: Conflict[] } | null;
   dof: Dof | null;
@@ -181,7 +222,8 @@ const post = <T>(path: string, body: unknown) =>
 
 export const preflight = (body: Omit<RequestBody, 'objective'> & { objective?: Objective }) =>
   post<Preflight>('/api/design-requests/preflight', body);
-export const generate = (body: RequestBody) => post<GenerateResult>('/api/design-requests', body);
+export const generate = (body: RequestBody & { supersedes?: string }) =>
+  post<GenerateResult>('/api/design-requests', body);
 export const evaluateMix = (
   body: Omit<RequestBody, 'objective'> & { lines: { materialId: string; kgPerM3: string }[] },
 ) => post<MixEvaluation>('/api/design-requests/evaluate-mix', body);
@@ -220,4 +262,11 @@ export const requestQuery = (id: string) =>
       api<GenerateResult & { plantId: string; request: Requirements; inputs: unknown; mode: Mode }>(
         `/api/design-requests/${id}`,
       ),
+  });
+
+export const sensitivityQuery = (requestId: string, changes = '-0.1,0.1') =>
+  queryOptions({
+    queryKey: ['design-requests', 'sensitivity', requestId, changes],
+    queryFn: () =>
+      api<SensitivityReport>(`/api/design-requests/${requestId}/sensitivity?changes=${changes}`),
   });

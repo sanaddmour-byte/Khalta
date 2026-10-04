@@ -54,6 +54,10 @@ function BatchDialog({ design, onClose }: { design: DesignCard; onClose: () => v
     freshDensityKgM3: '',
     yieldM3: '',
     waterAddedKgM3: '',
+    retainedSlumpMm: '',
+    retentionMinutes: '',
+    stability: '',
+    placement: '',
     notes: '',
   });
   const m = useMutation({
@@ -66,6 +70,10 @@ function BatchDialog({ design, onClose }: { design: DesignCard; onClose: () => v
         freshDensityKgM3: numOrUndef(f.freshDensityKgM3),
         yieldM3: numOrUndef(f.yieldM3),
         waterAddedKgM3: numOrUndef(f.waterAddedKgM3),
+        retainedSlumpMm: numOrUndef(f.retainedSlumpMm),
+        retentionMinutes: numOrUndef(f.retentionMinutes),
+        ...(f.stability && { stability: f.stability }),
+        ...(f.placement && { placementAcceptable: f.placement === 'yes' }),
         ...(f.notes.trim() && { notes: f.notes.trim() }),
       }),
     onSuccess: async () => {
@@ -81,6 +89,8 @@ function BatchDialog({ design, onClose }: { design: DesignCard; onClose: () => v
     ['freshDensityKgM3', 'lab.batch.density'],
     ['yieldM3', 'lab.batch.yield'],
     ['waterAddedKgM3', 'lab.batch.waterAdded'],
+    ['retainedSlumpMm', 'lab.batch.retainedSlump'],
+    ['retentionMinutes', 'lab.batch.retentionMinutes'],
   ];
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -116,6 +126,38 @@ function BatchDialog({ design, onClose }: { design: DesignCard; onClose: () => v
               />
             </div>
           ))}
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="b-stability">{t('lab.batch.stability')}</Label>
+            <select
+              id="b-stability"
+              className="h-9 rounded-md border border-line bg-surface px-2 text-sm"
+              value={f.stability}
+              onChange={(e) => setF({ ...f, stability: e.target.value })}
+              data-testid="batch-stability"
+            >
+              <option value="">{t('lab.batch.notObserved')}</option>
+              {['stable', 'bleeding', 'segregation', 'bleeding_and_segregation'].map((v) => (
+                <option key={v} value={v}>
+                  {t(`lab.batch.stabilityOptions.${v}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="b-placement">{t('lab.batch.placement')}</Label>
+            <select
+              id="b-placement"
+              className="h-9 rounded-md border border-line bg-surface px-2 text-sm"
+              value={f.placement}
+              onChange={(e) => setF({ ...f, placement: e.target.value })}
+              data-testid="batch-placement"
+            >
+              <option value="">{t('lab.batch.notObserved')}</option>
+              <option value="yes">{t('lab.batch.placementYes')}</option>
+              <option value="no">{t('lab.batch.placementNo')}</option>
+            </select>
+          </div>
+          <p className="col-span-2 text-xs text-muted">{t('lab.batch.optionalHint')}</p>
           <div className="col-span-2 flex flex-col gap-1">
             <Label htmlFor="b-notes">{t('lab.batch.notes')}</Label>
             <Input

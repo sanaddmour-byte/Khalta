@@ -22,6 +22,11 @@ export interface FitLimits {
   rmseFactor: number;
   /** No held-out miss may exceed this many s. */
   missS: number;
+  /**
+   * Forward-in-time validation tests a result only when at least this many earlier-cast results exist, so the scatter
+   * it is judged against is not an artefact of a tiny sample. A statistical default awaiting QC review.
+   */
+  chronologicalMinTrain: number;
 }
 export const DEFAULT_FIT_LIMITS: FitLimits = {
   minResults: 30,
@@ -30,7 +35,11 @@ export const DEFAULT_FIT_LIMITS: FitLimits = {
   windowMonths: 12,
   rmseFactor: 1.5,
   missS: 3,
+  chronologicalMinTrain: 10,
 };
+
+/** Bumped whenever the fit or its validity rules change; stored with each model so a report names the rules it used. */
+export const FIT_VERSION = '2';
 
 export type ModelReasonCode =
   | 'too_few_results'
@@ -40,10 +49,13 @@ export type ModelReasonCode =
   | 'no_held_out'
   | 'held_out_rmse'
   | 'held_out_miss'
+  | 'no_chronological'
+  | 'chronological_rmse'
+  | 'chronological_miss'
   | 'degenerate_fit';
 
 export interface HeldOut {
-  method: 'leave_one_out' | 'five_fold';
+  method: 'leave_one_out' | 'five_fold' | 'chronological';
   n: number;
   rmseMpa: number;
   meanErrorMpa: number;
@@ -67,6 +79,8 @@ export interface FitResult {
   sMpa: number;
   r2: number;
   heldOut: HeldOut | null;
+  /** Forward-in-time validation: each result predicted from earlier-cast results only. */
+  chronological: Chronological | null;
   status: 'valid' | 'provisional';
   reasons: { code: ModelReasonCode; detail: string }[];
 }
@@ -139,6 +153,67 @@ function heldOut(points: StrengthPoint[], sMpa: number): HeldOut | null {
   };
 }
 
+/** Forward-in-time validation: a HeldOut summary plus the errors in units of the scatter known at the time. */
+export interface Chronological extends HeldOut {
+  /** Root-mean-square of (observed − predicted) / s, s being the residual sd of the earlier-cast fit. */
+  rmsStandardised: number;
+  /** Largest |observed − predicted| / s. */
+  maxStandardised: number;
+}
+
+/** Residual sd below this (MPa) is numerical dust, not a scale to measure a miss against. */
+const S_FLOOR_MPA = 1e-3;
+
+/**
+ * Forward-in-time validation. Each result is predicted by a curve fitted ONLY to results cast on an earlier date, and
+ * its miss is judged against the scatter that earlier fit showed (its own residual sd). So a process that drifts after
+ * the model was fitted (a new cement lot, a season) is caught even though the drift also inflates a whole-data s. A
+ * result is tested only when the earlier results span `minLevels` distinct w/cm levels and number at least
+ * `minTrain` (never fewer than 5: two parameters leave too few degrees of freedom for a residual sd). Null when no result can be tested (for example when
+ * everything was cast on one day).
+ */
+export function chronologicalCheck(
+  points: StrengthPoint[],
+  minLevels: number,
+  minTrain = DEFAULT_FIT_LIMITS.chronologicalMinTrain,
+): Chronological | null {
+  const ordered = [...points].sort((p, q) =>
+    p.castDate === q.castDate ? p.id.localeCompare(q.id) : p.castDate.localeCompare(q.castDate),
+  );
+  const errors: number[] = [];
+  const z: number[] = [];
+  let covered = 0;
+  for (const p of ordered) {
+    const train = ordered.filter((q) => q.castDate < p.castDate);
+    if (train.length < Math.max(5, minTrain)) continue;
+    if (new Set(train.map((q) => q.wcm.toFixed(2))).size < minLevels) continue;
+    const m = ols(
+      train.map((q) => q.wcm),
+      train.map((q) => Math.log(q.mpa)),
+    );
+    if (!m) continue;
+    const sTrain = Math.sqrt(
+      train.reduce((sum, q) => sum + (q.mpa - predictMpa(m, q.wcm)) ** 2, 0) / (train.length - 2),
+    );
+    const pred = predictMpa(m, p.wcm);
+    errors.push(p.mpa - pred);
+    z.push((p.mpa - pred) / Math.max(sTrain, S_FLOOR_MPA));
+    if (p.mpa >= pred - 1.64 * sTrain) covered++;
+  }
+  if (errors.length === 0) return null;
+  const rmse = Math.sqrt(errors.reduce((sum, e) => sum + e * e, 0) / errors.length);
+  return {
+    method: 'chronological',
+    n: errors.length,
+    rmseMpa: round6(rmse),
+    meanErrorMpa: round6(errors.reduce((sum, e) => sum + e, 0) / errors.length),
+    worstMissMpa: round6(Math.max(...errors.map(Math.abs))),
+    coverage: round6(covered / errors.length),
+    rmsStandardised: round6(Math.sqrt(z.reduce((sum, e) => sum + e * e, 0) / z.length)),
+    maxStandardised: round6(Math.max(...z.map(Math.abs))),
+  };
+}
+
 /** Fit and judge. `points` must already be one group at one test age and inside the time window. */
 export function fitModel(
   points: StrengthPoint[],
@@ -166,6 +241,7 @@ export function fitModel(
   const wcmMin = Math.min(...wcms);
   const wcmMax = Math.max(...wcms);
   const ho = heldOut(usable, sMpa);
+  const chrono = chronologicalCheck(usable, limits.minLevels, limits.chronologicalMinTrain);
 
   const reasons: FitResult['reasons'] = [];
   if (n < limits.minResults)
@@ -195,6 +271,24 @@ export function fitModel(
         detail: `a held-out result misses by ${ho.worstMissMpa} MPa, beyond ${limits.missS} × s`,
       });
   }
+  if (!chrono)
+    reasons.push({
+      code: 'no_chronological',
+      detail:
+        'no result can be predicted from earlier-cast results only (too few earlier results or cast dates)',
+    });
+  else {
+    if (chrono.rmsStandardised > limits.rmseFactor + 1e-9)
+      reasons.push({
+        code: 'chronological_rmse',
+        detail: `forward-in-time errors average ${chrono.rmsStandardised} × the scatter known at the time, above ${limits.rmseFactor}`,
+      });
+    if (chrono.maxStandardised > limits.missS + 1e-9)
+      reasons.push({
+        code: 'chronological_miss',
+        detail: `a result predicted from earlier ones misses by ${chrono.maxStandardised} × the scatter known at the time, beyond ${limits.missS}`,
+      });
+  }
   return {
     a: round6(fit.a),
     b: round6(fit.b),
@@ -207,6 +301,7 @@ export function fitModel(
     sMpa: round6(sMpa),
     r2: round6(r2),
     heldOut: ho,
+    chronological: chrono,
     status: reasons.length === 0 ? 'valid' : 'provisional',
     reasons,
   };

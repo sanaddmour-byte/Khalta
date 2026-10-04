@@ -9,6 +9,8 @@ export interface GroupMaterial {
   category: Category;
   /** `cement_type` for cement, `scm_type` for an SCM, `type` for an admixture (null when not stated). */
   kind: string | null;
+  /** The supplier recorded on the material (null when none). A change of source is a different material for strength. */
+  supplierId?: string | null;
 }
 export interface StrengthGroup {
   plantId: string;
@@ -18,6 +20,11 @@ export interface StrengthGroup {
   admixtures: { id: string; type: string | null }[];
   basis: 'cylinder' | 'cube';
   ageDays: number;
+  /**
+   * The supplier of each part when the model was fitted. Not part of the key (so existing keys are stable); a model
+   * whose part now has another supplier is invalidated. Absent on models fitted before this was recorded.
+   */
+  sources?: Record<string, string | null>;
 }
 
 const byId = <T extends { id: string }>(xs: T[]) =>
@@ -42,6 +49,13 @@ export function groupOf(
     ),
     basis,
     ageDays,
+    sources: Object.fromEntries(
+      mats
+        .filter(
+          (m) => m.category === 'cement' || m.category === 'scm' || m.category === 'admixture',
+        )
+        .map((m) => [m.id, m.supplierId ?? null]),
+    ),
   };
 }
 
@@ -61,6 +75,7 @@ export type InvalidationCode =
   | 'cement_type_changed'
   | 'scm_type_changed'
   | 'admixture_type_changed'
+  | 'source_changed'
   | 'no_recent_results';
 
 /** Why a stored model no longer holds against the materials as they are now (empty when it still does). */
@@ -83,6 +98,11 @@ export function invalidations(
       out.push({
         code: n.code,
         detail: `${n.id}: was ${n.type ?? 'unstated'}, now ${m.kind ?? 'unstated'}`,
+      });
+    else if (g.sources && n.id in g.sources && (m.supplierId ?? null) !== (g.sources[n.id] ?? null))
+      out.push({
+        code: 'source_changed',
+        detail: `${n.id}: the supplier changed since the model was fitted; it is a different source`,
       });
   }
   if (recentResults === 0)
@@ -109,6 +129,7 @@ export function groupOfParts(
   materials: {
     id: string;
     category: Category;
+    supplierId?: string | null;
     test: { properties: Record<string, unknown> } | null;
   }[],
 ): StrengthGroup | null {
@@ -121,6 +142,7 @@ export function groupOfParts(
       id: m.id,
       category: m.category,
       kind: kindOfMaterial(m.category, m.test?.properties),
+      supplierId: (m as { supplierId?: string | null }).supplierId ?? null,
     }));
   return groupOf(plantId, request.basis, request.testAgeDays, mats);
 }

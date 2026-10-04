@@ -12,6 +12,7 @@ import {
   kindOfMaterial,
   windowStart,
   type EvaluationSnapshot,
+  FIT_VERSION,
   type FitLimits,
   type FitResult,
   type GroupMaterial,
@@ -56,6 +57,7 @@ export async function designGroup(
     mats.map((m) => ({
       id: m.id,
       category: m.category,
+      supplierId: m.supplierId,
       test: { properties: m.properties },
     })),
   );
@@ -63,7 +65,11 @@ export async function designGroup(
 
 async function materialsNow(db: Executor, ids: string[]) {
   const mats = await db
-    .select({ id: schema.materials.id, category: schema.materials.category })
+    .select({
+      id: schema.materials.id,
+      category: schema.materials.category,
+      supplierId: schema.materials.supplierId,
+    })
     .from(schema.materials)
     .where(and(inArray(schema.materials.id, ids), isNull(schema.materials.deletedAt)));
   const tests = await db
@@ -79,6 +85,7 @@ async function materialsNow(db: Executor, ids: string[]) {
   return mats.map((m) => ({
     id: m.id,
     category: m.category as GroupMaterial['category'],
+    supplierId: m.supplierId,
     properties: by.get(m.id) ?? {},
   }));
 }
@@ -91,6 +98,7 @@ export async function groupMaterialsNow(db: Executor, g: StrengthGroup): Promise
     id: m.id,
     category: m.category,
     kind: kindOfMaterial(m.category, m.properties),
+    supplierId: m.supplierId,
   }));
 }
 
@@ -257,6 +265,46 @@ const modelHash = (m: { a: string; b: string; groupKey: string; wcmMin: string; 
     .update(JSON.stringify([m.groupKey, m.a, m.b, m.wcmMin, m.wcmMax]))
     .digest('hex');
 
+/**
+ * The stored validation report: what the model was trained on, the limits it was judged against, both validation
+ * checks, its operating domain and the fit version. Everything a reviewer needs to decide on approval without
+ * recomputing. `pointsSha256` fingerprints the exact training set (result ids and values).
+ */
+export function validationReport(
+  g: StrengthGroup,
+  fit: FitResult,
+  points: { id: string; wcm: number; mpa: number; castDate: string }[],
+  limits: FitLimits,
+  today: string,
+) {
+  const dates = points.map((p) => p.castDate).sort();
+  const ordered = [...points].sort((a, b) => a.id.localeCompare(b.id));
+  return {
+    fitVersion: FIT_VERSION,
+    fittedOn: today,
+    group: { key: groupKey(g), basis: g.basis, ageDays: g.ageDays, sources: g.sources ?? null },
+    training: {
+      n: fit.n,
+      levels: fit.levels,
+      firstCast: dates[0] ?? null,
+      lastCast: dates[dates.length - 1] ?? null,
+      pointsSha256: createHash('sha256')
+        .update(JSON.stringify(ordered.map((p) => [p.id, p.wcm, p.mpa, p.castDate])))
+        .digest('hex'),
+    },
+    limits,
+    domain: { wcmMin: fit.wcmMin, wcmMax: fit.wcmMax, ageDays: g.ageDays, basis: g.basis },
+    figures: { sMpa: fit.sMpa, r2: fit.r2, seA: fit.seA, seB: fit.seB },
+    heldOut: fit.heldOut,
+    chronological: fit.chronological,
+    status: fit.status,
+    reasons: fit.reasons,
+    // A supplier recorded in place on a material cannot be traced back per result: noted, never hidden.
+    sourceNote:
+      'A source change must be recorded as a new material; an in-place supplier change invalidates an approved model.',
+  };
+}
+
 export type FitOutcome =
   | { kind: 'fitted'; model: ModelRow; fit: FitResult; created: boolean }
   | { kind: 'insufficient'; n: number };
@@ -319,6 +367,9 @@ export async function fitGroup(
       sMpa: fit.sMpa.toFixed(6),
       r2: fit.r2.toFixed(6),
       heldOut: fit.heldOut,
+      chronological: fit.chronological,
+      validationReport: validationReport(g, fit, got.points, limits, today),
+      fitVersion: FIT_VERSION,
       reasons: fit.reasons,
       status: fit.status,
       fittedBy: actorId,

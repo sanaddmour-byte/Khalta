@@ -540,3 +540,11 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Fixed along the way:** validator candidate fixtures regenerated (the new null `eng.batch.*` seeds); the user-menu axe check ran mid-animation and failed intermittently, it now waits for `settled`. The insights volume axe check failed once on a toast and passed on re-run; watch it.
 
 **Not verified:** the formulas against a plant's own procedure; real equipment resolutions; no e2e for the new panel yet (API tests cover the logic).
+
+## 2026-10-04 — Improvement set, phase 4: optimizer transparency, trial and strength governance, change impact
+
+**Changed** (ADR 0023): optimizer 1.1.0 with a named termination for every result (a timeout or solver error is no longer reported as infeasibility), per-candidate LP cost and rounding gap, price-sensitivity break-evens (re-pricing only), supersession of older requests; strength fit version 2 with forward-in-time validation, a stored validation report and source-change invalidation; optional trial criteria (retention, stability, placement) that ship empty, with a pumpable design blocking until placement is configured; change-impact assessment (idempotent, retryable, observable jobs; five classes; QC-manager dispositions guarded in the database) with a list on the Insights page. Migrations 0034–0036.
+
+**Tests:** engine 470, api 337 (new: optimizer-transparency, change-impact, strength report and source change, optional observations), validator 177, web 38, rbac 210, rules 159; e2e main 103 + rules 15.
+
+**Not verified / open:** the statistical default `chronologicalMinTrain = 10` and the standardised forward-error limits need QC review; HTTP abort is not wired to `OptimizeCancelled`; an in-place supplier change cannot be traced back per result; no e2e yet for the Transparency, Sensitivity and Change-impact panels.

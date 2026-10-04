@@ -45,11 +45,17 @@ export function initialEstimates(p: Prepared, cfg: ConfigSpec) {
   };
 }
 
+/** Counts what the solver answered, so a solver failure is never reported as infeasibility. */
+export interface SolveTally {
+  errors: number;
+}
+
 export async function solveConfig(
   p: Prepared,
   cfg: ConfigSpec,
   solver: Solver,
   objective: Objective,
+  tally?: SolveTally,
 ): Promise<Solved | null> {
   let { binderEst, aggMassEst, fmFineEst } = initialEstimates(p, cfg);
   let last: { sol: LpSolution; model: Model } | null = null;
@@ -61,6 +67,7 @@ export async function solveConfig(
     let sol: LpSolution;
     if (objective === 'closest_to_targets' && model.devs.length > 0) {
       const s1 = await solver.solve(stageOne(model));
+      if (s1.status === 'error' && tally && !last) tally.errors++;
       if (s1.status !== 'optimal') break;
       const dev = model.devs.reduce(
         (a, d) => a + d.weight * ((s1.x[d.plus] ?? 0) + (s1.x[d.minus] ?? 0)),
@@ -77,6 +84,7 @@ export async function solveConfig(
     } else sol = await solver.solve(model.problem);
     // A later iteration can only be infeasible because an estimate moved; the last feasible point stands and
     // is validated from scratch afterwards.
+    if (sol.status === 'error' && tally && !last) tally.errors++;
     if (sol.status !== 'optimal') break;
     last = { sol, model };
     const b = sol.x['B'] ?? 0;

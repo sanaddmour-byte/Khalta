@@ -26,6 +26,11 @@ const batchBody = z.strictObject({
   freshDensityKgM3: num(1500, 3500, 1).optional(),
   yieldM3: num(0.5, 1.5, 3).optional(),
   waterAddedKgM3: num(0, 100, 1).optional(),
+  /** Optional criteria: judged only when QC has configured them. */
+  retainedSlumpMm: num(0, 300, 1).optional(),
+  retentionMinutes: z.number().int().min(1).max(600).optional(),
+  stability: z.enum(['stable', 'bleeding', 'segregation', 'bleeding_and_segregation']).optional(),
+  placementAcceptable: z.boolean().optional(),
   notes: z.string().trim().max(500).optional(),
   supersedesId: z.uuid().optional(),
 });

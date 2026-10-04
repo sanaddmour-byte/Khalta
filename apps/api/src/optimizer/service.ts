@@ -71,6 +71,8 @@ export const requestBody = z.strictObject({
   cementColour: z.enum(['any', 'white', 'grey']).default('any'),
   /** The verified project-requirements revision this request is made against (frozen into the design it produces). */
   projectRequirementsId: z.uuid().optional(),
+  /** An earlier request this one replaces (same plant). The earlier result stays readable but can no longer make a design. */
+  supersedes: z.uuid().optional(),
   materials: z
     .strictObject({
       include: z.array(z.uuid()).max(200).optional(),

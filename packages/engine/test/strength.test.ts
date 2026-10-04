@@ -23,6 +23,12 @@ import {
 
 // SYNTHETIC: ln f = 4.4 − 2.0·w/cm, plus a deterministic ± wobble so s > 0.
 const WCMS = [0.4, 0.5, 0.6];
+/** One cast date per result (weekly), so forward-in-time validation has earlier results to learn from. */
+const weekly = (i: number) => {
+  const d = new Date(Date.UTC(2026, 0, 1 + i * 7));
+  return d.toISOString().slice(0, 10);
+};
+
 function points(n: number, wobble = 1.5): StrengthPoint[] {
   return Array.from({ length: n }, (_, i) => {
     const w = WCMS[i % 3]!;
@@ -31,7 +37,7 @@ function points(n: number, wobble = 1.5): StrengthPoint[] {
       id: `p${String(i).padStart(3, '0')}`,
       wcm: w,
       mpa: Math.exp(4.4 - 2.0 * w) + (noise * wobble) / 2,
-      castDate: '2026-06-01',
+      castDate: weekly(i),
     };
   });
 }
@@ -43,7 +49,7 @@ describe('fitModel', () => {
         id: `e${k}-${i}`,
         wcm: w,
         mpa: Math.exp(4.4 - 2 * w),
-        castDate: '2026-06-01',
+        castDate: weekly(k * 10 + i),
       })),
     );
     const f = fitModel(pts)!;
@@ -119,7 +125,7 @@ describe('validity matrix (each threshold on both sides)', () => {
     const narrow = (hi: number) =>
       Array.from({ length: 36 }, (_, i) => {
         const w = [0.4, (0.4 + hi) / 2, hi][i % 3]!;
-        return { id: `n${i}`, wcm: w, mpa: Math.exp(4.4 - 2 * w), castDate: '2026-06-01' };
+        return { id: `n${i}`, wcm: w, mpa: Math.exp(4.4 - 2 * w), castDate: weekly(i) };
       });
     expect(fitModel(narrow(0.49))!.reasons.map((r) => r.code)).toContain('span_too_narrow');
     expect(fitModel(narrow(0.5))!.reasons.map((r) => r.code)).not.toContain('span_too_narrow');

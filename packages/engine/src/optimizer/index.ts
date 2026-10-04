@@ -8,3 +8,4 @@ export { createHighsSolver, toLpText } from './highsSolver';
 export { prepare, type Prepared } from './prepare';
 export { dmaxFor, gradingSieves, targetPassing, wfAdjustment, measure } from './measure';
 export { aciBaseline, type AciBaseline } from './baseline';
+export * from './sensitivity';

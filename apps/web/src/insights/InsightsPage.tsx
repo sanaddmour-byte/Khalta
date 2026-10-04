@@ -23,6 +23,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
+import { ChangeImpactSection } from './ChangeImpactSection';
 import { useFormat } from '../lib/format';
 import { usePlant } from '../lib/plant';
 import { usePrefs } from '../lib/prefs';
@@ -339,6 +340,8 @@ export function InsightsPage() {
           </p>
         )}
       </section>
+
+      <ChangeImpactSection />
 
       <section aria-label={t('insights.inbox')} className="flex flex-col gap-3">
         <div className="flex flex-wrap items-end gap-3">

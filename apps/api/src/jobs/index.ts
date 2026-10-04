@@ -9,6 +9,7 @@ export const JOB_NAMES = [
   'material-test',
   'rule-change',
   'strength-result',
+  'change-impact',
   'nightly',
   'backup',
 ] as const;

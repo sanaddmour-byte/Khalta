@@ -28,6 +28,7 @@ import { evaluationRoutes } from './routes/evaluations';
 import { portfolioRoutes } from './routes/portfolio';
 import { baselineRoutes } from './routes/baselines';
 import { projectRequirementRoutes } from './routes/projectRequirements';
+import { changeImpactRoutes } from './routes/changeImpacts';
 import { designRequestRoutes } from './routes/designRequests';
 import { profileRoutes } from './routes/profiles';
 import { legacyRoutes } from './routes/legacy';
@@ -119,6 +120,7 @@ export function createApp({
   portfolioRoutes(api);
   baselineRoutes(api);
   projectRequirementRoutes(api);
+  changeImpactRoutes(api);
   designRequestRoutes(api);
   profileRoutes(api);
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {

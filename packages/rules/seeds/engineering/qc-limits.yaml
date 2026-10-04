@@ -134,3 +134,48 @@ rules:
     verified: false
     note_en: 'Maximum concrete temperature of a trial batch, °C (hot-weather limit; QC sets)'
     note_ar: 'أقصى درجة حرارة للخرسانة في الخلطة التجريبية، °م (حد الطقس الحار؛ يحدده ضبط الجودة)'
+
+  - key: 'eng.trial.retention_min_slump_mm'
+    requirement: 'eng.trial.retention_min_slump_mm'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'QC limits'
+    value: null
+    units: 'mm'
+    clause_ref: 'docs/adr/0023-trial-and-strength-governance.md'
+    verified: false
+    note_en: 'Optional trial criterion: the slump measured after the retention time must be at least this, mm. Applied only once QC enters it together with the retention time.'
+    note_ar: 'معيار اختياري للتجربة: يجب ألا يقل الهبوط المقاس بعد زمن الاحتفاظ عن هذه القيمة، ملم. يُطبَّق بعد أن يدخله ضبط الجودة مع زمن الاحتفاظ.'
+  - key: 'eng.trial.retention_minutes'
+    requirement: 'eng.trial.retention_minutes'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'QC limits'
+    value: null
+    units: 'none'
+    clause_ref: 'docs/adr/0023-trial-and-strength-governance.md'
+    verified: false
+    note_en: 'Optional trial criterion: minutes after mixing at which the retained slump must be measured. Applied only once QC enters it together with the minimum retained slump.'
+    note_ar: 'معيار اختياري للتجربة: عدد الدقائق بعد الخلط التي يُقاس عندها الهبوط المحتفَظ به. يُطبَّق بعد أن يدخله ضبط الجودة مع الحد الأدنى للهبوط.'
+  - key: 'eng.trial.stability_required'
+    requirement: 'eng.trial.stability_required'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'QC limits'
+    value: null
+    units: 'none'
+    clause_ref: 'docs/adr/0023-trial-and-strength-governance.md'
+    verified: false
+    note_en: 'Optional trial criterion: enter 1 when bleeding and segregation must be observed and the batch found stable. Not applied until QC sets it.'
+    note_ar: 'معيار اختياري للتجربة: أدخل 1 عند وجوب ملاحظة النزف والانفصال وثبات الخلطة. لا يُطبَّق حتى يحدده ضبط الجودة.'
+  - key: 'eng.trial.placement_required'
+    requirement: 'eng.trial.placement_required'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'QC limits'
+    value: null
+    units: 'none'
+    clause_ref: 'docs/adr/0023-trial-and-strength-governance.md'
+    verified: false
+    note_en: 'Optional trial criterion: enter 1 when pumping and finishing must be observed and found acceptable. A pumpable design cannot pass its trial until QC sets this.'
+    note_ar: 'معيار اختياري للتجربة: أدخل 1 عند وجوب ملاحظة الضخ والتشطيب وقبولهما. لا يجتاز تصميم قابل للضخ تجربته حتى يحدد ضبط الجودة هذا المعيار.'

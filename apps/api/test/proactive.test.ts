@@ -620,6 +620,7 @@ describe('the worker (pg-boss)', () => {
         'material-test': stub,
         'rule-change': stub,
         'strength-result': stub,
+        'change-impact': stub,
         nightly: stub,
         backup: stub,
       },

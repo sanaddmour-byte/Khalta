@@ -236,6 +236,18 @@ export function projectRequirementRoutes(api: ApiRoutes) {
       summary:
         'Verify a draft (a second person, e-signed). Refused while limits of one requirement are stated on incompatible bases',
       capability: 'rules.verify',
+      // designs that froze the revision this one replaces are assessed (never altered)
+      after: ({ auth, params }) =>
+        api.jobs.enqueue(
+          'change-impact',
+          {
+            tenantId: auth.tenantId,
+            trigger: 'requirements_revision',
+            subject: params.id,
+            token: params.id,
+          },
+          { singletonKey: `req-rev:${params.id}` },
+        ),
       params: idParam,
       body: verifyBody,
     },

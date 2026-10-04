@@ -778,6 +778,13 @@ export const trialBatches = pgTable(
     temperatureC: numeric('temperature_c', { precision: 5, scale: 1 }),
     freshDensityKgM3: numeric('fresh_density_kg_m3', { precision: 8, scale: 1 }),
     yieldM3: numeric('yield_m3', { precision: 6, scale: 3 }),
+    /** Optional criteria (applied only when QC configured them): slump after a stated time, stability, placement. */
+    retainedSlumpMm: numeric('retained_slump_mm', { precision: 8, scale: 1 }),
+    retentionMinutes: integer('retention_minutes'),
+    stability: text('stability', {
+      enum: ['stable', 'bleeding', 'segregation', 'bleeding_and_segregation'],
+    }),
+    placementAcceptable: boolean('placement_acceptable'),
     /** Legacy (M4.1 fixtures only, never read): strength results are rows of `strength_results` from M4.2. */
     strengthMpa: jsonb('strength_mpa').notNull().default([]),
     /** Water added on site to reach the target slump (information only), kg per m³. */
@@ -969,6 +976,27 @@ export const designRequests = pgTable(
   (t) => [index('design_requests_plant_idx').on(t.tenantId, t.plantId, t.createdAt)],
 );
 
+/**
+ * A newer request replaced this one. Requests are immutable, so the fact lives in its own append-only row (one per
+ * superseded request). The old result stays readable, but no design can be made from it.
+ */
+export const designRequestSupersessions = pgTable(
+  'design_request_supersessions',
+  {
+    requestId: uuid('request_id')
+      .primaryKey()
+      .references(() => designRequests.id),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    supersededBy: uuid('superseded_by')
+      .notNull()
+      .references(() => designRequests.id),
+    createdAt: createdAt(),
+  },
+  (t) => [index('design_request_supersessions_by_idx').on(t.supersededBy)],
+);
+
 /** One ranked candidate of a request. Never edited; turning it into a design creates a new draft design. */
 export const designCandidates = pgTable(
   'design_candidates',
@@ -1000,6 +1028,8 @@ export const designCandidates = pgTable(
     /** Result of the independent candidate validator at creation. Only `pass` candidates are stored. */
     validator: jsonb('validator').notNull(),
     validatorStatus: text('validator_status', { enum: ['pass', 'fail'] }).notNull(),
+    /** How the solver reached it: LP cost before rounding, the rounding gap, fixed-point convergence. */
+    solve: jsonb('solve').notNull().default({}),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex('design_candidates_request_rank_uq').on(t.requestId, t.rank)],
@@ -1250,6 +1280,12 @@ export const strengthModels = pgTable(
     sMpa: numeric('s_mpa', { precision: 14, scale: 6 }).notNull(),
     r2: numeric('r2', { precision: 10, scale: 6 }).notNull(),
     heldOut: jsonb('held_out'),
+    /** Forward-in-time validation (each result predicted from earlier-cast ones). */
+    chronological: jsonb('chronological'),
+    /** The validation report as stored at fit time: training data summary, limits used, both checks, domain, fit version. */
+    validationReport: jsonb('validation_report').notNull().default({}),
+    /** The version of the fit and validity rules that produced it. */
+    fitVersion: text('fit_version').notNull().default('1'),
     /** Why it is provisional (named), or why it was invalidated. */
     reasons: jsonb('reasons').notNull().default([]),
     status: text('status', { enum: ['valid', 'provisional', 'invalidated'] }).notNull(),
@@ -1315,4 +1351,81 @@ export const backupRuns = pgTable(
     error: text('error'),
   },
   (t) => [index('backup_runs_started_idx').on(t.startedAt)],
+);
+
+/**
+ * A change that touched approved designs, and the job that assessed it. One row per (tenant, dedupe key), so a repeated
+ * trigger or a retried job assesses the same change once. `jobState` is what an operator watches.
+ */
+export const changeImpacts = pgTable(
+  'change_impacts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    trigger: text('trigger', {
+      enum: [
+        'price_change',
+        'test_expiry',
+        'material_change',
+        'rule_revision',
+        'requirements_revision',
+        'strength_deterioration',
+      ],
+    }).notNull(),
+    /** What changed: a material id, a rules timestamp, a requirements revision id, a design id, a plant list. */
+    subject: text('subject').notNull(),
+    /** trigger + subject + a version token of the change. */
+    dedupeKey: text('dedupe_key').notNull(),
+    jobState: text('job_state', { enum: ['pending', 'running', 'completed', 'failed'] })
+      .notNull()
+      .default('pending'),
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
+    summary: jsonb('summary').notNull().default({}),
+    createdAt: createdAt(),
+    startedAt: ts('started_at'),
+    finishedAt: ts('finished_at'),
+  },
+  (t) => [
+    uniqueIndex('change_impacts_dedupe_uq').on(t.tenantId, t.dedupeKey),
+    index('change_impacts_state_idx').on(t.tenantId, t.jobState, t.createdAt),
+  ],
+);
+
+/** One design touched by a change: what a person must consider, and what they decided. The design itself is never altered. */
+export const changeImpactItems = pgTable(
+  'change_impact_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    impactId: uuid('impact_id')
+      .notNull()
+      .references(() => changeImpacts.id),
+    designId: uuid('design_id')
+      .notNull()
+      .references(() => mixDesigns.id),
+    plantId: uuid('plant_id')
+      .notNull()
+      .references(() => plants.id),
+    designVersion: integer('design_version').notNull(),
+    klass: text('class', {
+      enum: ['no_action', 'review', 'revalidate', 'requalify', 'suspend_recommended'],
+    }).notNull(),
+    reasons: jsonb('reasons').notNull().default([]),
+    disposition: text('disposition', {
+      enum: ['revalidation_started', 'requalification_required', 'accepted_risk', 'dismissed'],
+    }),
+    dispositionBy: text('disposition_by').references(() => users.id),
+    dispositionAt: ts('disposition_at'),
+    dispositionNote: text('disposition_note'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('change_impact_items_uq').on(t.impactId, t.designId),
+    index('change_impact_items_open_idx').on(t.tenantId, t.klass),
+  ],
 );

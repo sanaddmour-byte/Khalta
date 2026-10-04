@@ -120,6 +120,10 @@ export async function trialCriteria(db: Executor, tenantId: string): Promise<Tri
     densityBandKgM3: ruleNumber(rules, 'eng.trial.density_band_kg_m3'),
     yieldBandM3: ruleNumber(rules, 'eng.trial.yield_band_m3'),
     temperatureMaxC: ruleNumber(rules, 'eng.trial.temperature_max_c'),
+    retentionMinSlumpMm: ruleNumber(rules, 'eng.trial.retention_min_slump_mm'),
+    retentionMinutes: ruleNumber(rules, 'eng.trial.retention_minutes'),
+    stabilityRequired: ruleNumber(rules, 'eng.trial.stability_required'),
+    placementRequired: ruleNumber(rules, 'eng.trial.placement_required'),
   };
 }
 
@@ -147,6 +151,10 @@ export async function trialBatchesOf(db: Executor, designId: string): Promise<Tr
     temperatureC: n(r.temperatureC),
     freshDensityKgM3: n(r.freshDensityKgM3),
     yieldM3: n(r.yieldM3),
+    retainedSlumpMm: n(r.retainedSlumpMm),
+    retentionMinutes: r.retentionMinutes,
+    stability: r.stability as TrialBatch['stability'],
+    placementAcceptable: r.placementAcceptable,
     // only the specimens of this batch cast for the design's test age are judged (others are stored and shown)
     strengthMpa: results
       .filter((x) => x.trialBatchId === r.id && age !== null && x.ageDays === age)
@@ -374,7 +382,11 @@ function trialGates(
   criteria: TrialCriteria,
   batches: TrialBatch[],
 ) {
-  const req = d.requirements as { slumpMm?: number | null; airPct?: number | null };
+  const req = d.requirements as {
+    slumpMm?: number | null;
+    airPct?: number | null;
+    pumpable?: boolean;
+  };
   const density = report.trace.find((t) => t.key === 'mass.fresh_density')?.value;
   const result = evaluateTrialAcceptance(
     criteria,
@@ -383,6 +395,7 @@ function trialGates(
       airPct: req.airPct ?? null,
       densityKgM3: typeof density === 'number' ? density : null,
       fcrMpa: report.strengthAdequacy.fcrMpa,
+      pumpable: req.pumpable === true,
     },
     batches,
   );

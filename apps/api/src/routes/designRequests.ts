@@ -4,7 +4,7 @@
 import { schema, type AuditRecorder, type Tx } from '@khalta/db';
 import type { AuthContext } from '../middleware';
 import { canTransition, type EvaluationSnapshot } from '@khalta/engine';
-import { candidateRecord } from '@khalta/engine/optimizer';
+import { candidateRecord, priceSensitivity, toSensitivityInput } from '@khalta/engine/optimizer';
 import { roleCan, canAccessPlant } from '@khalta/rbac';
 import { validateCandidate } from '@khalta/validator';
 import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
@@ -64,6 +64,8 @@ function candidateView(c: CandidateRow, canCost: boolean) {
     evidence: c.evidence,
     requiresAuthorization: c.requiresAuthorization,
     costJodPerM3: canCost ? c.costJodPerM3 : null,
+    // LP cost and rounding gap are money figures: shown only with cost.view
+    solve: canCost ? c.solve : null,
     validator: {
       status: c.validatorStatus,
       version: (c.validator as { validatorVersion?: string }).validatorVersion ?? null,
@@ -119,6 +121,7 @@ export async function createRequest(
         conflicts: r.conflicts,
         dof: r.dof,
         stats: r.stats,
+        termination: r.termination,
         excluded: r.excluded,
         notes: r.notes,
       },
@@ -154,10 +157,33 @@ export async function createRequest(
             objectiveValue: c.objectiveValue.toFixed(6),
             validator: run.validations.get(c.rank)!,
             validatorStatus: 'pass' as const,
+            solve: c.solve ?? {},
           })),
         )
         .returning()
     : [];
+  let supersededOld: string | null = null;
+  if (body.supersedes) {
+    // Only a request of this tenant and plant that nothing replaced yet is marked; replacing twice is harmless.
+    const [target] = await tx
+      .select({ id: schema.designRequests.id })
+      .from(schema.designRequests)
+      .where(
+        and(
+          eq(schema.designRequests.id, body.supersedes),
+          eq(schema.designRequests.tenantId, auth.tenantId),
+          eq(schema.designRequests.plantId, body.plantId),
+        ),
+      );
+    if (target) {
+      const marked = await tx
+        .insert(schema.designRequestSupersessions)
+        .values({ requestId: target.id, tenantId: auth.tenantId, supersededBy: row!.id })
+        .onConflictDoNothing()
+        .returning({ id: schema.designRequestSupersessions.requestId });
+      supersededOld = marked[0]?.id ?? null;
+    }
+  }
   await audit.record({
     action: 'design_request.create',
     entityType: 'design_request',
@@ -168,6 +194,8 @@ export async function createRequest(
       candidates: stored.length,
       blockers: r.blockers.length,
       stats: r.stats,
+      termination: r.termination.kind,
+      supersedes: supersededOld,
     },
   });
   const canCost = roleCan(auth.role, 'cost.view', auth.settings);
@@ -175,7 +203,7 @@ export async function createRequest(
     id: row!.id,
     status: r.status,
     objective: r.objective,
-    outcome: row!.outcome,
+    outcome: outcomeView(row!.outcome, canCost),
     candidates: stored.sort((a, b) => a.rank - b.rank).map((c) => candidateView(c, canCost)),
   };
 }
@@ -202,6 +230,17 @@ export async function requestTrialDesign(
       ),
     );
   if (!req || !canAccessPlant(auth.scope, req.plantId)) throw notFound('Design request not found');
+  const [sup] = await tx
+    .select({ by: schema.designRequestSupersessions.supersededBy })
+    .from(schema.designRequestSupersessions)
+    .where(eq(schema.designRequestSupersessions.requestId, req.id));
+  if (sup)
+    throw new ApiError(
+      409,
+      'request_superseded',
+      'A newer request replaced this one; use a candidate from the newer request',
+      { supersededBy: sup.by },
+    );
   const [cand] = await tx
     .select()
     .from(schema.designCandidates)
@@ -429,6 +468,60 @@ export async function requestTrialDesign(
   };
 }
 
+/** The stored outcome for a role: the rounding gap is a money figure, so it is withheld without `cost.view`. */
+function outcomeView(outcome: unknown, canCost: boolean) {
+  const o = outcome as { termination?: Record<string, unknown> };
+  if (canCost || !o.termination) return outcome;
+  const { maxRoundingGapJod: _gap, ...termination } = o.termination;
+  return { ...o, termination };
+}
+
+/**
+ * What produced a result, in one place: the objective in plain terms, how the search ended, the constraints it ran
+ * under, the price basis, the strength model frozen into it and what the independent validator did. The wording the
+ * UI shows never says "optimal": the search is one LP per discrete configuration (ADR 0009).
+ */
+function transparencyOf(
+  row: typeof schema.designRequests.$inferSelect,
+  cands: CandidateRow[],
+  canCost: boolean,
+  supersededBy: string | null,
+) {
+  const outcome = row.outcome as { termination?: unknown; stats?: unknown };
+  const snap = row.snapshot as {
+    strengthModel?: {
+      id: string;
+      groupKey: string;
+      wcmMin: number;
+      wcmMax: number;
+      ageDays: number;
+      basis: string;
+    } | null;
+    settings?: unknown;
+  };
+  const top = cands[0]?.report as { cost?: { basis?: unknown } } | undefined;
+  return {
+    termination:
+      (outcomeView(row.outcome, canCost) as { termination?: unknown }).termination ?? null,
+    stats: outcome.stats ?? null,
+    optimizerVersion: row.optimizerVersion,
+    solver: row.solver,
+    // frozen into the request: later changes to the plant model do not alter this result
+    strengthModel: snap.strengthModel
+      ? {
+          id: snap.strengthModel.id,
+          groupKey: snap.strengthModel.groupKey,
+          wcmMin: snap.strengthModel.wcmMin,
+          wcmMax: snap.strengthModel.wcmMax,
+          ageDays: snap.strengthModel.ageDays,
+          basis: snap.strengthModel.basis,
+        }
+      : null,
+    priceBasis: canCost ? (top?.cost?.basis ?? null) : null,
+    supersededBy,
+  };
+}
+
 export function designRequestRoutes(api: ApiRoutes) {
   api.mutate(
     'post',
@@ -462,6 +555,9 @@ export function designRequestRoutes(api: ApiRoutes) {
           status: schema.designRequests.status,
           request: schema.designRequests.request,
           createdAt: schema.designRequests.createdAt,
+          supersededBy: sql<
+            string | null
+          >`(select s.superseded_by from design_request_supersessions s where s.request_id = ${schema.designRequests.id})`,
           candidates: sql<number>`(select count(*)::int from design_candidates c where c.request_id = ${schema.designRequests.id})`,
         })
         .from(schema.designRequests)
@@ -496,6 +592,11 @@ export function designRequestRoutes(api: ApiRoutes) {
         .where(eq(schema.designCandidates.requestId, row.id))
         .orderBy(schema.designCandidates.rank);
       const canCost = roleCan(auth.role, 'cost.view', auth.settings);
+      const [supRow] = await db
+        .select({ by: schema.designRequestSupersessions.supersededBy })
+        .from(schema.designRequestSupersessions)
+        .where(eq(schema.designRequestSupersessions.requestId, row.id));
+      const supersededBy = supRow?.by ?? null;
       const designs = cands.length
         ? await db
             .select({
@@ -524,7 +625,9 @@ export function designRequestRoutes(api: ApiRoutes) {
         status: row.status,
         request: row.request,
         inputs: row.inputs,
-        outcome: row.outcome,
+        outcome: outcomeView(row.outcome, canCost),
+        supersededBy: supersededBy,
+        transparency: transparencyOf(row, cands, canCost, supersededBy),
         optimizerVersion: row.optimizerVersion,
         solver: row.solver,
         createdAt: row.createdAt,
@@ -548,6 +651,62 @@ export function designRequestRoutes(api: ApiRoutes) {
       status: 201,
     },
     async ({ auth, params, body, tx, audit }) => requestTrialDesign(tx, auth, audit, params, body),
+  );
+
+  api.get(
+    '/api/design-requests/:id/sensitivity',
+    {
+      summary:
+        'Price sensitivity of the stored candidates: re-prices them for what-if changes to one material at a time and reports break-even points. It never re-solves and never touches a constraint, so it cannot find a different mix',
+      capability: 'cost.view',
+      params: idParam,
+      query: z.object({
+        changes: z
+          .string()
+          .regex(/^-?\d+(\.\d+)?(,-?\d+(\.\d+)?){0,6}$/)
+          .default('-0.1,0.1'),
+      }),
+    },
+    async ({ auth, params, query, db }) => {
+      const [row] = await db
+        .select()
+        .from(schema.designRequests)
+        .where(
+          and(
+            eq(schema.designRequests.id, params.id),
+            eq(schema.designRequests.tenantId, auth.tenantId),
+          ),
+        );
+      if (!row || !canAccessPlant(auth.scope, row.plantId))
+        throw notFound('Design request not found');
+      const changes = query.changes.split(',').map(Number);
+      if (changes.some((c) => c <= -1 || c > 5))
+        throw new ApiError(
+          400,
+          'invalid_request',
+          'A price change must be above -100 % and at most +500 %',
+        );
+      const cands = await db
+        .select({
+          id: schema.designCandidates.id,
+          rank: schema.designCandidates.rank,
+          report: schema.designCandidates.report,
+        })
+        .from(schema.designCandidates)
+        .where(eq(schema.designCandidates.requestId, row.id))
+        .orderBy(schema.designCandidates.rank);
+      if (cands.length < 2)
+        throw new ApiError(409, 'nothing_to_compare', 'Sensitivity needs at least two candidates');
+      return {
+        requestId: row.id,
+        changes,
+        note: 'Re-priced from the stored candidates; nothing was re-solved and no constraint was changed.',
+        ...priceSensitivity(
+          toSensitivityInput(cands as { id: string; rank: number; report: never }[]),
+          changes,
+        ),
+      };
+    },
   );
 
   api.readPost(

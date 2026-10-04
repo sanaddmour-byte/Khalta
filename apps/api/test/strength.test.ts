@@ -182,6 +182,16 @@ describe('fitting: a proposal with the evidence it stands on', () => {
       inForce: false,
       approvedAt: null,
     });
+    // the stored validation report names what the model stood on and how it was judged
+    const rep = m.body.model.validationReport;
+    expect(m.body.model.fitVersion).toBe('2');
+    expect(rep.fitVersion).toBe('2');
+    expect(rep.training.n).toBe(37);
+    expect(rep.training.pointsSha256).toMatch(/^[0-9a-f]{64}$/);
+    expect(rep.limits.minResults).toBeGreaterThan(0);
+    expect(rep.domain).toMatchObject({ ageDays: 28, basis: 'cylinder' });
+    expect(rep.heldOut).toBeTruthy();
+    expect(rep.chronological.method).toBe('chronological');
     expect(Number(m.body.model.b)).toBeGreaterThan(1.5);
     expect(Number(m.body.model.b)).toBeLessThan(3);
     expect(m.body.points.filter((p: { included: boolean }) => p.included)).toHaveLength(37);
@@ -491,6 +501,9 @@ describe('low-strength alerts on the live design (the seeded sequence)', () => {
 
   it('the sequence rule fires against the approved model band', async () => {
     const mgr = await as('qc_manager');
+    // the earlier tests deliberately injected wild low and high results (20 and 55 MPa); the validity limits are
+    // loosened here so this test can approve a model, because it is about the alert band and not about the fit
+    await setSettings({ strengthHeldOutRmseFactor: 100, strengthHeldOutMissS: 100 });
     expect((await mgr.post('/api/strength-models/refit').send({})).status).toBe(200);
     const [m] = (await env.db.select().from(schema.strengthModels))
       .filter(
@@ -584,5 +597,35 @@ describe('invalidation: a changed material takes the model out of use', () => {
     expect(ev.body.report.strengthAdequacy.model).toBe('none');
     // a second night finds nothing more to invalidate
     expect((await nightlyStrength(ctx(), env.tenantId)).invalidated).toBe(0);
+  });
+
+  it('a supplier changed in place on a group material invalidates an approved model by name', async () => {
+    const mgr = await as('qc_manager');
+    await setSettings({ strengthHeldOutRmseFactor: 100, strengthHeldOutMissS: 100 });
+    expect((await mgr.post('/api/strength-models/refit').send({})).status).toBe(200);
+    const fresh = (await env.db.select().from(schema.strengthModels))
+      .filter((x) => x.status === 'valid' && !x.approvedAt && !x.retiredAt)
+      .filter((x) => (x.grp as { sources?: unknown }).sources)
+      .sort((a, b) => b.fittedAt.getTime() - a.fittedAt.getTime())[0];
+    expect(fresh).toBeTruthy();
+    expect((await mgr.post(`/api/strength-models/${fresh!.id}/approve`).send(SIGN)).status).toBe(
+      200,
+    );
+    const cementId = (fresh!.grp as { cementId: string }).cementId;
+    const [sup] = await env.db
+      .insert(schema.suppliers)
+      .values({ tenantId: env.tenantId, nameAr: 'مصدر آخر', nameEn: 'Other source (SYNTHETIC)' })
+      .returning();
+    await env.db
+      .update(schema.materials)
+      .set({ supplierId: sup!.id })
+      .where(eq(schema.materials.id, cementId));
+    expect((await nightlyStrength(ctx(), env.tenantId)).invalidated).toBeGreaterThanOrEqual(1);
+    const [after] = await env.db
+      .select()
+      .from(schema.strengthModels)
+      .where(eq(schema.strengthModels.id, fresh!.id));
+    expect(after!.status).toBe('invalidated');
+    expect((after!.reasons as { code: string }[]).map((r) => r.code)).toContain('source_changed');
   });
 });

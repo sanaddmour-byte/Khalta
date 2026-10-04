@@ -171,6 +171,20 @@ export interface Candidate {
   /** Always MODEL_BASELINE + TRIAL_REQUIRED; MODEL_PREDICTS_SHORTFALL needs QC-manager authorisation. */
   requiresAuthorization: boolean;
   notes: { code: string; detail: string }[];
+  /** How this candidate came out of the solver: set by `optimize` (see `CandidateSolve`). */
+  solve?: CandidateSolve;
+}
+
+/**
+ * What the solver did for one candidate. `lpCostJod` is the LP optimum of its configuration BEFORE rounding to
+ * practical quantities; `roundingGapJod` is what rounding added (never negative in exact arithmetic). The candidate is
+ * not proven globally cheapest: the search is one LP per discrete configuration (ADR 0009).
+ */
+export interface CandidateSolve {
+  lpCostJod: number;
+  roundingGapJod: number | null;
+  fixedPointIterations: number;
+  fixedPointConverged: boolean;
 }
 
 export interface DofReport {
@@ -207,6 +221,58 @@ export interface ConflictReport {
 
 export type OptimizeStatus = 'candidates' | 'blocked' | 'infeasible' | 'no_valid_candidate';
 
+/**
+ * Why the search ended, in words a person can act on. `status` says what came out; this says how complete it is.
+ * - optimal_within_search: every enumerated configuration was solved; the best is the lowest-cost found among them
+ * - feasible_unproven: candidates exist but the search was cut short (time budget, solver errors, enumeration cap)
+ * - timed_out: the time budget ended the search before ANY configuration was solved (this is not infeasibility)
+ * - infeasible: every configuration was proven infeasible for the stated hard rows
+ * - invalid_input: the request cannot be formulated (a parameter, rule or material is missing)
+ * - solver_failure: the solver itself failed on every configuration it tried
+ * - no_valid_candidate: solutions were found but none survived rounding and the independent validator
+ * - cancelled: the caller stopped the search (never stored)
+ */
+export const TERMINATION_KINDS = [
+  'optimal_within_search',
+  'feasible_unproven',
+  'timed_out',
+  'infeasible',
+  'invalid_input',
+  'solver_failure',
+  'no_valid_candidate',
+  'cancelled',
+] as const;
+export type TerminationKind = (typeof TERMINATION_KINDS)[number];
+
+export interface Termination {
+  kind: TerminationKind;
+  /** True only when every enumerated configuration was attempted and none was lost to a solver error or the budget. */
+  searchComplete: boolean;
+  configurations: {
+    enumerated: number;
+    solved: number;
+    infeasible: number;
+    solverErrors: number;
+    /** Not attempted because the time budget (or the enumeration cap) ended the search. */
+    notAttempted: number;
+  };
+  /** The objective in plain terms. The wording never claims a proven global optimum. */
+  objective: { name: Objective; statement: 'lowest_cost_found' | 'closest_to_targets_found' };
+  /** Rows of the first solved configuration by owner (code, engineering, user, physical). */
+  constraints: Record<string, number>;
+  /** The largest amount rounding added over the LP optimum among the returned candidates, JOD/m³. */
+  maxRoundingGapJod: number | null;
+  /** The independent validator at the candidate stage. */
+  validator: { checked: number; accepted: number; rejected: number };
+}
+
+export class OptimizeCancelled extends Error {
+  constructor() {
+    super('The optimization was cancelled');
+    this.name = 'OptimizeCancelled';
+  }
+}
+
 export interface OptimizeResult {
   status: OptimizeStatus;
   objective: Objective;
@@ -219,6 +285,7 @@ export interface OptimizeResult {
     enumerated: number;
     solved: number;
     infeasible: number;
+    solverErrors: number;
     rejectedAfterRounding: number;
     truncated: boolean;
     elapsedMs: number;
@@ -226,7 +293,8 @@ export interface OptimizeResult {
   /** Materials excluded from the search and why (never silent). */
   excluded: { materialId: string; reason: string }[];
   notes: { code: string; detail: string }[];
+  termination: Termination;
   optimizerVersion: string;
 }
 
-export const OPTIMIZER_VERSION = '1.0.0';
+export const OPTIMIZER_VERSION = '1.1.0';

@@ -4,7 +4,7 @@ import type { TrialAcceptance } from './trial';
 
 export type GateId =
   | 'trial_batch'
-  | `criterion_${'slump' | 'air' | 'density' | 'yield' | 'temperature' | 'strength'}`
+  | `criterion_${'slump' | 'air' | 'density' | 'yield' | 'temperature' | 'strength' | 'retention' | 'stability' | 'placement'}`
   | 'trial_passed'
   | 'four_eyes'
   | 'validator'

@@ -37,7 +37,7 @@ describe('cheapest objective', () => {
     expect(r.candidates.map((c) => c.rank)).toEqual([1, 2, 3, 4, 5]);
     expect(r.stats).toMatchObject({ enumerated: 136, solved: 136, truncated: false });
     expect(r.dof).toMatchObject({ quantities: 6, equalities: 1, dof: 5, state: 'free' });
-    expect(r.optimizerVersion).toBe('1.0.0');
+    expect(r.optimizerVersion).toBe('1.1.0');
     expect(r.excluded).toEqual([]);
   });
 

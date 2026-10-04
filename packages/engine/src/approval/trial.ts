@@ -13,7 +13,27 @@ export interface TrialCriteria {
   yieldBandM3: number | null;
   /** Maximum concrete temperature, °C (hot-weather limit). */
   temperatureMaxC: number | null;
+  /**
+   * Criteria beyond the five measured ones. Each is applied only when QC has configured it, and a requirement that
+   * names it (a pumpable mix) with no criterion on file blocks instead of passing silently. None has a default.
+   */
+  /** Workability retention: the slump measured after `retentionMinutes` must be at least this (mm). */
+  retentionMinSlumpMm?: number | null;
+  /** The age (minutes after mixing) at which the retained slump must be measured. */
+  retentionMinutes?: number | null;
+  /** 1 when stability (bleeding and segregation) must be observed and found acceptable. */
+  stabilityRequired?: number | null;
+  /** 1 when placement (pumping and finishing) must be observed and found acceptable. */
+  placementRequired?: number | null;
 }
+
+export const STABILITY_OBSERVATIONS = [
+  'stable',
+  'bleeding',
+  'segregation',
+  'bleeding_and_segregation',
+] as const;
+export type StabilityObservation = (typeof STABILITY_OBSERVATIONS)[number];
 
 export interface TrialBatch {
   id: string;
@@ -23,6 +43,13 @@ export interface TrialBatch {
   temperatureC: number | null;
   freshDensityKgM3: number | null;
   yieldM3: number | null;
+  /** Slump after the retention time, and how many minutes after mixing it was taken. */
+  retainedSlumpMm?: number | null;
+  retentionMinutes?: number | null;
+  /** What was seen: only `stable` satisfies a configured stability criterion. */
+  stability?: StabilityObservation | null;
+  /** Whether the mix pumped and finished acceptably (an observation by the person at the batch). */
+  placementAcceptable?: boolean | null;
   /** Individual specimen results at the design's test age (MPa). */
   strengthMpa: number[];
 }
@@ -34,11 +61,22 @@ export interface TrialTargets {
   densityKgM3: number | null;
   /** Required average strength f′cr (MPa) from the stored evaluation. */
   fcrMpa: number | null;
+  /** The design must be pumpable: placement then needs a configured criterion. */
+  pumpable?: boolean;
 }
 
 export type CriterionStatus = 'pass' | 'fail' | 'missing' | 'not_applicable';
 export interface CriterionResult {
-  id: 'slump' | 'air' | 'density' | 'yield' | 'temperature' | 'strength';
+  id:
+    | 'slump'
+    | 'air'
+    | 'density'
+    | 'yield'
+    | 'temperature'
+    | 'strength'
+    | 'retention'
+    | 'stability'
+    | 'placement';
   status: CriterionStatus;
   /** Rule key of a missing parameter, or the reason a measurement is missing. */
   missing?: string;
@@ -124,6 +162,45 @@ export function evaluateTrialAcceptance(
       target: targets.fcrMpa,
     });
   }
+  // ---- optional criteria: applied when configured; a stated requirement with none on file blocks
+  const retMin = criteria.retentionMinSlumpMm ?? null;
+  const retAt = criteria.retentionMinutes ?? null;
+  if (retMin === null && retAt === null) out.push({ id: 'retention', status: 'not_applicable' });
+  else if (retMin === null || retAt === null)
+    out.push({
+      id: 'retention',
+      status: 'missing',
+      missing: retMin === null ? 'eng.trial.retention_min_slump_mm' : 'eng.trial.retention_minutes',
+    });
+  else if (!num(batch?.retainedSlumpMm) || !num(batch?.retentionMinutes))
+    out.push({ id: 'retention', status: 'missing', missing: 'measurement' });
+  else if (batch.retentionMinutes + 1e-9 < retAt)
+    out.push({
+      id: 'retention',
+      status: 'missing',
+      missing: 'measurement_too_early',
+      measured: batch.retainedSlumpMm,
+      limit: retMin,
+    });
+  else
+    out.push({
+      id: 'retention',
+      status: batch.retainedSlumpMm + 1e-9 >= retMin ? 'pass' : 'fail',
+      measured: batch.retainedSlumpMm,
+      limit: retMin,
+    });
+  if ((criteria.stabilityRequired ?? null) !== 1)
+    out.push({ id: 'stability', status: 'not_applicable' });
+  else if (!batch?.stability)
+    out.push({ id: 'stability', status: 'missing', missing: 'measurement' });
+  else out.push({ id: 'stability', status: batch.stability === 'stable' ? 'pass' : 'fail' });
+  const placementOn = (criteria.placementRequired ?? null) === 1;
+  if (!placementOn && targets.pumpable)
+    out.push({ id: 'placement', status: 'missing', missing: 'eng.trial.placement_required' });
+  else if (!placementOn) out.push({ id: 'placement', status: 'not_applicable' });
+  else if (typeof batch?.placementAcceptable !== 'boolean')
+    out.push({ id: 'placement', status: 'missing', missing: 'measurement' });
+  else out.push({ id: 'placement', status: batch.placementAcceptable ? 'pass' : 'fail' });
   return {
     ok: !!batch && out.every((c) => c.status === 'pass' || c.status === 'not_applicable'),
     batchId: batch?.id ?? null,

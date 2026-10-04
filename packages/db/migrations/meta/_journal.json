@@ -239,6 +239,27 @@
       "when": 1791110005870,
       "tag": "0033_batch_preparation_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791111810434,
+      "tag": "0034_optimizer_transparency",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791112094914,
+      "tag": "0035_trial_strength_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791114361911,
+      "tag": "0036_change_impact",
+      "breakpoints": true
     }
   ]
 }

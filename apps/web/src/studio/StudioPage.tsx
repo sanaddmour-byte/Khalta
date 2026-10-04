@@ -51,6 +51,7 @@ import { parseOrigin } from '../profiles/api';
 import { ComparePlantsDialog } from './ComparePlantsDialog';
 import { InspectStage, type Inspectable } from './InspectStage';
 import { BlockedPanel, ConflictPanel, DofMeter } from './panels';
+import { SensitivityPanel, TerminationPanel } from './Transparency';
 import {
   DEFAULT_REQ,
   MixGrid,
@@ -275,7 +276,10 @@ export function StudioPage() {
   const gen = useMutation({
     mutationFn: async () => {
       const seq = ++cancelled.current;
-      const data = await generate(body!);
+      const data = await generate({
+        ...body!,
+        ...(result?.data.id && { supersedes: result.data.id }),
+      });
       if (seq !== cancelled.current) throw new Error('cancelled');
       return { key, data };
     },
@@ -605,6 +609,9 @@ export function StudioPage() {
               </p>
             </div>
           )}
+          {outcome?.termination && (
+            <TerminationPanel termination={outcome.termination} canCost={canCost} />
+          )}
           {result?.data.status === 'blocked' && <BlockedPanel blockers={outcome!.blockers} />}
           {result?.data.status === 'infeasible' && outcome?.conflicts && (
             <ConflictPanel
@@ -656,6 +663,9 @@ export function StudioPage() {
                   />
                 ))}
               </div>
+              {canCost && result && cands.length >= 2 && (
+                <SensitivityPanel requestId={result.data.id} nameOfMaterial={nameOf} />
+              )}
               {pinnedCands.length >= 2 && (
                 <section aria-labelledby="cmp-title" className="flex flex-col gap-2">
                   <h3 id="cmp-title" className="font-semibold">
