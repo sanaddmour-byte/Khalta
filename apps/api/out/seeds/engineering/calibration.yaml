@@ -1,0 +1,26 @@
+ruleset: 'ENGINEERING'
+edition: 'Engineering parameters (not code values)'
+source_doc: '02-codes §6'
+rules:
+  - key: 'eng.water.beta_fm'
+    requirement: 'eng.water.beta_fm'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Calibration'
+    value: null
+    units: 'none'
+    clause_ref: '02-codes §6'
+    verified: false
+    note_en: 'Water-demand adjustment per unit fineness modulus: null until calibrated from trial batches (M5.2)'
+    note_ar: 'تعديل الطلب على الماء لكل وحدة معامل نعومة: فارغ حتى المعايرة من الخلطات التجريبية (M5.2)'
+  - key: 'eng.water.beta_75'
+    requirement: 'eng.water.beta_75'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Calibration'
+    value: null
+    units: 'none'
+    clause_ref: '02-codes §6'
+    verified: false
+    note_en: 'Water-demand adjustment per percent finer than 75 µm: null until calibrated'
+    note_ar: 'تعديل الطلب على الماء لكل نسبة مارّة من 75 ميكرون: فارغ حتى المعايرة'

@@ -1,0 +1,37 @@
+ruleset: 'SHARED'
+edition: 'Cement strength classes and market names (M7.1)'
+source_doc: 'EN 197-1 strength classes; Jordanian market names'
+rules:
+  - key: 'cement.class_min_28d_mpa.c32_5'
+    requirement: 'cement.class_min_28d_mpa.c32_5'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Cement'
+    value: 32.5
+    units: 'MPa'
+    clause_ref: 'EN 197-1 strength classes'
+    verified: false
+    note_en: 'Class 32.5: minimum 28-day mortar strength. A certificate below it is a warning on the material, never a code result.'
+    note_ar: 'الفئة 32.5: الحد الأدنى لمقاومة الملاط بعمر 28 يوماً. شهادة أدنى منه تنبيه على المادة وليست نتيجة امتثال.'
+  - key: 'cement.class_min_28d_mpa.c42_5'
+    requirement: 'cement.class_min_28d_mpa.c42_5'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Cement'
+    value: 42.5
+    units: 'MPa'
+    clause_ref: 'EN 197-1 strength classes'
+    verified: false
+    note_en: 'Class 42.5: minimum 28-day mortar strength. A certificate below it is a warning on the material, never a code result.'
+    note_ar: 'الفئة 42.5: الحد الأدنى لمقاومة الملاط بعمر 28 يوماً. شهادة أدنى منه تنبيه على المادة وليست نتيجة امتثال.'
+  - key: 'cement.class_min_28d_mpa.c52_5'
+    requirement: 'cement.class_min_28d_mpa.c52_5'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Cement'
+    value: 52.5
+    units: 'MPa'
+    clause_ref: 'EN 197-1 strength classes'
+    verified: false
+    note_en: 'Class 52.5: minimum 28-day mortar strength. A certificate below it is a warning on the material, never a code result.'
+    note_ar: 'الفئة 52.5: الحد الأدنى لمقاومة الملاط بعمر 28 يوماً. شهادة أدنى منه تنبيه على المادة وليست نتيجة امتثال.'

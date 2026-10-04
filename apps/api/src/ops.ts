@@ -72,6 +72,45 @@ export async function backupState(
   };
 }
 
+export const WORKER_STALE_SECONDS = 120;
+export type WorkerState = 'live' | 'stale' | 'never' | 'unknown';
+
+/** Is a worker alive? Information only: an API without a worker still serves, but jobs and escalations do not run. */
+export async function workerState(
+  db: Db,
+  now = new Date(),
+): Promise<{ state: WorkerState; lastSeenAt: string | null; version: string | null }> {
+  const [row] = await db
+    .select()
+    .from(schema.workerHeartbeats)
+    .where(eq(schema.workerHeartbeats.name, 'worker'));
+  if (!row) return { state: 'never', lastSeenAt: null, version: null };
+  const age = (now.getTime() - row.at.getTime()) / 1000;
+  return {
+    state: age > WORKER_STALE_SECONDS ? 'stale' : 'live',
+    lastSeenAt: row.at.toISOString(),
+    version: row.version,
+  };
+}
+
+/** Writes the worker's heartbeat now and every `everyMs`; returns a stop function. A failed write is retried at the next beat. */
+export function startHeartbeat(db: Db, version: string | undefined, everyMs = 30_000) {
+  const beat = () =>
+    db
+      .insert(schema.workerHeartbeats)
+      .values({ name: 'worker', version: version ?? null })
+      .onConflictDoUpdate({
+        target: schema.workerHeartbeats.name,
+        set: { at: new Date(), version: version ?? null },
+      })
+      .then(() => undefined)
+      .catch((e: unknown) => console.error('heartbeat failed', e));
+  void beat();
+  const t = setInterval(() => void beat(), everyMs);
+  t.unref();
+  return () => clearInterval(t);
+}
+
 /** 200 when the database answers and every migration is applied; 503 otherwise. Backup state is information only. */
 export function readyHandler(
   db: Db,
@@ -95,11 +134,19 @@ export function readyHandler(
           lastStatus: null,
         }))
       : { state: 'none' as const, lastOkAt: null, lastStatus: null };
+    const worker = dbOk
+      ? await workerState(db).catch(() => ({
+          state: 'unknown' as const,
+          lastSeenAt: null,
+          version: null,
+        }))
+      : { state: 'unknown' as const, lastSeenAt: null, version: null };
     res.status(dbOk && migrationsOk ? 200 : 503).json({
       status: dbOk && migrationsOk ? 'ready' : 'not_ready',
       database: dbOk ? 'ok' : 'unreachable',
       migrations: { applied, expected },
       backup,
+      worker,
       version: config.APP_VERSION ?? null,
     });
   };

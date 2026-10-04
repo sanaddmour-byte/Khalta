@@ -72,6 +72,20 @@ describe('readiness and headers', () => {
     expect(r.body.backup.state).toBe('none');
     expect(JSON.stringify(r.body)).not.toMatch(/password|secret|postgres:\/\//i);
   });
+  it('/ready reports worker liveness (information only): never, live, then stale; the API stays ready throughout', async () => {
+    const { startHeartbeat, workerState } = await import('../src/ops');
+    const { schema } = await import('@khalta/db');
+    expect((await request(env.app).get('/ready')).body.worker).toMatchObject({ state: 'never' });
+    const stop = startHeartbeat(env.db, 'test-1', 60_000);
+    await new Promise((r) => setTimeout(r, 300));
+    const live = (await request(env.app).get('/ready')).body;
+    expect(live.status).toBe('ready');
+    expect(live.worker).toMatchObject({ state: 'live', version: 'test-1' });
+    stop();
+    // two minutes later with no beat, the worker is stale but the API still serves
+    expect((await workerState(env.db, new Date(Date.now() + 5 * 60_000))).state).toBe('stale');
+    await env.db.delete(schema.workerHeartbeats);
+  });
   it('/ready is 503 when a migration is missing or the database is unreachable, and backups never take it down', async () => {
     const mk = (db: typeof env.db, expected?: number) => {
       const a = express();

@@ -1,0 +1,64 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'scm.max.fly_ash_pozzolan_pct'
+    requirement: 'scm.max.fly_ash_pozzolan_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Maximum fly ash or natural pozzolan, % of total cementitious (F3) (Jordanian value to be entered.)'
+    note_ar: 'أقصى نسبة رماد متطاير أو بوزولان طبيعي % من إجمالي المواد الإسمنتية (F3) (تُدخل القيمة الأردنية.)'
+  - key: 'scm.max.slag_pct'
+    requirement: 'scm.max.slag_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Maximum slag, % of total cementitious (F3) (Jordanian value to be entered.)'
+    note_ar: 'أقصى نسبة خبث % من إجمالي المواد الإسمنتية (F3) (تُدخل القيمة الأردنية.)'
+  - key: 'scm.max.silica_fume_pct'
+    requirement: 'scm.max.silica_fume_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Maximum silica fume, % of total cementitious (F3) (Jordanian value to be entered.)'
+    note_ar: 'أقصى نسبة غبار السيليكا % من إجمالي المواد الإسمنتية (F3) (تُدخل القيمة الأردنية.)'
+  - key: 'scm.max.fly_ash_silica_fume_pct'
+    requirement: 'scm.max.fly_ash_silica_fume_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Maximum fly ash plus silica fume, % of total cementitious (F3) (Jordanian value to be entered.)'
+    note_ar: 'أقصى مجموع الرماد المتطاير وغبار السيليكا % من إجمالي المواد الإسمنتية (F3) (تُدخل القيمة الأردنية.)'
+  - key: 'scm.max.total_pct'
+    requirement: 'scm.max.total_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'SCM limits'
+    applies_to: { 'exposure': ['F3'] }
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Maximum total of fly ash, slag and silica fume, % of total cementitious (F3) (Jordanian value to be entered.)'
+    note_ar: 'أقصى مجموع الرماد المتطاير والخبث وغبار السيليكا % من إجمالي المواد الإسمنتية (F3) (تُدخل القيمة الأردنية.)'

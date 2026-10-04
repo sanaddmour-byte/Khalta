@@ -1,0 +1,40 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'tolerance.slump.band1'
+    requirement: 'slump_tolerance_mm'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Tolerances'
+    applies_to: { 'slump_mm': { 'lte': 50 } }
+    value: 15
+    units: 'mm'
+    clause_ref: 'ASTM C94'
+    verified: false
+    note_en: 'Slump tolerance (plus or minus) for nominal slump up to 50 mm'
+    note_ar: 'تفاوت الهبوط (زائد أو ناقص) للهبوط الاسمي حتى 50 مم'
+  - key: 'tolerance.slump.band2'
+    requirement: 'slump_tolerance_mm'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Tolerances'
+    applies_to: { 'slump_mm': { 'gt': 50, 'lte': 100 } }
+    value: 25
+    units: 'mm'
+    clause_ref: 'ASTM C94'
+    verified: false
+    note_en: 'Slump tolerance (plus or minus) for nominal slump above 50 and up to 100 mm'
+    note_ar: 'تفاوت الهبوط (زائد أو ناقص) للهبوط الاسمي بين 50 و100 مم'
+  - key: 'tolerance.slump.band3'
+    requirement: 'slump_tolerance_mm'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Tolerances'
+    applies_to: { 'slump_mm': { 'gt': 100 } }
+    value: 40
+    units: 'mm'
+    clause_ref: 'ASTM C94'
+    verified: false
+    note_en: 'Slump tolerance (plus or minus) for nominal slump above 100 mm'
+    note_ar: 'تفاوت الهبوط (زائد أو ناقص) للهبوط الاسمي فوق 100 مم'

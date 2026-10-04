@@ -1,0 +1,57 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'JS 30-1:2016 (aligned with EN 197-1)'
+rules:
+  - key: 'cement.taxonomy'
+    requirement: 'cement.taxonomy'
+    kind: 'value'
+    requirement_class: 'CODE_HARD'
+    group: 'Cement'
+    value:
+      [
+        'CEM I 42.5N',
+        'CEM I 52.5N',
+        'CEM I 42.5N-SR3',
+        'CEM II/A-P 42.5N',
+        'CEM II/B-P 32.5N',
+        'CEM II/B-P 42.5N',
+        'CEM II/B-LL 42.5N',
+      ]
+    units: 'none'
+    clause_ref: 'JS 30-1:2016 / EN 197-1'
+    verified: false
+    note_en: 'Cement types recognised through JS 30-1 (EN 197-1 naming)'
+    note_ar: 'أنواع الإسمنت المعتمدة وفق JS 30-1 (تسمية EN 197-1)'
+  - key: 'cement.sr_definitions.SR0.max_c3a_pct'
+    requirement: 'cement.sr_definitions.SR0.max_c3a_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Cement'
+    value: 0
+    units: '%'
+    clause_ref: 'EN 197-1 sulfate-resisting definitions'
+    verified: false
+    note_en: 'CEM I SR0: C3A content'
+    note_ar: 'CEM I SR0: محتوى C3A'
+  - key: 'cement.sr_definitions.SR3.max_c3a_pct'
+    requirement: 'cement.sr_definitions.SR3.max_c3a_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Cement'
+    value: 3
+    units: '%'
+    clause_ref: 'EN 197-1 sulfate-resisting definitions'
+    verified: false
+    note_en: 'CEM I SR3: maximum C3A'
+    note_ar: 'CEM I SR3: أقصى محتوى C3A'
+  - key: 'cement.sr_definitions.SR5.max_c3a_pct'
+    requirement: 'cement.sr_definitions.SR5.max_c3a_pct'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Cement'
+    value: 5
+    units: '%'
+    clause_ref: 'EN 197-1 sulfate-resisting definitions'
+    verified: false
+    note_en: 'CEM I SR5: maximum C3A'
+    note_ar: 'CEM I SR5: أقصى محتوى C3A'

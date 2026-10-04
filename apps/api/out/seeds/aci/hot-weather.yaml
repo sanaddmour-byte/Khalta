@@ -1,0 +1,15 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'hot.max_concrete_temp_c'
+    requirement: 'hot.max_concrete_temp_c'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Hot weather'
+    value: 35
+    units: 'degC'
+    clause_ref: 'ACI 305.1'
+    verified: false
+    note_en: 'Maximum concrete temperature at placement unless the project is stricter (many Jordanian specifications use 32 °C)'
+    note_ar: 'أقصى درجة حرارة للخرسانة عند الصب ما لم يكن المشروع أكثر تشدداً (تعتمد مواصفات أردنية كثيرة 32 °م)'

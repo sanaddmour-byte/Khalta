@@ -1,0 +1,26 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'grading.fine.limits'
+    requirement: 'grading.fine.limits'
+    kind: 'range'
+    requirement_class: 'CODE_HARD'
+    group: 'Grading'
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Fine aggregate grading limits per sieve. Not on file: enter from the licensed standard. (Jordanian value to be entered.)'
+    note_ar: 'حدود تدرج الركام الناعم لكل منخل. غير متوفرة: تُدخل من المواصفة المرخصة. (تُدخل القيمة الأردنية.)'
+  - key: 'grading.coarse.limits'
+    requirement: 'grading.coarse.limits'
+    kind: 'range'
+    requirement_class: 'CODE_HARD'
+    group: 'Grading'
+    value: null
+    units: '%'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Coarse aggregate grading limits per sieve and size number. Not on file. (Jordanian value to be entered.)'
+    note_ar: 'حدود تدرج الركام الخشن لكل منخل ورقم المقاس. غير متوفرة. (تُدخل القيمة الأردنية.)'

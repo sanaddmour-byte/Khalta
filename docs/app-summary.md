@@ -1,6 +1,6 @@
 # Khalta (خلطة) — full app summary, with UI and UX
 
-_As of 2026-10-04. Everything below is built and tested unless marked otherwise._
+_As of 2026-10-04. Everything below is built and tested (with SYNTHETIC data) unless marked otherwise; see `docs/readiness-matrix.md` for what has and has not been reviewed by a person._
 
 ## 1. What it is
 
@@ -42,7 +42,7 @@ Desktop-first for the Design Studio and Price Matrix; usable on tablet; read-onl
 
 ### Dashboard
 
-**Not built yet.** The route shows a teaching placeholder. The KPI tiles listed in `docs/spec/03-ui.md` §4.N are a specification, not a shipped screen. Role dashboards are scheduled in the improvement work (see `docs/audit/2026-10-gap-map.md`).
+**Built (phase 5).** A role-aware overview of counts and short worklists for your plants, each card a link to the screen behind it: QC managers see designs awaiting approval, designs needing revalidation, critical, unowned and overdue alerts and changes awaiting a decision; engineers see drafts and trials; procurement sees price alerts; plant managers see what is released and the alerts at their plant; sales and viewers see approved designs; administrators see users and failed background jobs (and no sign-off cards). No money figures appear here.
 
 ### Design Studio
 
@@ -117,7 +117,7 @@ Layout is mirrored with logical CSS properties, but charts, sieve axes, numbers 
 
 ## 8. Current state
 
-- **Built:** milestones M0 to M7.1 as defined in `04-phases.md`, except that the Dashboard screen was never built (placeholder). See `docs/audit/2026-10-gap-map.md` and `docs/readiness-matrix.md`.
+- **Built:** milestones M0 to M7.1 and the October 2026 improvement programme (lifecycle policy, project requirements, batch preparation and the v2 export, optimizer transparency, strength and trial governance, change-impact workflows, role dashboards, alert ownership, savings attribution, cement type/class/colour). See `docs/audit/2026-10-gap-map.md` and `docs/readiness-matrix.md`.
 - **Live on Railway** (`api-production-eee0.up.railway.app`): the API and web app are running; the worker was being fixed and redeployed at the time of writing.
 - **Not done:** the live backup and restore drill and smoke test; the Vercel front end (needs re-authentication and an `/api` rewrite); real data. The app is empty until you add plants, materials with tests, prices and verified rules.
 - **Needs your input:** the real engineering parameters, JS rule values, trial criteria, moisture limits, letterhead; the Arabic review; an on-call person; the ERP field mapping (ADR 0016 stays proposed).

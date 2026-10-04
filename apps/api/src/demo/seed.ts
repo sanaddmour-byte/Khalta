@@ -18,7 +18,13 @@ export class Client {
     private base: string,
     private origin: string,
   ) {}
-  async call<T = unknown>(method: string, path: string, body?: unknown, raw?: Buffer): Promise<T> {
+  async call<T = unknown>(
+    method: string,
+    path: string,
+    body?: unknown,
+    raw?: Buffer,
+    attempt = 0,
+  ): Promise<T> {
     const res = await fetch(`${this.base}${path}`, {
       method,
       headers: {
@@ -32,6 +38,13 @@ export class Client {
     const set = res.headers.getSetCookie?.() ?? [];
     if (set.length) this.cookie = set.map((c) => c.split(';')[0]).join('; ');
     const text = await res.text();
+    // The sign-in route is rate limited (a handful per ten seconds). A seeding run signs in as several roles, so it
+    // waits out the limit instead of failing: this is a one-off tool, never a request path.
+    if (res.status === 429 && attempt < 6) {
+      const wait = Number(res.headers.get('x-retry-after') ?? res.headers.get('retry-after') ?? 10);
+      await new Promise((r) => setTimeout(r, (Number.isFinite(wait) ? wait : 10) * 1000 + 500));
+      return this.call<T>(method, path, body, raw, attempt + 1);
+    }
     if (!res.ok) throw new Error(`${method} ${path} -> ${res.status} ${text.slice(0, 400)}`);
     return (text ? JSON.parse(text) : undefined) as T;
   }

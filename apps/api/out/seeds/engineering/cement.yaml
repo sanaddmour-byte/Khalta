@@ -1,0 +1,15 @@
+ruleset: 'ENGINEERING'
+edition: 'QC-configured cement parameters (not code values)'
+source_doc: 'M7.1 cement classification'
+rules:
+  - key: 'eng.cement.low_alkali.max_na2o_eq_pct'
+    requirement: 'eng.cement.low_alkali.max_na2o_eq_pct'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Cement'
+    value: null
+    units: '%'
+    clause_ref: 'QC parameter'
+    verified: false
+    note_en: 'Largest Na2O-equivalent (% by mass) a cement labelled low alkali may have. QC enters it (a common value is 0.60); empty until then.'
+    note_ar: 'أكبر محتوى مكافئ من Na2O (نسبة مئوية بالكتلة) للإسمنت الموسوم بأنه قليل القلويات. يدخله ضبط الجودة (قيمة شائعة 0.60)؛ فارغ حتى ذلك الحين.'

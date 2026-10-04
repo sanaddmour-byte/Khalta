@@ -43,7 +43,7 @@ const timed = async (name, fn) => {
 const sh = (cmd, args, env = {}, cwd = bundle) => {
   const r = spawnSync(cmd, args, { cwd, env: { ...process.env, ...env }, encoding: 'utf8' });
   if (r.status !== 0)
-    throw new Error(`${cmd} ${args.join(' ')} failed: ${(r.stderr || r.stdout).slice(0, 600)}`);
+    throw new Error(`${cmd} ${args.join(' ')} failed: ${(r.stderr || r.stdout).slice(-1500)}`);
   return r.stdout;
 };
 const psql = (db, q) => sh('psql', ['--no-psqlrc', '-At', '-d', withDb(db), '-c', q]).trim();

@@ -6,6 +6,7 @@ import { bootstrap } from './bootstrap';
 import { loadConfig } from './config';
 import { startWorker, type Jobs } from './jobs';
 import { handlersFor } from './jobs/handlers';
+import { startHeartbeat } from './ops';
 import { syncRules } from './rules/service';
 
 const config = loadConfig();
@@ -36,6 +37,7 @@ if (config.JOBS_IN_PROCESS === '1') {
   );
   jobs = w.jobs;
   jobStatus = w.status;
+  startHeartbeat(handle.db, config.APP_VERSION);
 }
 
 createApp({

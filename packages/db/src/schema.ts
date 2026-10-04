@@ -1460,3 +1460,11 @@ export const savingsAdjustments = pgTable(
     index('savings_adjustments_entry_idx').on(t.entryId),
   ],
 );
+
+/** The worker writes a row every half minute; /ready reports whether it is alive. One row per worker name. */
+export const workerHeartbeats = pgTable('worker_heartbeats', {
+  name: text('name').primaryKey(),
+  at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  /** The release the worker runs, to spot an API and a worker on different versions. */
+  version: text('version'),
+});

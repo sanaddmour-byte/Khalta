@@ -1,4 +1,4 @@
-// pnpm smoke:staging <base-url> [email password]
+// pnpm smoke:staging <base-url> [email password] [--require-worker]
 // Checks a running Khalta instance: health, the web app, the API guard, and (with credentials) sign-in.
 const [base, email, password] = process.argv.slice(2);
 if (!base) {
@@ -31,6 +31,15 @@ await check('/ready: database reachable and every migration applied', async () =
     r.ok && b.status === 'ready' && b.migrations.applied === b.migrations.expected,
     `status ${r.status} ${JSON.stringify(b)}`,
   );
+});
+// The worker runs jobs and escalations. An API without one still serves, so this is reported, and fails only with --require-worker.
+await check('the worker heartbeat is live', async () => {
+  const b = await (await fetch(url('/ready'))).json();
+  const state = b.worker?.state ?? 'unknown';
+  if (state !== 'live') {
+    if (process.argv.includes('--require-worker')) throw new Error(`worker ${state}`);
+    console.log(`warn worker is ${state}: background jobs and alert escalation are not running`);
+  }
 });
 await check('the app is served with security headers and a Content-Security-Policy', async () => {
   const r = await fetch(url('/'));
@@ -77,6 +86,16 @@ if (email && password) {
     const r = await fetch(url('/api/me'), { headers: { cookie } });
     must(r.ok && (await r.json()).user?.email === email.toLowerCase(), `status ${r.status}`);
   });
+  await check(
+    'the role dashboard and the change-impact list respond (and anonymous calls are refused)',
+    async () => {
+      for (const p of ['/api/dashboard', '/api/change-impacts']) {
+        must((await fetch(url(p))).status === 401, `${p} should refuse anonymous callers`);
+        const r = await fetch(url(p), { headers: { cookie } });
+        must(r.ok, `${p} ${r.status}`);
+      }
+    },
+  );
   await check('rules and materials respond', async () => {
     for (const p of ['/api/rules', '/api/materials']) {
       const r = await fetch(url(p), { headers: { cookie } });

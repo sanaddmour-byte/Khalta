@@ -1,0 +1,40 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'tolerance.slump.band1'
+    requirement: 'slump_tolerance_mm'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Tolerances'
+    applies_to: { 'slump_mm': { 'lte': 50 } }
+    value: null
+    units: 'mm'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Slump tolerance (plus or minus) for nominal slump up to 50 mm (Jordanian value to be entered.)'
+    note_ar: 'تفاوت الهبوط (زائد أو ناقص) للهبوط الاسمي حتى 50 مم (تُدخل القيمة الأردنية.)'
+  - key: 'tolerance.slump.band2'
+    requirement: 'slump_tolerance_mm'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Tolerances'
+    applies_to: { 'slump_mm': { 'gt': 50, 'lte': 100 } }
+    value: null
+    units: 'mm'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Slump tolerance (plus or minus) for nominal slump above 50 and up to 100 mm (Jordanian value to be entered.)'
+    note_ar: 'تفاوت الهبوط (زائد أو ناقص) للهبوط الاسمي بين 50 و100 مم (تُدخل القيمة الأردنية.)'
+  - key: 'tolerance.slump.band3'
+    requirement: 'slump_tolerance_mm'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Tolerances'
+    applies_to: { 'slump_mm': { 'gt': 100 } }
+    value: null
+    units: 'mm'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Slump tolerance (plus or minus) for nominal slump above 100 mm (Jordanian value to be entered.)'
+    note_ar: 'تفاوت الهبوط (زائد أو ناقص) للهبوط الاسمي فوق 100 مم (تُدخل القيمة الأردنية.)'

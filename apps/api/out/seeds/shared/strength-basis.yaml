@@ -1,0 +1,30 @@
+ruleset: 'SHARED'
+edition: 'Editable mapping (confirm against the Jordanian code and project specifications)'
+source_doc: '02-codes §5'
+rules:
+  - key: 'strength.basis_map'
+    requirement: 'strength.basis_map'
+    kind: 'value'
+    requirement_class: 'DESIGN_AID'
+    group: 'Strength basis'
+    value:
+      [
+        { 'cylinder_mpa': 20, 'cube_mpa': 25, 'en_class': 'C20/25', 'b_grade': 'B250' },
+        { 'cylinder_mpa': 25, 'cube_mpa': 30, 'en_class': 'C25/30', 'b_grade': 'B300' },
+        {
+          'cylinder_mpa': 30,
+          'cube_mpa': 37,
+          'en_class': 'C30/37',
+          'b_grade': null,
+          'b_grade_candidates': ['B350', 'B375'],
+        },
+        { 'cylinder_mpa': 35, 'cube_mpa': 45, 'en_class': 'C35/45', 'b_grade': 'B450' },
+        { 'cylinder_mpa': 40, 'cube_mpa': 50, 'en_class': 'C40/50', 'b_grade': 'B500' },
+        { 'cylinder_mpa': 45, 'cube_mpa': 55, 'en_class': 'C45/55', 'b_grade': 'B550' },
+        { 'cylinder_mpa': 50, 'cube_mpa': 60, 'en_class': 'C50/60', 'b_grade': 'B600' },
+      ]
+    units: 'MPa'
+    clause_ref: 'EN 206 class pairs; Jordanian practice (confirm)'
+    verified: false
+    note_en: 'Cylinder, cube, EN 206 class and Jordanian B-grade equivalents. C30/37 has two B-grade candidates (B350 or B375) until confirmed; B-grade input for C30/37 stays blocked.'
+    note_ar: 'المعادلات بين الأسطوانة والمكعب وفئة EN 206 ودرجة B الأردنية. للفئة C30/37 احتمالان (B350 أو B375) حتى التأكيد، ويبقى إدخال درجة B لها محجوباً.'

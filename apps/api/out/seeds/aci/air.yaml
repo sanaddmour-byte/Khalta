@@ -1,0 +1,50 @@
+ruleset: 'ACI'
+edition: 'ACI 318-19 / ACI 301 / ACI 211.1 / ASTM C94 / ACI 305.1'
+source_doc: 'ACI 318-19 Building Code Requirements for Structural Concrete'
+rules:
+  - key: 'air.F1.target_pct'
+    requirement: 'air_target_pct'
+    kind: 'table'
+    requirement_class: 'CODE_HARD'
+    group: 'Air content'
+    applies_to: { 'exposure': ['F1'] }
+    definition:
+      {
+        'cols': { 'name': 'nmas_mm', 'values': [9.5, 12.5, 19, 25, 37.5] },
+        'data': [[6.0, 5.5, 5.0, 4.5, 4.5]],
+        'interpolation': 'linear',
+      }
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.3.1'
+    verified: false
+    note_en: 'Target air content for F1 by nominal maximum aggregate size'
+    note_ar: 'محتوى الهواء المستهدف للفئة F1 حسب المقاس الاعتباري الأكبر للركام'
+  - key: 'air.F2_F3.target_pct'
+    requirement: 'air_target_pct'
+    kind: 'table'
+    requirement_class: 'CODE_HARD'
+    group: 'Air content'
+    applies_to: { 'exposure': ['F2', 'F3'] }
+    definition:
+      {
+        'cols': { 'name': 'nmas_mm', 'values': [9.5, 12.5, 19, 25, 37.5] },
+        'data': [[7.5, 7.0, 6.0, 6.0, 5.5]],
+        'interpolation': 'linear',
+      }
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.3.1'
+    verified: false
+    note_en: 'Target air content for F2 and F3 by nominal maximum aggregate size'
+    note_ar: 'محتوى الهواء المستهدف للفئتين F2 وF3 حسب المقاس الاعتباري الأكبر للركام'
+  - key: 'air.tolerance_pct'
+    requirement: 'air_tolerance_pct'
+    kind: 'tolerance'
+    requirement_class: 'CODE_HARD'
+    group: 'Air content'
+    applies_to: { 'exposure': ['F1', 'F2', 'F3'] }
+    value: 1.5
+    units: '%'
+    clause_ref: 'ACI 318-19 Table 19.3.3.1'
+    verified: false
+    note_en: 'Air content tolerance (plus or minus)'
+    note_ar: 'تفاوت محتوى الهواء (زائد أو ناقص)'

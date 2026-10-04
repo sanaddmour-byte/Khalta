@@ -1,0 +1,37 @@
+ruleset: 'JS'
+edition: 'Jordanian Structural Concrete Code 2022 (JSC-2022)'
+source_doc: 'Jordanian National Building Code, Structural Concrete Code (2022), Parts 1 and 2'
+rules:
+  - key: 'nmas.max_fraction.narrowest_form_dimension'
+    requirement: 'nmas.max_fraction.narrowest_form_dimension'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Aggregate size'
+    value: null
+    units: 'fraction'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Nominal maximum aggregate size must not exceed this fraction of the narrowest form dimension (Jordanian value to be entered.)'
+    note_ar: 'يجب ألا يتجاوز المقاس الاعتباري الأكبر للركام هذا الكسر من أضيق بُعد للقالب (تُدخل القيمة الأردنية.)'
+  - key: 'nmas.max_fraction.slab_depth'
+    requirement: 'nmas.max_fraction.slab_depth'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Aggregate size'
+    value: null
+    units: 'fraction'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Nominal maximum aggregate size must not exceed this fraction of the slab depth (Jordanian value to be entered.)'
+    note_ar: 'يجب ألا يتجاوز المقاس الاعتباري الأكبر للركام هذا الكسر من سماكة البلاطة (تُدخل القيمة الأردنية.)'
+  - key: 'nmas.max_fraction.min_clear_bar_spacing'
+    requirement: 'nmas.max_fraction.min_clear_bar_spacing'
+    kind: 'limit_max'
+    requirement_class: 'CODE_HARD'
+    group: 'Aggregate size'
+    value: null
+    units: 'fraction'
+    clause_ref: 'JSC-2022 §TBD'
+    verified: false
+    note_en: 'Nominal maximum aggregate size must not exceed this fraction of the minimum clear spacing between bars (Jordanian value to be entered.)'
+    note_ar: 'يجب ألا يتجاوز المقاس الاعتباري الأكبر للركام هذا الكسر من أدنى مسافة صافية بين القضبان (تُدخل القيمة الأردنية.)'

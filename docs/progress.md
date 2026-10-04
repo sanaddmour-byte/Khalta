@@ -556,3 +556,13 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Tests:** engine 476, api 344 (new: dashboard, alert-ownership, savings attribution, cement review), web 38; e2e main 112 + rules 15 (new: dashboard per role, Arabic dark axe, phone width on four screens, plant-switch guard).
 
 **Not verified / open:** reconciliation cannot read "reconciled" until QC verifies the rules; acknowledgement deadlines need QC values; escalation is in-app only; dashboards show counts, not trends; manual screen-reader and keyboard review is still outstanding (axe only).
+
+## 2026-10-04 — Improvement set, phase 6: pilot, operational readiness, readiness matrix
+
+**Changed:** the synthetic end-to-end pilot (`apps/api/test/pilot.test.ts`, step log in `docs/pilot/synthetic-pilot.md`) with the refused action at every stage; worker heartbeat reported by `/ready` (information only); an hourly escalation schedule; the smoke script now checks the worker, the dashboard and the change-impact endpoints; the restore drill re-run on the current build (`docs/runbooks/restore-drill-2026-10-04.md`); `docs/readiness-matrix.md` with five separate columns; app summary and gap map updated. Migration 0038.
+
+**Defect found by the drill and fixed:** the demo seeder signs in as several roles and stopped on the sign-in rate limit (429) against a production-mode server, so a staging redeploy would have failed to seed.
+
+**Final verification (all green):** lint, typecheck, `db:drift`; unit/API tests: engine 476, api 346, validator 177, web 38, rbac 210, rules 159 (+143 rules project), ui 120, eslint-plugin 43; e2e main 113 + rules 15.
+
+**Not verified:** anything on the deployed systems. Nothing was deployed or redeployed in this programme; staging still runs the earlier commit, and production is untouched. The live backup and recovery drill, Arabic review, manual accessibility review and every engineering input remain open (see the matrix).

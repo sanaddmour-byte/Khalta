@@ -1,0 +1,81 @@
+ruleset: 'ENGINEERING'
+edition: 'Engineering parameters (not code values)'
+source_doc: '02-codes §6 and 07-characteristics §2'
+rules:
+  - key: 'eng.fm.sieves'
+    requirement: 'eng.fm.sieves'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Materials'
+    value: [150, 75, 37.5, 19, 9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15]
+    units: 'mm'
+    clause_ref: 'ASTM C125 / C136 (fineness modulus series)'
+    verified: false
+    note_en: 'Sieve series (mm) summed to compute fineness modulus: cumulative % retained ÷ 100'
+    note_ar: 'سلسلة المناخل (ملم) المستخدمة لحساب معامل النعومة: مجموع النسب المئوية المتراكمة المحجوزة ÷ 100'
+  - key: 'eng.drift.tolerance.fm'
+    requirement: 'eng.drift.tolerance.fm'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Materials'
+    value: null
+    units: 'none'
+    clause_ref: '07-characteristics §2.6'
+    verified: false
+    note_en: 'Largest absolute change in fineness modulus between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)'
+    note_ar: 'أكبر تغيّر مطلق في معامل النعومة بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)'
+  - key: 'eng.drift.tolerance.sg_ssd'
+    requirement: 'eng.drift.tolerance.sg_ssd'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Materials'
+    value: null
+    units: 'none'
+    clause_ref: '07-characteristics §2.6'
+    verified: false
+    note_en: 'Largest absolute change in aggregate specific gravity (SSD) between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)'
+    note_ar: 'أكبر تغيّر مطلق في الوزن النوعي للركام (مشبع جاف السطح) بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)'
+  - key: 'eng.drift.tolerance.absorption_pct'
+    requirement: 'eng.drift.tolerance.absorption_pct'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Materials'
+    value: null
+    units: '%'
+    clause_ref: '07-characteristics §2.6'
+    verified: false
+    note_en: 'Largest absolute change in aggregate absorption between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)'
+    note_ar: 'أكبر تغيّر مطلق في امتصاص الركام بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)'
+  - key: 'eng.drift.tolerance.finer_75um_pct'
+    requirement: 'eng.drift.tolerance.finer_75um_pct'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Materials'
+    value: null
+    units: '%'
+    clause_ref: '07-characteristics §2.6'
+    verified: false
+    note_en: 'Largest absolute change in material finer than 75 µm between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)'
+    note_ar: 'أكبر تغيّر مطلق في المارّ من منخل 75 ميكرون بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)'
+  - key: 'eng.drift.tolerance.sg'
+    requirement: 'eng.drift.tolerance.sg'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Materials'
+    value: null
+    units: 'none'
+    clause_ref: '07-characteristics §2.6'
+    verified: false
+    note_en: 'Largest absolute change in cement / SCM specific gravity between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)'
+    note_ar: 'أكبر تغيّر مطلق في الوزن النوعي للإسمنت/المواد التكميلية بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)'
+  - key: 'eng.drift.tolerance.c3a_pct'
+    requirement: 'eng.drift.tolerance.c3a_pct'
+    kind: 'parameter'
+    requirement_class: 'ENGINEERING_GUARDRAIL'
+    group: 'Materials'
+    value: null
+    units: '%'
+    clause_ref: '07-characteristics §2.6'
+    verified: false
+    note_en: 'Largest absolute change in cement C₃A between consecutive tests before it is flagged as drift (QC sets; null = no tolerance configured)'
+    note_ar: 'أكبر تغيّر مطلق في مركب C₃A في الإسمنت بين فحصين متتاليين قبل اعتباره انحرافاً (يحدده ضبط الجودة؛ فارغ = لم تُضبط)'
