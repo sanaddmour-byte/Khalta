@@ -11,6 +11,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.js
 COPY apps ./apps
 COPY packages ./packages
 COPY tools ./tools
+COPY templates ./templates
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @khalta/web build
 # dist/ (bundled API, worker, ops CLI) + migrations/ + seeds/
