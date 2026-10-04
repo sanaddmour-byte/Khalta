@@ -1,7 +1,7 @@
 import { schema } from '@khalta/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildDemoPlan, DEMO_SEED, planHash, SYNTHETIC } from '../src/demo/plan';
-import { seedDemo } from '../src/demo/seed';
+import { seedDemo, seedDemoRules } from '../src/demo/seed';
 import { createTestEnv, type TestEnv } from './helpers';
 
 describe('demo plan', () => {
@@ -99,7 +99,7 @@ describe('demo seed against a real database', () => {
     expect(
       m.cells.filter((c: { notConvertible?: string }) => c.notConvertible === 'needs_density')
         .length,
-    ).toBeGreaterThan(0); // water per m3
+    ).toBe(0); // every cell converts to JOD/kg, so the optimizer can use all priced materials
     expect(((await admin.get('/api/price-snapshots')).body as unknown[]).length).toBe(2);
 
     const mats = (await admin.get('/api/materials')).body as {
@@ -118,5 +118,41 @@ describe('demo seed against a real database', () => {
     expect(vols.every((v) => v.source === 'demo')).toBe(true);
     const mgr = await env.login('qc.manager@khalta.test', 'demo-password-change-me');
     expect(((await mgr.get('/api/designs?queue=true')).body as unknown[]).length).toBe(2); // two still await attestation
+  });
+
+  it('the synthetic rule values let the optimizer run at both plants, in both modes; a second run changes nothing', async () => {
+    const deps = {
+      db: env.db,
+      auth: env.auth,
+      config: env.config,
+      tenantId: env.tenantId,
+      password: 'demo-password-change-me',
+    };
+    expect(await seedDemoRules(deps)).toBeGreaterThan(20);
+    expect(await seedDemoRules(deps)).toBe(0);
+    const mgr = await env.login('qc.manager@khalta.test', 'demo-password-change-me');
+    const plants = (await mgr.get('/api/plants')).body as { id: string; code: string }[];
+    for (const mode of ['ACI', 'BOTH'] as const)
+      for (const p of plants) {
+        const res = await mgr.post('/api/design-requests').send({
+          plantId: p.id,
+          mode,
+          requirements: {
+            fcMpa: 30,
+            basis: 'cylinder',
+            exposure: ['F0', 'S0', 'W0', 'C1'],
+            slumpMm: 100,
+            nmasMm: 19,
+          },
+        });
+        const blockers = res.body.outcome?.blockers ?? [];
+        expect(res.status, `${mode} ${p.code}`).toBe(201);
+        expect(
+          blockers.map((b: { subject: string }) => b.subject),
+          `${mode} ${p.code}`,
+        ).toEqual([]);
+        expect(res.body.status, `${mode} ${p.code}`).toBe('candidates');
+        expect(res.body.candidates.length).toBeGreaterThan(0);
+      }
   });
 });

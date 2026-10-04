@@ -5,7 +5,7 @@ import { createAuth } from '../auth';
 import { bootstrap } from '../bootstrap';
 import { loadConfig } from '../config';
 import { syncRules } from '../rules/service';
-import { seedDemo } from './seed';
+import { seedDemo, seedDemoRules } from './seed';
 
 const config = loadConfig();
 if (config.NODE_ENV === 'production' && process.env['KHALTA_ALLOW_DEMO_SEED'] !== '1')
@@ -33,6 +33,15 @@ const r = await seedDemo({
   password,
   log: (m) => console.log(`demo: ${m}`),
 });
+const filled = await seedDemoRules({
+  db: handle.db,
+  auth,
+  config,
+  tenantId,
+  password,
+  log: (m) => console.log(`demo: ${m}`),
+});
+console.log(`demo rules: ${filled} synthetic values filled`);
 console.log(
   r.skipped
     ? 'demo data already present; nothing changed'

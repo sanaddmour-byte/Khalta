@@ -9,9 +9,10 @@ import type { Auth } from '../auth';
 import type { Config } from '../config';
 import { insertUserWithPassword } from '../routes/users';
 import { buildDemoPlan, DEMO_MARKER_CODE, SYNTHETIC } from './plan';
+import { applyDemoRuleValues } from './rules';
 
 /** A tiny cookie-keeping HTTP client: the demo is created through the same API the UI uses. */
-class Client {
+export class Client {
   private cookie = '';
   constructor(
     private base: string,
@@ -261,6 +262,25 @@ export async function seedDemo(d: SeedDeps): Promise<{ skipped: boolean; designs
     });
     await d.db.insert(schema.productionVolumes).values(volumes);
     return { skipped: false, designs: imported.designs };
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+}
+
+/** Fills the empty rule values with the SYNTHETIC demo set (see rules.ts). Idempotent; safe to run on every start. */
+export async function seedDemoRules(d: SeedDeps): Promise<number> {
+  const app = createApp({ config: d.config, db: d.db, auth: d.auth });
+  const server: Server = await new Promise((resolve) => {
+    const s = app.listen(0, '127.0.0.1', () => resolve(s));
+  });
+  try {
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const admin = new Client(base, d.config.BETTER_AUTH_URL);
+    await admin.post('/api/auth/sign-in/email', {
+      email: 'admin@khalta.test',
+      password: d.password,
+    });
+    return await applyDemoRuleValues(admin, d.log);
   } finally {
     await new Promise((r) => server.close(r));
   }

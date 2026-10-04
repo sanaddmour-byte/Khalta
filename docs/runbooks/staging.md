@@ -30,7 +30,7 @@ Open a shell on the service (Railway CLI `railway run` or the dashboard) and run
 KHALTA_ALLOW_DEMO_SEED=1 DEMO_PASSWORD='<12+ characters>' node dist/demo.js
 ```
 
-It creates users `<role>@khalta.test` (+ `qc.manager2@khalta.test`), materials, prices, snapshots, legacy designs (four attested by the second QC manager) and volumes, all labelled SYNTHETIC. Running it again changes nothing. Do **not** run it against production.
+It creates users `<role>@khalta.test` (+ `qc.manager2@khalta.test`), materials, prices, snapshots, legacy designs (four attested by the second QC manager) and volumes, all labelled SYNTHETIC. It also fills every empty engineering parameter and rule value (grading limits, fines cap, Shilstone bounds, trial tolerances, JS values copied from ACI) with **SYNTHETIC, unverified** placeholders so the optimizer, trials and Studio can all be exercised; those rows say so in their clause reference. Running it again changes nothing. Do **not** run it against production. Changing the demo plan does not alter an existing demo database (the marker design is already there): recreate the staging database to get the new data.
 
 ## Smoke test
 

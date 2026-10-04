@@ -56,11 +56,18 @@ export interface DemoPlan {
   settings: { stalePriceDays: number; testAgeLimitDays: number };
 }
 
-const grad = (rows: [number, number][]) =>
-  [[150, 100] as [number, number], [75, 100] as [number, number], ...rows].map(([s, p]) => ({
-    sieve_mm: s,
-    passing_pct: p,
-  }));
+const REQUIRED_SIEVES = [9.5, 4.75, 2.36, 1.18, 0.6, 0.3, 0.15];
+/** A sieve analysis with every sieve the optimizer needs: finer than the finest given sieve passes 0%, coarser passes 100%. */
+const grad = (rows: [number, number][]) => {
+  const have = new Map<number, number>([[150, 100], [75, 100], ...rows]);
+  const sizes = rows.map(([s]) => s);
+  const lo = Math.min(...sizes);
+  const hi = Math.max(...sizes);
+  for (const s of REQUIRED_SIEVES) if (!have.has(s)) have.set(s, s < lo ? 0 : s > hi ? 100 : 0);
+  return [...have.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([sieve_mm, passing_pct]) => ({ sieve_mm, passing_pct }));
+};
 const dec = (n: number, p = 3) => n.toFixed(p);
 
 export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
@@ -255,6 +262,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       supplier: S(3),
       properties: {
         type: 'F',
+        water_convention: 'liquid_counts_as_water',
+        chloride_pct: 0.01,
         sg: 1.08,
         solids_pct: 38,
         min_dosage_pct: 0.4,
@@ -278,6 +287,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       supplier: S(3),
       properties: {
         type: 'D',
+        water_convention: 'liquid_counts_as_water',
+        chloride_pct: 0.01,
         sg: 1.12,
         solids_pct: 30,
         min_dosage_pct: 0.2,
@@ -420,6 +431,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
           sg_ssd: Number(jitter(a.sg, 0.005).toFixed(3)),
           absorption_pct: Number(jitter(a.abs, 0.08).toFixed(2)),
           finer_75um_pct: Number(jitter(a.fines, 0.1).toFixed(1)),
+          chlorides_pct: a.cat === 'fine_agg' ? 0.01 : 0.005,
+          sulfates_pct: a.cat === 'fine_agg' ? 0.05 : 0.03,
           sieve_analysis: grad(a.rows),
           ...(a.cat === 'fine_agg' ? {} : { la_abrasion_pct: Number(jitter(26, 0.1).toFixed(0)) }),
         },
@@ -437,7 +450,7 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
     scm: [45, 'JOD/ton'],
     fine_agg: [9, 'JOD/ton'],
     coarse_agg: [8, 'JOD/ton'],
-    water: [0.9, 'JOD/m3'],
+    water: [0.9, 'JOD/ton'], // 1 m3 of water is 1 ton
     admixture: [1.6, 'JOD/L'],
   };
   const prices: DemoPrice[] = [];
