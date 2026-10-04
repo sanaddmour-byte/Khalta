@@ -33,15 +33,20 @@ export function seedStudioWorld() {
     const rules = (await (await admin.get('/api/rules?ruleset=ENGINEERING')).json()).rules as {
       id: string;
       key: string;
+      value?: unknown;
     }[];
     const aci = (await (await admin.get('/api/rules?ruleset=ACI')).json()).rules as {
       id: string;
       key: string;
+      value?: unknown;
     }[];
     for (const [key, value] of Object.entries(SYNTHETIC_PARAMS)) {
       const hit = [...rules, ...aci].find((r) => r.key === key);
       expect(hit, `rule ${key}`).toBeDefined();
-      const res = await admin.patch(`/api/rules/${hit!.id}/value`, {
+      // another worker may have written it already (the specs seed this world concurrently)
+      if (JSON.stringify(hit!.value) === JSON.stringify(value)) continue;
+      // rule values are engineering values: the QC manager writes them, never the admin
+      const res = await qc.patch(`/api/rules/${hit!.id}/value`, {
         data: { value, reason: 'SYNTHETIC test parameter' },
       });
       expect(res.ok(), `patch ${key}: ${await res.text()}`).toBe(true);

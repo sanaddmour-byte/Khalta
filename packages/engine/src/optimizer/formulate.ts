@@ -16,6 +16,8 @@ import type { LpProblem, LpRow, LpVar } from './types';
 export type RowClass = 'CODE' | 'ENGINEERING' | 'USER' | 'PHYSICAL';
 export interface RowMeta {
   klass: RowClass;
+  /** For a CODE row: whether the limit comes from the project's own requirements. */
+  source?: 'code' | 'project';
   id: string;
   unit: string;
   /** For user rows: the characteristic key and the bound this row enforces. */
@@ -188,6 +190,7 @@ export function formulate(p: Prepared, cfg: ConfigSpec, o: FormOpts): Model {
   if (p.durabilityWcm !== null)
     addRow('C:wcm_limit', new Lin().plus(free).add('B', -p.durabilityWcm), null, 0, {
       klass: klassOf('CODE'),
+      ...(p.durabilityWcmSource ? { source: p.durabilityWcmSource } : {}),
       unit: 'ratio',
     });
   // The engineering w/cm ceiling (baseline − margin) yields to an explicit user choice that pins w/cm above

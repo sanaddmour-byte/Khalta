@@ -17,6 +17,7 @@ import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
 import type { DesignCard } from './api';
 import {
+  acceptAssumptions,
   acceptDeclared,
   gatesQuery,
   runAction,
@@ -100,17 +101,24 @@ function SignDialog({
   onClose,
 }: {
   design: DesignCard;
-  action: Action | 'accept';
+  action: Action | 'accept' | 'acceptAssumptions';
   onClose: () => void;
 }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [reason, setReason] = useState('');
+  // one key per opened dialog: pressing the button twice, or retrying after a lost response, acts once
+  const [guard] = useState(() => ({
+    idempotencyKey: crypto.randomUUID(),
+    expectedStatus: design.status,
+  }));
   const m = useMutation({
     mutationFn: () =>
       action === 'accept'
         ? acceptDeclared(design.id, reason.trim())
-        : runAction(design.id, action, reason.trim()),
+        : action === 'acceptAssumptions'
+          ? acceptAssumptions(design.id, reason.trim())
+          : runAction(design.id, action, reason.trim(), guard),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ['designs'] });
       toast.success(t('lifecycle.done'));
@@ -171,7 +179,7 @@ function Step({ design, action }: { design: DesignCard; action: Action }) {
   const qc = useQueryClient();
   const target = TARGET[action];
   const gates = useQuery({ ...gatesQuery(design.id, target ?? 'approved'), enabled: !!target });
-  const [signing, setSigning] = useState<Action | 'accept' | null>(null);
+  const [signing, setSigning] = useState<Action | 'accept' | 'acceptAssumptions' | null>(null);
   const start = useMutation({
     mutationFn: () => startTrial(design.id),
     onSuccess: async () => {
@@ -182,6 +190,7 @@ function Step({ design, action }: { design: DesignCard; action: Action }) {
   const report = target ? gates.data : undefined;
   const ready = target ? !!report?.ok : true;
   const declaredUnmet = report?.gates.find((g) => g.id === 'declared_values' && !g.met);
+  const assumptionsUnmet = report?.gates.find((g) => g.id === 'assumptions_accepted' && !g.met);
   const edgeRefusal = report && !report.edge.ok ? report.edge.reason : null;
   const { data: me } = useMe();
   const caps = me?.capabilities ?? [];
@@ -193,6 +202,13 @@ function Step({ design, action }: { design: DesignCard; action: Action }) {
       )}
       {target && report && <GateList gates={report.gates} />}
       {edgeRefusal && <p className="mt-2 text-xs text-muted">{edgeRefusal}</p>}
+      {report?.permitted && !report.permitted.ok && (
+        <ul className="mt-2 text-xs text-muted" data-testid="not-permitted">
+          {report.permitted.reasons.map((r) => (
+            <li key={r}>{t(`lifecycle.permitted.${r}`)}</li>
+          ))}
+        </ul>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
           disabled={!ready || !!edgeRefusal || start.isPending || !caps.includes(CAP[action])}
@@ -202,6 +218,15 @@ function Step({ design, action }: { design: DesignCard; action: Action }) {
         >
           {t(`lifecycle.do.${action}`)}
         </Button>
+        {action === 'approve' && assumptionsUnmet && caps.includes('design.approve') && (
+          <Button
+            variant="secondary"
+            onClick={() => setSigning('acceptAssumptions')}
+            data-testid="accept-assumptions"
+          >
+            {t('lifecycle.do.acceptAssumptions')}
+          </Button>
+        )}
         {action === 'approve' && declaredUnmet && caps.includes('design.approve') && (
           <Button
             variant="secondary"
@@ -229,9 +254,28 @@ export function LifecycleSection({ design }: { design: DesignCard }) {
   const caps = me?.capabilities ?? [];
   const actions = actionsFor(design.status).filter((a) => caps.includes(CAP[a]));
   if (actions.length === 0) return null;
+  const outcomes = [
+    ['calculation', design.status !== 'draft' || design.lastVerdict === 'pass'],
+    ['trial', ['trial_passed', 'approved', 'in_production', 'suspended'].includes(design.status)],
+    ['approved', ['approved', 'in_production', 'suspended'].includes(design.status)],
+    ['released', design.status === 'in_production'],
+  ] as const;
   return (
     <section className="mt-6" aria-label={t('lifecycle.title')} data-testid="lifecycle-section">
       <h3 className="mb-2 text-sm font-semibold text-heading">{t('lifecycle.title')}</h3>
+      <ol className="mb-3 flex flex-wrap gap-2 text-xs" data-testid="outcomes">
+        {outcomes.map(([k, done]) => (
+          <li
+            key={k}
+            data-outcome={k}
+            data-done={done}
+            className={`rounded-full border px-2 py-0.5 ${done ? 'border-pass-text text-pass-text' : 'border-line text-muted'}`}
+          >
+            {done ? '✓ ' : '○ '}
+            {t(`lifecycle.outcome.${k}`)}
+          </li>
+        ))}
+      </ol>
       <div className="flex flex-col gap-3">
         {actions.map((a) => (
           <Step key={a} design={design} action={a} />

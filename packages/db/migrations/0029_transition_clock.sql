@@ -1,0 +1,1 @@
+ALTER TABLE "design_transitions" ALTER COLUMN "at" SET DEFAULT clock_timestamp();

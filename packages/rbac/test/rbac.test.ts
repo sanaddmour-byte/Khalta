@@ -23,6 +23,8 @@ const SIGN_OFF: Capability[] = [
   'candidate.authorize',
   'production.release',
   'insight.accept',
+  'rules.edit',
+  'config.engineering',
 ];
 
 // Independent transcription of 01-domain.md §10 (the spec table), role -> capabilities.
@@ -55,6 +57,9 @@ const SPEC: Record<Role, Capability[]> = {
     'materials.read',
     'materials.write',
     'suppliers.write',
+    'rules.edit',
+    'config.engineering',
+    'settings.edit',
   ],
   qc_engineer: [
     'price.view',

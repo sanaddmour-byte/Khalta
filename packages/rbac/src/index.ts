@@ -39,6 +39,9 @@ export const CAPABILITIES = [
   'export.priceCost',
   'export.csv', // approved-design and batch-weight CSV for batching systems (plant-scoped; never cost)
   'audit.read',
+  'rules.edit', // change rule values and commit JS rule values (engineering authority, ADR 0020)
+  'config.engineering', // change safety-relevant tenant settings (engineering authority, ADR 0020)
+  'settings.edit', // open the tenant settings; which keys a person may change is decided per key
 ] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 
@@ -106,6 +109,9 @@ const MATRIX: Record<Capability, Record<Role, Cell>> = {
   'import.run': row({ admin: ALL, qc_manager: ALL }),
   'export.priceCost': row({ admin: ALL, qc_manager: ALL, procurement: ALL }),
   'audit.read': row({ admin: ALL, qc_manager: ALL }),
+  'rules.edit': row({ qc_manager: ALL }),
+  'config.engineering': row({ qc_manager: ALL }),
+  'settings.edit': row({ admin: ALL, qc_manager: ALL }),
 };
 
 function row(allowed: Partial<Record<Role, Cell>>): Record<Role, Cell> {

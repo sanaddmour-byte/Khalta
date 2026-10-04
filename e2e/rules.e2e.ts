@@ -51,13 +51,21 @@ test('four-eyes: the person who corrects a value cannot sign it off', async ({ p
   await expect(sheetChip(page, 'unverified')).toBeVisible();
 });
 
-test('admin may correct a value (new unverified version) but has no verify action', async ({
+test('admin can read rules but neither correct nor verify them (engineering authority)', async ({
   page,
 }) => {
   await start(page, { role: 'admin' });
   await page.goto('/rules');
   await open(page, 'hot.max_concrete_temp_c');
   await expect(page.getByTestId('verify-open')).toHaveCount(0);
+  await expect(page.getByTestId('edit-open')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'Import Jordanian values' })).toHaveCount(0);
+});
+
+test('a QC manager corrects a value (new unverified version)', async ({ page }) => {
+  await start(page, { role: 'qc_manager' });
+  await page.goto('/rules');
+  await open(page, 'hot.max_concrete_temp_c');
   await page.getByTestId('edit-open').click();
   await expect(page.getByTestId('edit-dialog')).toContainText('creates version 2');
   await page.locator('#edit-value').fill('33');
@@ -69,7 +77,7 @@ test('admin may correct a value (new unverified version) but has no verify actio
 });
 
 test('a wrong value shape is rejected in the form before anything is sent', async ({ page }) => {
-  await start(page, { role: 'admin' });
+  await start(page, { role: 'qc_manager' });
   await page.goto('/rules');
   await open(page, 'durability.F0.min_fc');
   await page.getByTestId('edit-open').click();
@@ -153,7 +161,7 @@ test('importing Jordanian values: errors block the commit, a clean file applies 
 });
 
 test('a file with a missing column is rejected before any row is looked at', async ({ page }) => {
-  await start(page, { role: 'admin' });
+  await start(page, { role: 'qc_manager' });
   await page.goto('/rules');
   await page.getByRole('tab', { name: 'Import Jordanian values' }).click();
   await page.getByTestId('csv-text').fill('rule_key,value\ndurability.F2.min_fc,31');

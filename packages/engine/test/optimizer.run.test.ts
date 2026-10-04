@@ -451,6 +451,7 @@ describe('degrees of freedom and conflicts', () => {
     for (const i of r.conflicts!.items) {
       expect(i.klass).toBe('USER');
       expect(i.relaxBy).toBeGreaterThan(0);
+      expect([i.category, i.adjustable]).toEqual(['user_preference', true]);
     }
     expect(ids.every((id) => ['wcm', 'binder_kg'].includes(id))).toBe(true);
   });
@@ -463,6 +464,9 @@ describe('degrees of freedom and conflicts', () => {
     for (const i of r.conflicts!.items) {
       expect(i.klass).not.toBe('USER');
       expect(i.relaxBy).toBeNull();
+      // a governing requirement is never adjustable and is classified by who owns it
+      expect(i.adjustable).toBe(false);
+      expect(i.category).not.toBe('user_preference');
     }
   });
 

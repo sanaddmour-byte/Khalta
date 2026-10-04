@@ -51,7 +51,7 @@ export const NAV: NavItem[] = [
     anyOf: ['rules.read'],
   },
   { id: 'imports', path: '/imports', icon: Upload, anyOf: ['import.run'] },
-  { id: 'settings', path: '/settings', icon: Settings, anyOf: ['org.manage'] },
+  { id: 'settings', path: '/settings', icon: Settings, anyOf: ['settings.edit'] },
 ];
 
 export function visibleNav(capabilities: readonly Capability[]): NavItem[] {

@@ -1,7 +1,8 @@
 // Design lifecycle endpoints (F-022): trial, approval, release, retire, versions, diff, gates, declared-value
 // acceptance. Every move goes through `applyTransition` (the engine's graph decides; the database refuses the rest).
 import { schema } from '@khalta/db';
-import { assertNotAuthor, canAccessPlant } from '@khalta/rbac';
+import { assertNotAuthor, canAccessPlant, roleCan, type Capability } from '@khalta/rbac';
+import { evidenceBreakdown, policyFor } from '@khalta/engine';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError, notFound } from '../errors';
@@ -12,8 +13,11 @@ import {
   applyTransition,
   esignBody,
   freshEvidence,
+  acceptedAssumptionsOf,
   gatesFor,
+  guardRequest,
   makeSignature,
+  releaseRecord,
   trialBatchesOf,
 } from '../lifecycle/service';
 
@@ -47,7 +51,11 @@ export function lifecycleRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, query, db }) => {
       const d = await loadDesign(db, auth, params.id);
-      const { _fresh, ...rest } = await gatesFor(db, auth, d, query.to);
+      const p = policyFor(query.to);
+      const { _fresh, ...rest } = await gatesFor(db, auth, d, query.to, {
+        capability: p ? roleCan(auth.role, p.capability as Capability, auth.settings) : true,
+        plantScope: p?.scope === 'tenant' || canAccessPlant(auth.scope, d.plantId),
+      });
       void _fresh;
       return rest;
     },
@@ -93,6 +101,16 @@ export function lifecycleRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, body, tx, audit }) => {
       const d = await loadDesign(tx, auth, params.id, true);
+      const again = await guardRequest(tx, auth, d, body);
+      if (again) {
+        await audit.record({
+          action: 'design.request_replayed',
+          entityType: 'mix_design',
+          entityId: d.id,
+          after: { status: again.toStatus, transitionId: again.transitionId },
+        });
+        return { id: d.id, status: again.toStatus, replayed: true };
+      }
       const r = await gatesFor(tx, auth, d, 'trial_passed');
       assertReady(r);
       const sig = await makeSignature(tx, auth, d, 'trial_reviewed', body.reason);
@@ -107,6 +125,8 @@ export function lifecycleRoutes(api: ApiRoutes) {
           criteria: r.gates.map((g) => ({ id: g.id, code: g.code })),
         },
         sig,
+        {},
+        body.idempotencyKey,
       );
       return { id: d.id, status: 'trial_passed' };
     },
@@ -168,6 +188,58 @@ export function lifecycleRoutes(api: ApiRoutes) {
 
   api.mutate(
     'post',
+    '/api/designs/:id/accept-assumptions',
+    {
+      summary:
+        'A QC manager accepts, with an e-signature, the assumptions the evaluator made for this design (they never satisfy approval silently)',
+      capability: 'design.approve',
+      params: idParam,
+      body: esignBody,
+      status: 201,
+    },
+    async ({ auth, params, body, tx, audit }) => {
+      const d = await loadDesign(tx, auth, params.id, true);
+      if (['superseded', 'retired'].includes(d.status))
+        throw new ApiError(409, 'conflict', `A ${d.status} design cannot be changed`);
+      const fresh = await freshEvidence(tx, auth, d);
+      const already = await acceptedAssumptionsOf(tx, d.id);
+      const open = evidenceBreakdown({
+        assumptions: fresh.report.assumptions,
+        assumptionReasons: fresh.report.assumptionReasons,
+        evidence: fresh.report.evidence,
+        dataQuality: fresh.report.dataQuality,
+      }).assumed.filter((a) => !already.includes(a));
+      if (open.length === 0)
+        throw new ApiError(
+          409,
+          'conflict',
+          'This design has no assumptions waiting for acceptance',
+        );
+      const sig = await makeSignature(tx, auth, d, 'assumptions_accepted', body.reason);
+      const [row] = await tx
+        .insert(schema.designAcceptances)
+        .values({
+          tenantId: auth.tenantId,
+          designId: d.id,
+          kind: 'assumptions',
+          materials: [],
+          assumptions: open,
+          esignature: sig,
+          acceptedBy: auth.user.id,
+        })
+        .returning({ id: schema.designAcceptances.id });
+      await audit.record({
+        action: 'design.accept_assumptions',
+        entityType: 'mix_design',
+        entityId: d.id,
+        after: { assumptions: open },
+      });
+      return { id: row!.id, assumptions: open };
+    },
+  );
+
+  api.mutate(
+    'post',
     '/api/designs/:id/approve',
     {
       summary:
@@ -178,6 +250,16 @@ export function lifecycleRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, body, tx, audit }) => {
       const d = await loadDesign(tx, auth, params.id, true);
+      const again = await guardRequest(tx, auth, d, body);
+      if (again) {
+        await audit.record({
+          action: 'design.request_replayed',
+          entityType: 'mix_design',
+          entityId: d.id,
+          after: { status: again.toStatus, transitionId: again.transitionId },
+        });
+        return { id: d.id, status: again.toStatus, replayed: true };
+      }
       assertNotAuthor(auth.user.id, d.createdBy); // the author never approves their own design
       const r = await gatesFor(tx, auth, d, 'approved');
       assertReady(r);
@@ -197,6 +279,7 @@ export function lifecycleRoutes(api: ApiRoutes) {
         },
         sig,
         { approvalSource: 'khalta', approvedBy: auth.user.id, approvedAt: now },
+        body.idempotencyKey,
       );
       // A new version's approval supersedes the version it came from (§14.1 `superseded`).
       let superseded: string | null = null;
@@ -249,6 +332,16 @@ export function lifecycleRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, body, tx, audit }) => {
       const d = await loadDesign(tx, auth, params.id, true);
+      const again = await guardRequest(tx, auth, d, body);
+      if (again) {
+        await audit.record({
+          action: 'design.request_replayed',
+          entityType: 'mix_design',
+          entityId: d.id,
+          after: { status: again.toStatus, transitionId: again.transitionId },
+        });
+        return { id: d.id, status: again.toStatus, replayed: true };
+      }
       if (!canAccessPlant(auth.scope, d.plantId)) throw notFound('Design not found');
       assertReady(await gatesFor(tx, auth, d, 'in_production'));
       const sig = await makeSignature(tx, auth, d, 'released', body.reason);
@@ -259,8 +352,10 @@ export function lifecycleRoutes(api: ApiRoutes) {
         d,
         'in_production',
         ['release'],
-        { plantId: d.plantId },
+        await releaseRecord(tx, auth, d),
         sig,
+        {},
+        body.idempotencyKey,
       );
       return { id: d.id, status: 'in_production' };
     },
@@ -278,6 +373,16 @@ export function lifecycleRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, body, tx, audit }) => {
       const d = await loadDesign(tx, auth, params.id, true);
+      const again = await guardRequest(tx, auth, d, body);
+      if (again) {
+        await audit.record({
+          action: 'design.request_replayed',
+          entityType: 'mix_design',
+          entityId: d.id,
+          after: { status: again.toStatus, transitionId: again.transitionId },
+        });
+        return { id: d.id, status: again.toStatus, replayed: true };
+      }
       assertReady(await gatesFor(tx, auth, d, 'retired'));
       const sig = await makeSignature(tx, auth, d, 'retired', body.reason);
       await applyTransition(
@@ -289,6 +394,8 @@ export function lifecycleRoutes(api: ApiRoutes) {
         ['qc_decision'],
         { reason: body.reason },
         sig,
+        {},
+        body.idempotencyKey,
       );
       return { id: d.id, status: 'retired' };
     },
@@ -307,6 +414,16 @@ export function lifecycleRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, body, tx, audit }) => {
       const d = await loadDesign(tx, auth, params.id, true);
+      const again = await guardRequest(tx, auth, d, body);
+      if (again) {
+        await audit.record({
+          action: 'design.request_replayed',
+          entityType: 'mix_design',
+          entityId: d.id,
+          after: { status: again.toStatus, transitionId: again.transitionId },
+        });
+        return { id: d.id, status: again.toStatus, replayed: true };
+      }
       const sig = await makeSignature(tx, auth, d, 'suspended', body.reason);
       await applyTransition(
         tx,
@@ -317,6 +434,8 @@ export function lifecycleRoutes(api: ApiRoutes) {
         ['suspension_decision'],
         { reason: body.reason, previous: d.status },
         sig,
+        {},
+        body.idempotencyKey,
       );
       return { id: d.id, status: 'suspended' };
     },
@@ -334,6 +453,16 @@ export function lifecycleRoutes(api: ApiRoutes) {
     },
     async ({ auth, params, body, tx, audit }) => {
       const d = await loadDesign(tx, auth, params.id, true);
+      const again = await guardRequest(tx, auth, d, body);
+      if (again) {
+        await audit.record({
+          action: 'design.request_replayed',
+          entityType: 'mix_design',
+          entityId: d.id,
+          after: { status: again.toStatus, transitionId: again.transitionId },
+        });
+        return { id: d.id, status: again.toStatus, replayed: true };
+      }
       const sig = await makeSignature(tx, auth, d, 'reinstated', body.reason);
       await applyTransition(
         tx,
@@ -344,6 +473,8 @@ export function lifecycleRoutes(api: ApiRoutes) {
         ['reinstatement_decision'],
         { reason: body.reason },
         sig,
+        {},
+        body.idempotencyKey,
       );
       return { id: d.id, status: body.to };
     },

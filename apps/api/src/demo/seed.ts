@@ -141,11 +141,11 @@ export async function seedDemo(d: SeedDeps): Promise<{ skipped: boolean; designs
 
     // demo-only synthetic limits (unverified; the real seeds stay null)
     await admin.patch('/api/settings', { stalePriceDays: plan.settings.stalePriceDays });
-    const rules = (await admin.get<{ rules: { id: string; key: string }[] }>('/api/rules')).rules;
+    const rules = (await mgr.get<{ rules: { id: string; key: string }[] }>('/api/rules')).rules;
     for (const cat of ['cement', 'scm', 'fine_agg', 'coarse_agg', 'admixture']) {
       const rule = rules.find((x) => x.key === `eng.test_age_limit_days.${cat}`);
       if (rule)
-        await admin.patch(`/api/rules/${rule.id}/value`, {
+        await mgr.patch(`/api/rules/${rule.id}/value`, {
           value: plan.settings.testAgeLimitDays,
           reason: `${SYNTHETIC} demo-only test-age limit`,
         });
@@ -275,12 +275,13 @@ export async function seedDemoRules(d: SeedDeps): Promise<number> {
   });
   try {
     const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-    const admin = new Client(base, d.config.BETTER_AUTH_URL);
-    await admin.post('/api/auth/sign-in/email', {
-      email: 'admin@khalta.test',
+    // rule values are engineering values: written by the QC manager, never by the admin (ADR 0020)
+    const mgr = new Client(base, d.config.BETTER_AUTH_URL);
+    await mgr.post('/api/auth/sign-in/email', {
+      email: 'qc.manager@khalta.test',
       password: d.password,
     });
-    return await applyDemoRuleValues(admin, d.log);
+    return await applyDemoRuleValues(mgr, d.log);
   } finally {
     await new Promise((r) => server.close(r));
   }

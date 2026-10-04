@@ -112,8 +112,13 @@ export function ConflictPanel({
               {conflicts.kind === 'hard_rows' && (
                 <span className="ms-2">{t('studio.conflict.binding')}</span>
               )}
+              {c.category && (
+                <span className="ms-2 text-muted" data-testid="conflict-category">
+                  {t(`studio.conflict.category.${c.category}`)}
+                </span>
+              )}
             </span>
-            {conflicts.kind === 'user_specified' && (
+            {conflicts.kind === 'user_specified' && c.adjustable !== false && (
               <Button
                 variant="secondary"
                 size="sm"

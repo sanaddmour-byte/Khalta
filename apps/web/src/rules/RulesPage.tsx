@@ -41,7 +41,8 @@ export function RulesPage() {
   );
   const caps = me?.capabilities ?? [];
   const canVerify = caps.includes('rules.verify');
-  const canImport = caps.includes('import.run');
+  // changing rule values and committing JS values is engineering authority (ADR 0020), not an administrator's
+  const canImport = caps.includes('rules.edit');
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();

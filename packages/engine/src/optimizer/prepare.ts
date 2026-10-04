@@ -72,6 +72,8 @@ export interface Prepared {
   baselineWc: number;
   /** Tightest durability max w/cm, or null when the exposure sets none. */
   durabilityWcm: number | null;
+  /** Whose limit governs the max w/cm: the codes, or the project's own (frozen) requirements. */
+  durabilityWcmSource: 'code' | 'project' | null;
   /** Ceiling the LP uses: min(baseline, durability) − robustness margin. */
   wcmCeiling: number;
   baseWaterKg: Map<number, number>;
@@ -197,6 +199,11 @@ export function prepare(input: OptimizerInput): PrepareResult {
   let durabilityWcm: number | null = null;
   const mw = usable('max_wcm');
   if (isNum(mw)) durabilityWcm = mw;
+  const durabilityWcmSource: 'code' | 'project' | null = !isNum(mw)
+    ? null
+    : String(reqOf('max_wcm')?.governing?.source) === 'PROJECT'
+      ? 'project'
+      : 'code';
   const minFc = usable('min_fc');
   if (isNum(minFc) && strength.cylinderMpa !== null && strength.cylinderMpa < minFc - 1e-9)
     block({
@@ -558,6 +565,7 @@ export function prepare(input: OptimizerInput): PrepareResult {
     strength,
     baselineWc,
     durabilityWcm,
+    durabilityWcmSource,
     wcmCeiling,
     baseWaterKg,
     slumpMm: req.slumpMm as number,

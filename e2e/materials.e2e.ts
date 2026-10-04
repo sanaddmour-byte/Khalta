@@ -164,9 +164,18 @@ test('admin manages plants and users', async ({ page }) => {
   await expectNoSeriousAxe(page, 'settings users');
 });
 
-test('settings: sanity ranges and the lab-source switch persist', async ({ page }) => {
+test('settings: engineering authority changes sanity ranges; the admin sees them locked and why', async ({
+  page,
+}) => {
   await start(page, { role: 'admin' });
   await page.goto('/settings');
+  await expect(page.getByTestId('s-sg_max')).toBeDisabled();
+  await expect(page.getByTestId('s-maxPlants')).toBeEnabled();
+  await expect(page.getByTestId('settings-authority-note')).toContainText('engineering authority');
+  await start(page, { role: 'qc_manager' });
+  await page.goto('/settings');
+  await expect(page.getByTestId('s-sg_max')).toBeEnabled();
+  await expect(page.getByTestId('s-maxPlants')).toBeDisabled();
   await expect(page.getByTestId('s-sg_max')).toHaveValue('3.1');
   await page.getByTestId('s-sg_max').fill('3.2');
   await page.getByTestId('settings-save').click();

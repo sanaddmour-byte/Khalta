@@ -80,9 +80,39 @@ export const settingsSchema = z.strictObject({
     .default(null),
   // When on, designs that rely on user-declared key properties cannot be approved (enforced from M4.1; on by default, 07 §2.5).
   approvalRequiresLabSource: z.boolean().default(true),
+  // When on, a design cannot be approved or released without a verified project-requirements revision frozen into it.
+  requireProjectRequirements: z.boolean().default(false),
 });
 export type Settings = z.infer<typeof settingsSchema>;
-export const settingsPatchSchema = settingsSchema.partial();
+
+/**
+ * Settings an administrator may change (organisation and presentation). Every other key shapes evidence, validity
+ * limits, acceptance or optimisation and is SAFETY-RELEVANT: it needs engineering authority (`config.engineering`),
+ * which the admin does not hold (ADR 0020).
+ */
+export const ADMINISTRATIVE_SETTING_KEYS = [
+  'maxPlants',
+  'salesCanViewCost',
+  'numberFormat',
+  'stalePriceDays',
+  'insightMinSavingJodPerM3',
+  'insightMinAnnualJod',
+  'letterhead',
+] as const;
+export const isAdministrativeSetting = (k: string) =>
+  (ADMINISTRATIVE_SETTING_KEYS as readonly string[]).includes(k);
+/**
+ * A patch names only the keys it changes. (`.partial()` alone would keep every default, so an update of one key would
+ * silently reset all the others to their defaults.)
+ */
+export const settingsPatchSchema = z.strictObject(
+  Object.fromEntries(
+    Object.entries(settingsSchema.shape).map(([k, v]) => [
+      k,
+      (v instanceof z.ZodDefault ? v.removeDefault() : v).optional(),
+    ]),
+  ) as unknown as { [K in keyof typeof settingsSchema.shape]: z.ZodOptional<z.ZodType> },
+);
 
 export async function loadSettings(db: Executor, tenantId: string): Promise<Settings> {
   const [row] = await db

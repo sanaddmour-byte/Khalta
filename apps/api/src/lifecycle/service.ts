@@ -4,9 +4,19 @@
 import { createHash } from 'node:crypto';
 import { schema, type AuditRecorder, type Executor, type Tx } from '@khalta/db';
 import {
+  DESIGN_STATES,
   canTransition,
   checkApprovalGates,
   evaluateTrialAcceptance,
+  evidenceBreakdown,
+  projectRequirementsGate,
+  type ProjectRequirementsFacts,
+  outcomesOf,
+  policyFor,
+  type EvidenceBreakdown,
+  type OutcomeStatus,
+  type SignatureMeaning,
+  type TransitionPolicy,
   type DesignFacts,
   type DesignState,
   type EvidenceKind,
@@ -15,7 +25,7 @@ import {
   type TrialCriteria,
 } from '@khalta/engine';
 import type { EvaluationReport, EvaluationSnapshot } from '@khalta/engine';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError } from '../errors';
 import type { AuthContext } from '../middleware';
@@ -23,17 +33,19 @@ import { buildSnapshot, runEvaluation, type DesignRow } from '../evaluation/serv
 import { loadCurrentRecords } from '../rules/service';
 import { loadSettings } from '../settings';
 
-export const esignBody = z.strictObject({ reason: z.string().trim().min(5).max(500) });
+export const esignBody = z.strictObject({
+  reason: z.string().trim().min(5).max(500),
+  /**
+   * Repeat protection: a second request with the same key returns the first outcome instead of acting twice.
+   * Generate one key per user action (a UUID); retrying the SAME action reuses it.
+   */
+  idempotencyKey: z.string().trim().min(8).max(100).optional(),
+  /** Concurrency protection: refuse when the design is no longer in the state the person was looking at. */
+  expectedStatus: z.enum(DESIGN_STATES).optional(),
+});
 export type EsignBody = z.infer<typeof esignBody>;
 
-export type Meaning =
-  | 'trial_reviewed'
-  | 'approved'
-  | 'released'
-  | 'retired'
-  | 'suspended'
-  | 'reinstated'
-  | 'declared_values_accepted';
+export type Meaning = SignatureMeaning;
 
 /** A typed e-signature: who, in what role, meaning what, why, and bound to the exact design version. */
 export interface ESignature {
@@ -177,6 +189,40 @@ export async function freshEvidence(tx: Executor, auth: AuthContext, d: DesignRo
 const sortObj = (o: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)));
 
+/**
+ * Repeat and concurrency protection for a signed move. Call right after the design row is locked. Returns the stored
+ * outcome of an earlier request with the same key (the caller returns it unchanged), or null to carry on; throws 409
+ * when the design is no longer in the state the caller was looking at.
+ */
+export async function guardRequest(
+  tx: Executor,
+  auth: AuthContext,
+  d: DesignRow,
+  body: { idempotencyKey?: string | undefined; expectedStatus?: string | undefined },
+): Promise<{ toStatus: string; transitionId: string } | null> {
+  if (body.idempotencyKey) {
+    const [prior] = await tx
+      .select({ id: schema.designTransitions.id, to: schema.designTransitions.toStatus })
+      .from(schema.designTransitions)
+      .where(
+        and(
+          eq(schema.designTransitions.tenantId, auth.tenantId),
+          eq(schema.designTransitions.designId, d.id),
+          eq(schema.designTransitions.idempotencyKey, body.idempotencyKey),
+        ),
+      );
+    if (prior) return { toStatus: prior.to, transitionId: prior.id };
+  }
+  if (body.expectedStatus && body.expectedStatus !== d.status)
+    throw new ApiError(
+      409,
+      'stale_state',
+      `The design is now ${d.status}, not ${body.expectedStatus}: reload it before acting`,
+      { actual: d.status, expected: body.expectedStatus },
+    );
+  return null;
+}
+
 export interface GateReport {
   to: string;
   /** The graph's own verdict for the edge (illegal / not yet available / needs evidence). */
@@ -190,8 +236,8 @@ const refusal = (from: string, to: string, evidence: EvidenceKind[]) => {
   return v.ok ? { ok: true as const } : { ok: false as const, reason: v.reason, code: v.code };
 };
 
-/** The checklist for moving `d` to `to`, without moving it. */
-export async function gatesFor(
+/** The checklist for moving `d` to `to`, without moving it (the policy-less core). */
+async function gatesCore(
   tx: Executor,
   auth: AuthContext,
   d: DesignRow,
@@ -230,6 +276,13 @@ export async function gatesFor(
     const accepted = acceptances.flatMap((a) =>
       ((a.materials as { materialId: string }[]) ?? []).map((m) => m.materialId),
     );
+    const acceptedAssumptions = await acceptedAssumptionsOf(tx, d.id);
+    const breakdown = evidenceBreakdown({
+      assumptions: fresh.report.assumptions,
+      assumptionReasons: fresh.report.assumptionReasons,
+      evidence: fresh.report.evidence,
+      dataQuality: fresh.report.dataQuality,
+    });
     const criteria = await trialCriteria(tx, auth.tenantId);
     const trial = trialGates(d, fresh.report, criteria, await trialBatchesOf(tx, d.id));
     const r = checkApprovalGates({
@@ -250,7 +303,10 @@ export async function gatesFor(
       },
       requiresLabSource: settings.approvalRequiresLabSource,
       acceptedMaterialIds: accepted,
+      assumptions: breakdown.assumed,
+      acceptedAssumptions,
       trial: trial.result,
+      projectRequirements: await requirementsFacts(tx, auth.tenantId, d, settings),
     });
     const edge = refusal(d.status, to, ['four_eyes_approval']);
     return { to, edge, gates: r.gates, ok: edge.ok && r.ok, _fresh: fresh };
@@ -262,7 +318,53 @@ export async function gatesFor(
     superseded: 'new_version_approved',
   };
   const edge = refusal(d.status, to, kind[to] ? [kind[to]!] : []);
-  return { to, edge, gates: [], ok: edge.ok };
+  // a release also needs the requirements the design froze to still be the project's current verified ones
+  const gates: Gate[] =
+    to === 'in_production'
+      ? [
+          projectRequirementsGate(
+            await requirementsFacts(tx, auth.tenantId, d, await loadSettings(tx, auth.tenantId)),
+          ),
+        ]
+      : [];
+  return { to, edge, gates, ok: edge.ok && gates.every((g) => g.met) };
+}
+
+export async function requirementsFacts(
+  tx: Executor,
+  tenantId: string,
+  d: DesignRow,
+  settings: { requireProjectRequirements: boolean },
+): Promise<ProjectRequirementsFacts> {
+  if (!d.requirementsRevisionId)
+    return { required: settings.requireProjectRequirements, frozen: null };
+  const [r] = await tx
+    .select({
+      projectRef: schema.projectRequirements.projectRef,
+      revision: schema.projectRequirements.revision,
+      status: schema.projectRequirements.status,
+    })
+    .from(schema.projectRequirements)
+    .where(
+      and(
+        eq(schema.projectRequirements.id, d.requirementsRevisionId),
+        eq(schema.projectRequirements.tenantId, tenantId),
+      ),
+    );
+  return { required: settings.requireProjectRequirements, frozen: r ?? null };
+}
+
+export async function acceptedAssumptionsOf(tx: Executor, designId: string): Promise<string[]> {
+  const rows = await tx
+    .select({ assumptions: schema.designAcceptances.assumptions })
+    .from(schema.designAcceptances)
+    .where(
+      and(
+        eq(schema.designAcceptances.designId, designId),
+        eq(schema.designAcceptances.kind, 'assumptions'),
+      ),
+    );
+  return rows.flatMap((r) => (r.assumptions as string[]) ?? []);
 }
 
 /** Trial acceptance against the stored targets; `ok` also needs QC sign-off, which is the act of passing. */
@@ -308,6 +410,7 @@ export async function applyTransition(
   detail: Record<string, unknown>,
   esignature: ESignature | null,
   set: Partial<typeof schema.mixDesigns.$inferInsert> = {},
+  idempotencyKey?: string,
 ) {
   const v = canTransition(d.status, to, evidence);
   if (!v.ok) throw new ApiError(409, v.code, v.reason);
@@ -323,6 +426,7 @@ export async function applyTransition(
     actorId: auth.user.id,
     evidence: { kind: evidence[0], kinds: evidence, ...detail },
     esignature,
+    ...(idempotencyKey ? { idempotencyKey } : {}),
   });
   await audit.record({
     action: `design.${to}`,
@@ -361,5 +465,118 @@ export async function loadFacts(tx: Executor, d: DesignRow): Promise<DesignFacts
     ),
     testVersions: (ev?.testVersions as Record<string, number>) ?? {},
     priceBasis: ev ? JSON.stringify(ev.priceBasis) : null,
+  };
+}
+
+export interface PolicyView {
+  to: string;
+  outcome: TransitionPolicy['outcome'];
+  capability: string;
+  scope: TransitionPolicy['scope'];
+  separation: TransitionPolicy['separation'];
+  signature: TransitionPolicy['signature'];
+  freshness: readonly string[];
+  mayRelyOn: TransitionPolicy['mayRelyOn'];
+  needsAcceptance: TransitionPolicy['needsAcceptance'];
+  blocks: TransitionPolicy['blocks'];
+}
+export interface GateAnswer extends GateReport {
+  policy: PolicyView | null;
+  /** Can THIS caller make the move, and if not, why not (capability, plant scope, separation of duties). */
+  permitted: { ok: boolean; reasons: ('capability' | 'plant_scope' | 'author_cannot_act')[] };
+  outcomes: OutcomeStatus;
+  evidence: EvidenceBreakdown;
+}
+
+/** The checklist for moving `d` to `to` plus the policy, who may do it, the four outcomes and the evidence states. */
+export async function gatesFor(
+  tx: Executor,
+  auth: AuthContext,
+  d: DesignRow,
+  to: string,
+  can: { capability: boolean; plantScope: boolean } = { capability: true, plantScope: true },
+): Promise<GateAnswer & { _fresh?: Awaited<ReturnType<typeof freshEvidence>> }> {
+  const core = await gatesCore(tx, auth, d, to);
+  const fresh = core._fresh ?? (await freshEvidence(tx, auth, d));
+  const p = policyFor(to);
+  const reasons: GateAnswer['permitted']['reasons'] = [];
+  if (!can.capability) reasons.push('capability');
+  if (!can.plantScope) reasons.push('plant_scope');
+  if (p?.separation === 'author' && d.createdBy === auth.user.id) reasons.push('author_cannot_act');
+  return {
+    ...core,
+    _fresh: fresh,
+    policy: p
+      ? {
+          to: p.to,
+          outcome: p.outcome,
+          capability: p.capability,
+          scope: p.scope,
+          separation: p.separation,
+          signature: p.signature,
+          freshness: p.freshness,
+          mayRelyOn: p.mayRelyOn,
+          needsAcceptance: p.needsAcceptance,
+          blocks: p.blocks,
+        }
+      : null,
+    permitted: { ok: reasons.length === 0, reasons },
+    outcomes: outcomesOf({
+      status: d.status,
+      evaluation: { validatorStatus: fresh.validator.status, verdict: fresh.report.verdict },
+      current: fresh.hasStored && fresh.rulesMatch && fresh.testsMatch,
+    }),
+    evidence: evidenceBreakdown({
+      assumptions: fresh.report.assumptions,
+      assumptionReasons: fresh.report.assumptionReasons,
+      evidence: fresh.report.evidence,
+      dataQuality: fresh.report.dataQuality,
+    }),
+  };
+}
+
+/**
+ * What a production release stands on, recorded in the transition: the exact design version (hash), the plant, the
+ * test version of every material in force at that moment, the frozen requirements revision, and the releasing authority.
+ */
+export async function releaseRecord(tx: Executor, auth: AuthContext, d: DesignRow) {
+  const lines = await designLines(tx, d.id);
+  const tests = await tx
+    .select({
+      materialId: schema.materialTests.materialId,
+      version: schema.materialTests.version,
+      source: schema.materialTests.source,
+    })
+    .from(schema.materialTests)
+    .where(
+      and(
+        eq(schema.materialTests.isCurrent, true),
+        eq(schema.materialTests.tenantId, auth.tenantId),
+      ),
+    );
+  const byMaterial = new Map(tests.map((t) => [t.materialId, t]));
+  const frozen = d.requirementsFrozen as {
+    projectRef: string;
+    revision: number;
+    contentHash: string;
+  } | null;
+  return {
+    plantId: d.plantId,
+    designVersion: d.version,
+    designVersionHash: versionHash(d, lines),
+    materials: lines.map((l) => ({
+      materialId: l.materialId,
+      testVersion: byMaterial.get(l.materialId)?.version ?? null,
+      testSource: byMaterial.get(l.materialId)?.source ?? null,
+    })),
+    requirements: frozen
+      ? {
+          id: d.requirementsRevisionId,
+          projectRef: frozen.projectRef,
+          revision: frozen.revision,
+          contentHash: frozen.contentHash,
+        }
+      : null,
+    releasedBy: { userId: auth.user.id, role: auth.role },
   };
 }

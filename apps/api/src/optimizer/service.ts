@@ -69,6 +69,8 @@ export const requestBody = z.strictObject({
   characteristics: z.unknown().optional(),
   /** M7.1: `white` allows only cements recorded as white; `grey` excludes white cements; `any` (default) allows all. */
   cementColour: z.enum(['any', 'white', 'grey']).default('any'),
+  /** The verified project-requirements revision this request is made against (frozen into the design it produces). */
+  projectRequirementsId: z.uuid().optional(),
   materials: z
     .strictObject({
       include: z.array(z.uuid()).max(200).optional(),

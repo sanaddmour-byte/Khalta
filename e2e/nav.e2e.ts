@@ -28,6 +28,7 @@ const EXPECTED: Record<string, string[]> = {
     'prices',
     'rules',
     'imports',
+    'settings',
   ],
   qc_engineer: [
     'dashboard',

@@ -612,6 +612,10 @@
       "nameAr": "Company name (Arabic)",
       "addressEn": "Address (English)",
       "addressAr": "Address (Arabic)"
+    },
+    "authority": {
+      "adminOnly": "You can change the organisational settings. Settings that shape evidence, validity limits and acceptance need engineering authority (a QC manager) and are locked here.",
+      "engineeringOnly": "You can change the settings that shape evidence, validity limits and acceptance. Organisational settings need an administrator and are locked here."
     }
   },
   "users": {
@@ -635,7 +639,10 @@
       "name": "Name",
       "email": "Email",
       "role": "Role"
-    }
+    },
+    "ownRole": "You cannot change your own role.",
+    "roleReason": "Reason for the role change",
+    "roleReasonHint": "Granting or removing an engineering role is recorded with this reason in the audit trail."
   },
   "prices": {
     "intro": "What each material costs delivered to each plant. Every change is kept: a new price closes the old one, nothing is overwritten. A missing price means “not available here”, never zero.",
@@ -1576,7 +1583,15 @@
       "none": "No single limit could be named.",
       "relax": "would have to move by {n} {unit}",
       "binding": "binding",
-      "release": "Release"
+      "release": "Release",
+      "category": {
+        "code_requirement": "Code requirement",
+        "project_requirement": "Project requirement",
+        "approved_internal_requirement": "Approved internal requirement",
+        "user_preference": "Your preference (can be released)",
+        "material_availability": "Material availability",
+        "missing_evidence": "Missing evidence"
+      }
     },
     "cand": {
       "empty": "Generate candidates from the Requirements stage.",
@@ -1889,7 +1904,8 @@
       "retire": "Retire…",
       "accept": "Accept declared values…",
       "suspend": "Suspend…",
-      "reinstate": "Reinstate…"
+      "reinstate": "Reinstate…",
+      "acceptAssumptions": "Accept assumptions…"
     },
     "gate": {
       "trial_batch": "At least one trial batch is logged",
@@ -1905,7 +1921,9 @@
       "criterion_density": "Fresh density within the band",
       "criterion_yield": "Yield within the band",
       "criterion_temperature": "Concrete temperature within the limit",
-      "criterion_strength": "Average strength at least f′cr"
+      "criterion_strength": "Average strength at least f′cr",
+      "assumptions_accepted": "Assumptions that stand in for missing values are accepted by QC",
+      "project_requirements": "The project requirements this design froze are verified and current"
     },
     "code": {
       "ok": "Met",
@@ -1923,7 +1941,13 @@
       "verdict_incomplete": "Some checks could not be evaluated",
       "rules_unverified": "A rule used by this evaluation is not verified by a QC manager",
       "evidence_stale": "Re-evaluate this design on current inputs first",
-      "declared_not_accepted": "User-declared key values need a lab source or QC acceptance"
+      "declared_not_accepted": "User-declared key values need a lab source or QC acceptance",
+      "assumptions_not_accepted": "The evaluator assumed values nobody recorded; a QC manager must accept them",
+      "none_recorded": "No project requirements recorded for this design",
+      "requirements_not_recorded": "Your organisation requires project requirements; none is frozen into this design",
+      "requirements_superseded": "The project issued a newer revision; create a new version against it",
+      "requirements_not_verified": "The project requirements are not verified yet",
+      "stale_state": "The design changed since you opened it; reload it"
     },
     "sign": {
       "title": {
@@ -1933,7 +1957,8 @@
         "retire": "Retire {code}",
         "accept": "Accept declared values of {code}",
         "suspend": "Suspend {code}",
-        "reinstate": "Reinstate {code}"
+        "reinstate": "Reinstate {code}",
+        "acceptAssumptions": "Accept the assumptions made for {code}"
       },
       "meaning": {
         "pass-trial": "You confirm that the trial criteria are met and you have reviewed the results.",
@@ -1942,7 +1967,8 @@
         "retire": "You retire this design. It cannot be used again; a new version is needed.",
         "accept": "You accept that some key values are user-declared and not from a lab report or datasheet.",
         "suspend": "You suspend this design. It stops being available for production until a QC manager reinstates it. Nothing suspends automatically.",
-        "reinstate": "You reinstate this suspended design and confirm the reason for suspension no longer applies."
+        "reinstate": "You reinstate this suspended design and confirm the reason for suspension no longer applies.",
+        "acceptAssumptions": "You accept, with your signature, the values the evaluator assumed because nobody recorded them. They remain listed on the design."
       },
       "reason": "Reason (at least 5 characters)",
       "scope": "A typed e-signature records who signed, in what role, what it means, why, when, and the exact version of the design. It does not claim legal validity.",
@@ -1968,6 +1994,17 @@
       "requirements_change": "requirements",
       "rule_change": "rules",
       "test_change": "material tests"
+    },
+    "outcome": {
+      "calculation": "Calculation checks passed",
+      "trial": "Trial accepted",
+      "approved": "Design approved",
+      "released": "Production released"
+    },
+    "permitted": {
+      "capability": "Your role cannot make this move",
+      "plant_scope": "This design is at a plant outside your assignment",
+      "author_cannot_act": "You authored this design; someone else must approve it"
     }
   },
   "lab": {

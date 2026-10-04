@@ -6,7 +6,10 @@ import { NAV, visibleNav } from '../src/lib/nav';
 const EXPECTED: Record<Role, string[]> = {
   admin: [
     'dashboard',
+    'studio',
     'library',
+    'profiles',
+    'insights',
     'savings',
     'materials',
     'prices',
@@ -26,6 +29,7 @@ const EXPECTED: Record<Role, string[]> = {
     'prices',
     'rules',
     'imports',
+    'settings',
   ],
   qc_engineer: [
     'dashboard',

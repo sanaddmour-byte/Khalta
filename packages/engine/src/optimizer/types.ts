@@ -184,6 +184,8 @@ export interface DofReport {
   fixed: string[];
 }
 
+import type { InfeasibilityClass } from '../requirements/project';
+
 export interface ConflictItem {
   /** The characteristic or limit that cannot all be met. */
   id: string;
@@ -192,6 +194,10 @@ export interface ConflictItem {
   relaxBy: number | null;
   unit: string;
   detail: string;
+  /** Who owns the limit (code, project, approved internal, user preference, material availability). */
+  category: InfeasibilityClass;
+  /** True ONLY for a user preference: every governing requirement has no relax control. */
+  adjustable: boolean;
 }
 
 export interface ConflictReport {

@@ -7,6 +7,7 @@ import type { ConfigSpec } from './enumerate';
 import { initialEstimates } from './solve';
 import { asPhaseOne, formulate, type Model } from './formulate';
 import type { Prepared } from './prepare';
+import { classifyInfeasibility } from '../requirements/project';
 import type { ConflictItem, ConflictReport, DofReport, Solver } from './types';
 
 export function dofOf(p: Prepared, cfg: ConfigSpec): DofReport {
@@ -74,6 +75,8 @@ export async function diagnose(
           relaxBy: relax === null ? null : Math.round(relax * 1e4) / 1e4,
           unit: meta.unit,
           detail: `${meta.charKey ?? e.row} ${meta.bound ?? ''} ${meta.value ?? ''}`.trim(),
+          category: classifyInfeasibility({ klass: 'USER' }).class,
+          adjustable: classifyInfeasibility({ klass: 'USER' }).adjustable,
         });
       }
       if (items.length > 0) return { kind: 'user_specified', items: dedupe(items) };
@@ -92,6 +95,13 @@ export async function diagnose(
         relaxBy: null,
         unit: meta.unit,
         detail: `${e.row} cannot be met together with the other limits`,
+        ...(() => {
+          const c = classifyInfeasibility({
+            klass: meta.klass,
+            ...(meta.source === 'project' ? { source: 'project' as const } : {}),
+          });
+          return { category: c.class, adjustable: false };
+        })(),
       });
     }
     return { kind: 'hard_rows', items };

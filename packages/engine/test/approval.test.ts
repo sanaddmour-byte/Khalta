@@ -107,6 +107,34 @@ const unmet = (i: GateInput) =>
     .gates.filter((g) => !g.met)
     .map((g) => g.id);
 
+describe('assumptions never satisfy mandatory evidence silently', () => {
+  const A = ['Water specific gravity was taken as 1.000 (not confirmed in the material record).'];
+  it('an unaccepted assumption blocks approval and is named', () => {
+    const r = checkApprovalGates({ ...GOOD, assumptions: A, acceptedAssumptions: [] });
+    expect(r.ok).toBe(false);
+    expect(r.gates.find((g) => g.id === 'assumptions_accepted')).toMatchObject({
+      met: false,
+      code: 'assumptions_not_accepted',
+      detail: A,
+    });
+  });
+  it('a signed acceptance of exactly that statement lets it through; another statement does not', () => {
+    expect(
+      checkApprovalGates({ ...GOOD, assumptions: A, acceptedAssumptions: A }).gates.find(
+        (g) => g.id === 'assumptions_accepted',
+      ),
+    ).toMatchObject({ met: true, code: 'accepted' });
+    expect(unmet({ ...GOOD, assumptions: A, acceptedAssumptions: ['something else'] })).toEqual([
+      'assumptions_accepted',
+    ]);
+  });
+  it('no assumptions: the gate is met', () => {
+    expect(
+      checkApprovalGates({ ...GOOD }).gates.find((g) => g.id === 'assumptions_accepted'),
+    ).toMatchObject({ met: true, code: 'ok' });
+  });
+});
+
 describe('approval gates (§14.1, 07 §2.5)', () => {
   it('all met', () => expect(checkApprovalGates(GOOD)).toMatchObject({ ok: true }));
   it('lists EVERY unmet gate, not just the first', () => {

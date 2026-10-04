@@ -564,6 +564,45 @@ export const legacyImportBatches = pgTable('legacy_import_batches', {
  * A mix design. Imported inputs (code, plant, requirements, lines, snapshot) never change in place;
  * only status and approval bookkeeping do (trigger, migration 0009).
  */
+/**
+ * A project's requirements, one row per REVISION (07/Improvement 2). A draft can be edited; a verified revision is
+ * immutable (database trigger) and was verified by someone other than its author. A change is a new revision that
+ * supersedes the old one. Designs freeze the revision they were made against.
+ */
+export const projectRequirements = pgTable(
+  'project_requirements',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    /** The project's own reference (a contract, a job, a specification number). */
+    projectRef: text('project_ref').notNull(),
+    revision: integer('revision').notNull(),
+    status: text('status', { enum: ['draft', 'verified', 'superseded'] })
+      .notNull()
+      .default('draft'),
+    /** Validated against `projectRequirementsSchema` by the API. */
+    content: jsonb('content').notNull(),
+    contentHash: text('content_hash').notNull(),
+    supersedesId: uuid('supersedes_id').references((): AnyPgColumn => projectRequirements.id),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+    verifiedBy: text('verified_by').references(() => users.id),
+    verifiedAt: ts('verified_at'),
+    /** The typed e-signature of the verification (signer, role, meaning, reason, content hash). */
+    verification: jsonb('verification'),
+    supersededAt: ts('superseded_at'),
+    supersededById: uuid('superseded_by_id').references((): AnyPgColumn => projectRequirements.id),
+  },
+  (t) => [
+    uniqueIndex('project_requirements_rev_uq').on(t.tenantId, t.projectRef, t.revision),
+    index('project_requirements_ref_idx').on(t.tenantId, t.projectRef, t.status),
+  ],
+);
+
 export const mixDesigns = pgTable(
   'mix_designs',
   {
@@ -584,6 +623,12 @@ export const mixDesigns = pgTable(
     approvedAt: ts('approved_at'),
     rulesetMode: text('ruleset_mode'),
     requirements: jsonb('requirements').notNull(),
+    /** The verified project-requirements revision this version was made against (null: none recorded, e.g. legacy). */
+    requirementsRevisionId: uuid('requirements_revision_id').references(
+      (): AnyPgColumn => projectRequirements.id,
+    ),
+    /** A frozen copy: { projectRef, revision, contentHash, content }. Immutable with the version. */
+    requirementsFrozen: jsonb('requirements_frozen'),
     inputsSnapshot: jsonb('inputs_snapshot').notNull(),
     /** What the file said (not an approval): reference, "in production" flag, average volume. */
     importedApprovalRef: text('imported_approval_ref'),
@@ -698,9 +743,19 @@ export const designTransitions = pgTable(
     evidence: jsonb('evidence').notNull(),
     /** Typed e-signature (M4.1): signer, role, meaning, reason, and the hash of the design version it was applied to. */
     esignature: jsonb('esignature'),
-    at: ts('at').notNull().defaultNow(),
+    /** A client-chosen key: a repeat of the same request returns the stored outcome instead of acting twice. */
+    idempotencyKey: text('idempotency_key'),
+    /** Wall-clock time of the insert (not the transaction start), so two moves in one transaction keep their order. */
+    at: ts('at')
+      .notNull()
+      .default(sql`clock_timestamp()`),
   },
-  (t) => [index('design_transitions_design_idx').on(t.designId)],
+  (t) => [
+    index('design_transitions_design_idx').on(t.designId),
+    uniqueIndex('design_transitions_idem_uq')
+      .on(t.tenantId, t.designId, t.idempotencyKey)
+      .where(sql`${t.idempotencyKey} is not null`),
+  ],
 );
 
 /**
@@ -747,8 +802,14 @@ export const designAcceptances = pgTable(
     designId: uuid('design_id')
       .notNull()
       .references(() => mixDesigns.id),
+    /** `declared_values`: materials whose declared key properties were accepted. `assumptions`: evaluator assumptions accepted. */
+    kind: text('kind', { enum: ['declared_values', 'assumptions'] })
+      .notNull()
+      .default('declared_values'),
     /** Materials whose declared key properties were accepted, with the fields accepted. */
     materials: jsonb('materials').notNull(),
+    /** The assumption statements a person accepted for this design (kind = assumptions). */
+    assumptions: jsonb('assumptions').notNull().default([]),
     esignature: jsonb('esignature').notNull(),
     acceptedBy: text('accepted_by')
       .notNull()

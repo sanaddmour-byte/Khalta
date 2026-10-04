@@ -522,3 +522,11 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Verification note:** tests prove labels never change any check, each warning fires on both sides of its threshold, white cement is judged like any other, the colour option excludes the right cements, and the form, filter and Studio option work and pass axe in English. They do **not** prove that real mill certificates match the labels people enter.
 
 **Next:** none planned. Go-live remains blocked on a Railway plan upgrade and a backup-bucket decision.
+
+## 2026-10-04 — Improvement set, phase 2: lifecycle policy, project requirements, engineering authority
+
+**Changed** (details in ADR 0020 and 0021): one transition policy and the four outcomes; assumption acceptance gate; idempotent, concurrency-guarded signed moves; admin can no longer edit rule values or safety-relevant settings; role-change governance; settings patch no longer resets unrelated keys; versioned project requirements with four-eyes verification, frozen into design versions, comparable-basis conflict resolution, release record, infeasibility classes. Migrations 0028–0031 (additive; no existing row is given a verified or approved state).
+
+**Tests:** engine 435, api (see the final report), web 38, rbac 210.
+
+**Pre-existing defects found and fixed:** `PATCH /api/settings` reset every other key; the earlier admin-role change left a failing web unit test and an e2e expectation; transitions recorded in one transaction had equal timestamps.

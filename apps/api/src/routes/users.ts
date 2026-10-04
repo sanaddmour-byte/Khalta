@@ -20,7 +20,11 @@ const createBody = z.strictObject({
 const patchBody = z.strictObject({
   name: z.string().trim().min(1).max(200).optional(),
   role: role.optional(),
+  /** Required when a role change grants or removes an ENGINEERING role (qc_manager, qc_engineer). */
+  reason: z.string().trim().min(5).max(500).optional(),
 });
+/** Roles that carry engineering authority: granting or removing one is a governed, reasoned, audited act. */
+const ENGINEERING_ROLES = ['qc_manager', 'qc_engineer'];
 const passwordBody = z.strictObject({ password });
 const plantsBody = z.strictObject({ plantIds: z.array(z.uuid()).max(200) });
 
@@ -147,6 +151,16 @@ export function userRoutes(api: ApiRoutes, auth: Auth) {
     },
     async ({ auth: a, body, params, tx, audit }) => {
       const before = await findUser(tx, a.tenantId, params.id);
+      const roleChange = body.role !== undefined && body.role !== before.role;
+      if (roleChange && before.id === a.user.id) throw conflict('You cannot change your own role');
+      const engineeringChange =
+        roleChange &&
+        (ENGINEERING_ROLES.includes(body.role!) || ENGINEERING_ROLES.includes(before.role));
+      if (engineeringChange && !body.reason)
+        throw Object.assign(
+          conflict('Granting or removing an engineering role needs a recorded reason'),
+          { status: 422, code: 'reason_required' },
+        );
       if (
         body.role &&
         body.role !== 'admin' &&
@@ -154,7 +168,8 @@ export function userRoutes(api: ApiRoutes, auth: Auth) {
         (await activeAdminCount(tx, a.tenantId)) <= 1
       )
         throw conflict('Cannot demote the last active admin');
-      const patch = { ...body, updatedAt: new Date() };
+      const { reason, ...fields } = body;
+      const patch = { ...fields, updatedAt: new Date() };
       await tx.update(schema.users).set(patch).where(eq(schema.users.id, params.id));
       const after = {
         id: before.id,
@@ -166,7 +181,11 @@ export function userRoutes(api: ApiRoutes, auth: Auth) {
         entityType: 'user',
         entityId: before.id,
         before: { name: before.name, role: before.role },
-        after,
+        after: {
+          ...after,
+          ...(reason ? { reason } : {}),
+          ...(engineeringChange ? { engineeringRoleChange: true } : {}),
+        },
       });
       return after;
     },

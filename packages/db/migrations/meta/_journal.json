@@ -197,6 +197,34 @@
       "when": 1791028454330,
       "tag": "0027_backup_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791105767478,
+      "tag": "0028_lifecycle_gates",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791106341631,
+      "tag": "0029_transition_clock",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791106740554,
+      "tag": "0030_project_requirements",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791106741840,
+      "tag": "0031_project_requirements_integrity",
+      "breakpoints": true
     }
   ]
 }

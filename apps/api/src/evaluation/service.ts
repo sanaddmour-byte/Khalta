@@ -15,6 +15,7 @@ import {
   type SnapshotTest,
   type Properties,
 } from '@khalta/engine';
+import { projectRequirementsSchema, toProjectOverrides } from '@khalta/engine';
 import { evaluate, selectRules } from '@khalta/engine/evaluate';
 import type { Mode, ProjectOverride, RuleRecord } from '@khalta/rules';
 import { validateEvaluation } from '@khalta/validator';
@@ -194,7 +195,8 @@ export async function buildSnapshot(
       snapshotId: opts.priceSnapshotId ?? null,
     },
     request,
-    projectOverrides: opts.projectOverrides ?? [],
+    // the project's own limits, frozen into this design version, then anything the caller adds (tighten-only either way)
+    projectOverrides: [...frozenOverrides(design), ...(opts.projectOverrides ?? [])],
     tablePolicy: opts.tablePolicy ?? {},
     rules,
     lines: lines.map((l) => ({ materialId: l.materialId, kgPerM3: l.quantity })),
@@ -365,4 +367,11 @@ export function stripSnapshotCost(s: EvaluationSnapshot): EvaluationSnapshot {
     ...s,
     materials: s.materials.map((m) => ({ ...m, price: { status: 'unavailable' as const } })),
   };
+}
+
+/** The overrides a design's frozen project requirements contribute; the rules resolver refuses any that loosen a code limit. */
+export function frozenOverrides(design: { requirementsFrozen?: unknown }): ProjectOverride[] {
+  const f = design.requirementsFrozen as { content?: unknown } | null | undefined;
+  if (!f?.content) return [];
+  return toProjectOverrides(projectRequirementsSchema.parse(f.content)) as ProjectOverride[];
 }

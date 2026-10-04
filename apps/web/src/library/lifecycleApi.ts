@@ -16,6 +16,27 @@ export interface GateReport {
   edge: { ok: boolean; reason?: string; code?: string };
   gates: Gate[];
   ok: boolean;
+  /** What the server demands for this move, who may do it, the four outcomes and the evidence states. */
+  policy?: {
+    outcome: string | null;
+    capability: string;
+    separation: 'author' | 'none';
+    signature: string | null;
+  } | null;
+  permitted?: { ok: boolean; reasons: ('capability' | 'plant_scope' | 'author_cannot_act')[] };
+  outcomes?: {
+    calculationChecks: 'none' | 'passed' | 'failed' | 'incomplete' | 'stale';
+    trialAccepted: boolean;
+    approved: boolean;
+    released: boolean;
+  };
+  evidence?: {
+    assumed: string[];
+    conventions: string[];
+    declared: string[];
+    missing: string[];
+    modelPredicted: string[];
+  };
 }
 
 export const gatesQuery = (id: string, to: Target) =>
@@ -27,8 +48,18 @@ export const gatesQuery = (id: string, to: Target) =>
 const post = <T>(path: string, body?: unknown) =>
   api<T>(path, { method: 'POST', body: JSON.stringify(body ?? {}) });
 
-export const runAction = (id: string, action: Action, reason: string) =>
-  post<{ id: string; status: string }>(`/api/designs/${id}/${action}`, { reason });
+/**
+ * `idempotencyKey` makes a retry of the SAME action harmless (the server returns the first outcome); `expectedStatus`
+ * makes the server refuse when the design changed since the person loaded it.
+ */
+export const runAction = (
+  id: string,
+  action: Action,
+  reason: string,
+  guard?: { idempotencyKey: string; expectedStatus: string },
+) => post<{ id: string; status: string }>(`/api/designs/${id}/${action}`, { reason, ...guard });
+export const acceptAssumptions = (id: string, reason: string) =>
+  post<{ id: string; assumptions: string[] }>(`/api/designs/${id}/accept-assumptions`, { reason });
 export const startTrial = (id: string) =>
   post<{ id: string; status: string }>(`/api/designs/${id}/start-trial`);
 export const acceptDeclared = (id: string, reason: string) =>

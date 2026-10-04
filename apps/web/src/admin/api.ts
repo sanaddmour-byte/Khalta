@@ -65,7 +65,7 @@ export const saveSettings = (body: Partial<TenantSettings>) =>
   api<TenantSettings>('/api/settings', json('PATCH', body));
 export const createUser = (body: { email: string; name: string; role: Role; password: string }) =>
   api<AdminUser>('/api/users', json('POST', body));
-export const updateUser = (id: string, body: { name?: string; role?: Role }) =>
+export const updateUser = (id: string, body: { name?: string; role?: Role; reason?: string }) =>
   api<AdminUser>(`/api/users/${id}`, json('PATCH', body));
 export const deactivateUser = (id: string) => api(`/api/users/${id}`, json('DELETE'));
 export const resetPassword = (id: string, password: string) =>

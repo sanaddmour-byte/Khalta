@@ -990,7 +990,15 @@ describe('settings feed the evaluation', () => {
         airPct: 2,
       },
     });
-    const admin = await asRole('admin');
+    // these settings shape evidence and acceptance: engineering authority, not the administrator (ADR 0020)
+    const admin = await asRole('qc_manager');
+    const adminDenied = await (
+      await asRole('admin')
+    )
+      .patch('/api/settings')
+      .send({ safetyMarginMpa: 0 });
+    expect(adminDenied.status).toBe(403);
+    expect(adminDenied.body.error.code).toBe('engineering_authorization_required');
     expect(
       (
         await admin

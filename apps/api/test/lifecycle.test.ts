@@ -545,3 +545,394 @@ describe('versions, diff, supersede, release and retire', () => {
       expect(['trial_candidate', 'trial_in_progress']).toContain(d.status);
   });
 });
+
+describe('policy, outcomes, assumptions, repeats and concurrency (SYNTHETIC world)', () => {
+  it('the gates answer carries the policy, who may act and why not, the four outcomes and the evidence states', async () => {
+    await setCriteria(true);
+    await verifyRules(true);
+    const { id, engineer } = await trialCandidate('PO-1');
+    await toTrialPassed(id);
+    const asEngineer = await engineer.get(`/api/designs/${id}/gates?to=approved`);
+    expect(asEngineer.status).toBe(200);
+    expect(asEngineer.body.policy).toMatchObject({
+      to: 'approved',
+      outcome: 'design_approved',
+      capability: 'design.approve',
+      separation: 'author',
+      signature: 'approved',
+    });
+    // the engineer is the author and lacks the capability: both reasons are named, nothing is hidden
+    expect(asEngineer.body.permitted).toEqual({
+      ok: false,
+      reasons: expect.arrayContaining(['capability', 'author_cannot_act']),
+    });
+    expect(asEngineer.body.outcomes).toMatchObject({
+      trialAccepted: true,
+      approved: false,
+      released: false,
+    });
+    expect(asEngineer.body.evidence).toEqual(
+      expect.objectContaining({
+        assumed: expect.any(Array),
+        conventions: expect.any(Array),
+        declared: expect.any(Array),
+        missing: expect.any(Array),
+        modelPredicted: expect.any(Array),
+      }),
+    );
+    const asManager = await (await as('qc_manager')).get(`/api/designs/${id}/gates?to=approved`);
+    expect(asManager.body.permitted).toEqual({ ok: true, reasons: [] });
+  });
+
+  it('a repeated request with the same key returns the first outcome and acts once; a stale view is refused', async () => {
+    await setCriteria(true);
+    await verifyRules(true);
+    const { id } = await trialCandidate('PO-3');
+    await toTrialPassed(id);
+    const mgr = await as('qc_manager');
+    // looking at a design that is not trial_in_progress any more
+    const stale = await mgr
+      .post(`/api/designs/${id}/approve`)
+      .send({ ...SIGN, expectedStatus: 'trial_in_progress' });
+    expect(stale.status).toBe(409);
+    expect(stale.body.error.code).toBe('stale_state');
+    expect(stale.body.error.details).toMatchObject({ actual: 'trial_passed' });
+    expect((await designRow(id)).status).toBe('trial_passed');
+
+    const key = 'approve-PO-3-0001';
+    const first = await mgr
+      .post(`/api/designs/${id}/approve`)
+      .send({ ...SIGN, idempotencyKey: key, expectedStatus: 'trial_passed' });
+    expect(first.status, JSON.stringify(first.body)).toBe(200);
+    const again = await mgr
+      .post(`/api/designs/${id}/approve`)
+      .send({ ...SIGN, idempotencyKey: key, expectedStatus: 'trial_passed' });
+    expect(again.status).toBe(200);
+    expect(again.body).toMatchObject({ id, status: 'approved', replayed: true });
+    const moves = await env.db
+      .select()
+      .from(schema.designTransitions)
+      .where(
+        and(
+          eq(schema.designTransitions.designId, id),
+          eq(schema.designTransitions.toStatus, 'approved'),
+        ),
+      );
+    expect(moves).toHaveLength(1);
+    expect(moves[0]!.idempotencyKey).toBe(key);
+  });
+
+  it('two simultaneous approvals: exactly one acts, the other is refused with a named reason', async () => {
+    await setCriteria(true);
+    await verifyRules(true);
+    const { id } = await trialCandidate('PO-4');
+    await toTrialPassed(id);
+    const [a, b] = await Promise.all([as('qc_manager'), as('qc_manager')]);
+    const res = await Promise.all([
+      a.post(`/api/designs/${id}/approve`).send(SIGN),
+      b.post(`/api/designs/${id}/approve`).send(SIGN),
+    ]);
+    expect(res.map((r) => r.status).sort()).toEqual([200, 409]);
+    const loser = res.find((r) => r.status === 409)!;
+    expect(['conflict', 'no_such_transition', 'gates_unmet']).toContain(loser.body.error.code);
+    const moves = await env.db
+      .select()
+      .from(schema.designTransitions)
+      .where(
+        and(
+          eq(schema.designTransitions.designId, id),
+          eq(schema.designTransitions.toStatus, 'approved'),
+        ),
+      );
+    expect(moves).toHaveLength(1);
+  });
+
+  it('an assumption that stands in for a missing input blocks approval until a QC manager signs its acceptance', async () => {
+    await setCriteria(true);
+    await verifyRules(true);
+    const { id } = await trialCandidate('PO-2');
+    // the water's specific gravity is no longer confirmed: the evaluator will have to assume 1.000
+    const water = await env.db
+      .select({ id: schema.materials.id })
+      .from(schema.materials)
+      .where(
+        and(eq(schema.materials.tenantId, env.tenantId), eq(schema.materials.category, 'water')),
+      );
+    const used = await env.db
+      .select()
+      .from(schema.mixDesignLines)
+      .where(eq(schema.mixDesignLines.designId, id));
+    const w = used.find((l) => water.some((x) => x.id === l.materialId))!;
+    const [cur] = await env.db
+      .select()
+      .from(schema.materialTests)
+      .where(
+        and(
+          eq(schema.materialTests.materialId, w.materialId),
+          eq(schema.materialTests.isCurrent, true),
+        ),
+      );
+    const { sg_confirmed: _gone, sg: _sg, ...props } = cur!.properties as Record<string, unknown>;
+    await env.db
+      .update(schema.materialTests)
+      .set({ isCurrent: false })
+      .where(eq(schema.materialTests.id, cur!.id));
+    await env.db.insert(schema.materialTests).values({
+      tenantId: env.tenantId,
+      materialId: w.materialId,
+      version: cur!.version + 1,
+      isCurrent: true,
+      source: cur!.source,
+      properties: props,
+      testedAt: cur!.testedAt,
+    });
+    const mgr = await as('qc_manager');
+    await mgr.post(`/api/designs/${id}/evaluate`).send({ mode: 'ACI' });
+    await toTrialPassed(id);
+    const approver = await as('qc_manager');
+    const info = await approver.get(`/api/designs/${id}/gates?to=approved`);
+    expect(info.body.evidence.assumed.length).toBeGreaterThan(0);
+    const blocked = await approver.post(`/api/designs/${id}/approve`).send(SIGN);
+    expect(blocked.status).toBe(409);
+    expect(gates(blocked.body.error)).toEqual(['assumptions_accepted']);
+    // an engineer cannot accept; a QC manager can, with an e-signature
+    expect(
+      (
+        await (
+          await as('qc_engineer', [plantA])
+        )
+          .post(`/api/designs/${id}/accept-assumptions`)
+          .send(SIGN)
+      ).status,
+    ).toBe(403);
+    const acc = await approver.post(`/api/designs/${id}/accept-assumptions`).send(SIGN);
+    expect(acc.status, JSON.stringify(acc.body)).toBe(201);
+    const [row] = await env.db
+      .select()
+      .from(schema.designAcceptances)
+      .where(eq(schema.designAcceptances.id, acc.body.id));
+    expect(row).toMatchObject({ kind: 'assumptions' });
+    expect(row!.esignature).toMatchObject({ meaning: 'assumptions_accepted', role: 'qc_manager' });
+    expect((await approver.post(`/api/designs/${id}/accept-assumptions`).send(SIGN)).status).toBe(
+      409,
+    );
+    expect((await approver.post(`/api/designs/${id}/approve`).send(SIGN)).status).toBe(200);
+
+    // put the water test back so later tests in this world are unaffected
+    const [now] = await env.db
+      .select()
+      .from(schema.materialTests)
+      .where(
+        and(
+          eq(schema.materialTests.materialId, w.materialId),
+          eq(schema.materialTests.isCurrent, true),
+        ),
+      );
+    await env.db
+      .update(schema.materialTests)
+      .set({ isCurrent: false })
+      .where(eq(schema.materialTests.id, now!.id));
+    await env.db.insert(schema.materialTests).values({
+      tenantId: env.tenantId,
+      materialId: w.materialId,
+      version: now!.version + 1,
+      isCurrent: true,
+      source: cur!.source,
+      properties: cur!.properties,
+      testedAt: cur!.testedAt,
+    });
+  });
+});
+
+describe('project requirements frozen into a design version (SYNTHETIC)', () => {
+  const REQ_CONTENT = {
+    standards: [{ ruleset: 'ACI', name: 'SYNTHETIC standard', edition: 'SYNTHETIC' }],
+    specification: { reference: 'SYN-LC', revision: 'A' },
+    strength: {
+      designation: 'C30',
+      basis: 'cylinder',
+      specifiedMpa: 30,
+      testAgeDays: 28,
+      acceptanceMethod: 'SYNTHETIC acceptance',
+    },
+    exposure: ['F0', 'S0', 'W0', 'C1'],
+    governingLimits: [
+      {
+        key: 'max_wcm',
+        bound: 'max',
+        value: 0.6,
+        unit: 'ratio',
+        basis: { specimen: 'cylinder', ageDays: 28, method: null },
+        source: 'project',
+        sourceRef: 'SYNTHETIC spec §1',
+      },
+    ],
+  };
+  const verifiedRevision = async (ref: string, content = REQ_CONTENT) => {
+    const eng = await as('qc_engineer', [plantA]);
+    const made = await eng.post('/api/project-requirements').send({ projectRef: ref, content });
+    expect(made.status, JSON.stringify(made.body)).toBe(201);
+    const mgr = await as('qc_manager');
+    expect(
+      (await mgr.post(`/api/project-requirements/${made.body.id}/verify`).send(SIGN)).status,
+    ).toBe(200);
+    return made.body as { id: string; revision: number; contentHash: string };
+  };
+  async function candidateWith(code: string, extra: Record<string, unknown>) {
+    const m = await as('qc_manager');
+    const made = await m
+      .post('/api/design-requests')
+      .send({ plantId: plantA, mode: 'ACI', requirements: REQUIREMENTS, ...extra });
+    expect(made.status, JSON.stringify(made.body)).toBe(201);
+    const eng = await as('qc_engineer', [plantA]);
+    return eng
+      .post(
+        `/api/design-requests/${made.body.id}/candidates/${made.body.candidates[0].id}/trial-candidate`,
+      )
+      .send({ code, name: code });
+  }
+
+  it('a verified revision is frozen into the design (immutably) and its project limits reach the evaluation', async () => {
+    await setCriteria(true);
+    const rev = await verifiedRevision('FRZ-1');
+    const res = await candidateWith('FR-1', { projectRequirementsId: rev.id });
+    expect(res.status, JSON.stringify(res.body)).toBe(201);
+    const row = await designRow(res.body.design.id);
+    expect(row.requirementsRevisionId).toBe(rev.id);
+    expect(row.requirementsFrozen).toMatchObject({
+      projectRef: 'FRZ-1',
+      revision: 1,
+      contentHash: rev.contentHash,
+    });
+    await expect(
+      env.pool.query(`UPDATE mix_designs SET requirements_frozen = '{}'::jsonb WHERE id = $1`, [
+        row.id,
+      ]),
+    ).rejects.toThrow(/immutable/);
+    const mgr = await as('qc_manager');
+    expect((await mgr.post(`/api/designs/${row.id}/evaluate`).send({ mode: 'ACI' })).status).toBe(
+      200,
+    );
+    const [ev] = await env.db
+      .select()
+      .from(schema.designEvaluations)
+      .where(eq(schema.designEvaluations.designId, row.id))
+      .orderBy(desc(schema.designEvaluations.createdAt));
+    expect((ev!.snapshot as { projectOverrides: unknown[] }).projectOverrides).toEqual([
+      expect.objectContaining({
+        requirement: 'max_wcm',
+        value: 0.6,
+        clause_ref: 'SYNTHETIC spec §1',
+      }),
+    ]);
+  });
+
+  it('a draft or superseded revision cannot be frozen', async () => {
+    const eng = await as('qc_engineer', [plantA]);
+    const draft = await eng
+      .post('/api/project-requirements')
+      .send({ projectRef: 'FRZ-2', content: REQ_CONTENT });
+    const refused = await candidateWith('FR-2', { projectRequirementsId: draft.body.id });
+    expect(refused.status).toBe(409);
+    expect(refused.body.error.code).toBe('requirements_not_verified');
+  });
+
+  it('approval and release are blocked when the revision a design froze is no longer the current one; the release records what it stands on', async () => {
+    await setCriteria(true);
+    await verifyRules(true);
+    const rev = await verifiedRevision('FRZ-3');
+    const made = await candidateWith('FR-3', { projectRequirementsId: rev.id });
+    const id = made.body.design.id as string;
+    await toTrialPassed(id);
+    const mgr = await as('qc_manager');
+    expect((await mgr.get(`/api/designs/${id}/gates?to=approved`)).body.gates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'project_requirements', met: true, code: 'ok' }),
+      ]),
+    );
+    expect((await mgr.post(`/api/designs/${id}/approve`).send(SIGN)).status).toBe(200);
+
+    // the project issues a new revision: the design froze the old one
+    const eng = await as('qc_engineer', [plantA]);
+    const r2 = await eng.post('/api/project-requirements').send({
+      projectRef: 'FRZ-3',
+      content: { ...REQ_CONTENT, specification: { reference: 'SYN-LC', revision: 'B' } },
+    });
+    expect(
+      (
+        await (
+          await as('qc_manager')
+        )
+          .post(`/api/project-requirements/${r2.body.id}/verify`)
+          .send(SIGN)
+      ).status,
+    ).toBe(200);
+    const blocked = await mgr.post(`/api/designs/${id}/release`).send(SIGN);
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.error.details.gates).toEqual([
+      expect.objectContaining({
+        id: 'project_requirements',
+        met: false,
+        code: 'requirements_superseded',
+      }),
+    ]);
+    expect((await designRow(id)).status).toBe('approved');
+  });
+
+  it('release records the version hash, plant, material test versions, requirements revision and the authority', async () => {
+    await setCriteria(true);
+    await verifyRules(true);
+    const rev = await verifiedRevision('FRZ-4');
+    const made = await candidateWith('FR-4', { projectRequirementsId: rev.id });
+    const id = made.body.design.id as string;
+    await toTrialPassed(id);
+    const mgr = await as('qc_manager');
+    expect((await mgr.post(`/api/designs/${id}/approve`).send(SIGN)).status).toBe(200);
+    expect((await mgr.post(`/api/designs/${id}/release`).send(SIGN)).status).toBe(200);
+    const [t] = await env.db
+      .select()
+      .from(schema.designTransitions)
+      .where(
+        and(
+          eq(schema.designTransitions.designId, id),
+          eq(schema.designTransitions.toStatus, 'in_production'),
+        ),
+      );
+    const ev = t!.evidence as Record<string, unknown>;
+    expect(ev).toMatchObject({
+      kind: 'release',
+      plantId: plantA,
+      designVersion: 1,
+      requirements: { id: rev.id, projectRef: 'FRZ-4', revision: 1, contentHash: rev.contentHash },
+      releasedBy: { role: 'qc_manager' },
+    });
+    expect(ev['designVersionHash']).toMatch(/^[0-9a-f]{64}$/);
+    expect(
+      (ev['materials'] as { testVersion: number | null }[]).every((m) => m.testVersion !== null),
+    ).toBe(true);
+    expect(t!.esignature).toMatchObject({
+      meaning: 'released',
+      designVersionHash: ev['designVersionHash'],
+    });
+  });
+
+  it('when the tenant requires project requirements, a design without any cannot be approved', async () => {
+    await setCriteria(true);
+    await verifyRules(true);
+    const { id } = await trialCandidate('FR-5');
+    await toTrialPassed(id);
+    await setSettings({ requireProjectRequirements: true });
+    try {
+      const blocked = await (await as('qc_manager')).post(`/api/designs/${id}/approve`).send(SIGN);
+      expect(blocked.status).toBe(409);
+      expect(gates(blocked.body.error)).toEqual(['project_requirements']);
+      expect(
+        blocked.body.error.details.gates.find(
+          (g: { id: string }) => g.id === 'project_requirements',
+        ).code,
+      ).toBe('requirements_not_recorded');
+    } finally {
+      await setSettings({});
+    }
+  });
+});

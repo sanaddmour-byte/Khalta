@@ -250,8 +250,13 @@ describe('verification', () => {
 });
 
 describe('correcting values', () => {
-  it('needs import.run (admin, QC manager), a reason, and a value of the right shape', async () => {
+  it('needs rules.edit (QC manager only: engineering authority), a reason, and a value of the right shape', async () => {
     const w = await rule('ACI', 'durability.W2.max_wcm');
+    // the administrator manages the organisation but cannot change engineering values (ADR 0020)
+    expect(
+      (await admin.patch(`/api/rules/${w.id}/value`).send({ value: 0.5, reason: 'try as admin' }))
+        .status,
+    ).toBe(403);
     expect(
       (await qce.patch(`/api/rules/${w.id}/value`).send({ value: 0.5, reason: 'try' })).status,
     ).toBe(403);
@@ -323,7 +328,7 @@ describe('correcting values', () => {
   it('is audited with before and after, and a rule can be filled in from "not on file"', async () => {
     const j = await rule('JS', 'durability.S1.max_wcm');
     const before = (await env.auditRows()).length;
-    const res = await admin.patch(`/api/rules/${j.id}/value`).send({
+    const res = await qcm.patch(`/api/rules/${j.id}/value`).send({
       value: 0.5,
       clause_ref: 'JSC-2022 §7.3.2',
       reason: 'from the Jordanian code, Table 7.3',

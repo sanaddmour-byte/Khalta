@@ -11,7 +11,9 @@ export type GateId =
   | 'compliance'
   | 'rules_verified'
   | 'evidence_current'
-  | 'declared_values';
+  | 'declared_values'
+  | 'assumptions_accepted'
+  | 'project_requirements';
 
 export interface GateInput {
   /** The design's author (created_by) and the person asking to approve. */
@@ -30,9 +32,49 @@ export interface GateInput {
   current: { hasStored: boolean; rulesMatch: boolean; testsMatch: boolean };
   /** Tenant setting `approval_requires_lab_source`. */
   requiresLabSource: boolean;
+  /** Statements the evaluator made without data ("water SG taken as 1.000"), and the ones a QC manager accepted with a signature. */
+  assumptions?: readonly string[];
+  acceptedAssumptions?: readonly string[];
   /** Material ids whose declared values a QC manager accepted (with an e-signature) for this design. */
   acceptedMaterialIds: readonly string[];
   trial: TrialAcceptance | null;
+  /** The project-requirements revision frozen into the design, if any, and the tenant's policy about it. */
+  projectRequirements?: ProjectRequirementsFacts;
+}
+
+export interface ProjectRequirementsFacts {
+  /** The tenant setting `requireProjectRequirements`. */
+  required: boolean;
+  /** The revision the design froze (null: none recorded, e.g. a legacy design). */
+  frozen: {
+    projectRef: string;
+    revision: number;
+    status: 'draft' | 'verified' | 'superseded';
+  } | null;
+}
+
+/** Whether the project requirements a design froze are still the project's current, verified ones. */
+export function projectRequirementsGate(f: ProjectRequirementsFacts | undefined): Gate {
+  const frozen = f?.frozen ?? null;
+  if (!frozen)
+    return {
+      id: 'project_requirements',
+      met: !f?.required,
+      code: f?.required ? 'requirements_not_recorded' : 'none_recorded',
+    };
+  if (frozen.status === 'verified')
+    return {
+      id: 'project_requirements',
+      met: true,
+      code: 'ok',
+      detail: [`${frozen.projectRef} r${frozen.revision}`],
+    };
+  return {
+    id: 'project_requirements',
+    met: false,
+    code: frozen.status === 'superseded' ? 'requirements_superseded' : 'requirements_not_verified',
+    detail: [`${frozen.projectRef} r${frozen.revision}`],
+  };
 }
 
 export interface Gate {
@@ -109,6 +151,24 @@ export function checkApprovalGates(i: GateInput): GateResult {
     code: unaccepted.length === 0 ? (declared.length ? 'accepted' : 'ok') : 'declared_not_accepted',
     detail: unaccepted,
   });
+
+  // An assumption never silently satisfies mandatory evidence: it must be listed AND accepted with a signature.
+  const unacceptedAssumptions = (i.assumptions ?? []).filter(
+    (a) => !(i.acceptedAssumptions ?? []).includes(a),
+  );
+  gates.push({
+    id: 'assumptions_accepted',
+    met: unacceptedAssumptions.length === 0,
+    code:
+      unacceptedAssumptions.length === 0
+        ? (i.assumptions ?? []).length
+          ? 'accepted'
+          : 'ok'
+        : 'assumptions_not_accepted',
+    detail: unacceptedAssumptions,
+  });
+
+  gates.push(projectRequirementsGate(i.projectRequirements));
 
   return { ok: gates.every((g) => g.met), gates };
 }

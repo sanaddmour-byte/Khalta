@@ -61,7 +61,9 @@ describe('audit completeness', () => {
     expect(rows[0]!.after).toMatchObject({ email: 'new@example.test' }); // normalized
 
     rows = await after(async () => {
-      await agent.patch(`/api/users/${userId}`).send({ role: 'qc_engineer' });
+      await agent
+        .patch(`/api/users/${userId}`)
+        .send({ role: 'qc_engineer', reason: 'Joins the QC team' });
     });
     expect(rows[0]).toMatchObject({ action: 'user.update' });
     expect(rows[0]!.before).toMatchObject({ role: 'viewer' });

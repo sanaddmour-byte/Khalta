@@ -30,7 +30,9 @@ export function seedLifecycleWorld() {
   return (ready ??= (async () => {
     const { plantA } = await seedStudioWorld();
     const admin = await as(emailFor('admin'));
-    const rules = (await (await admin.get('/api/rules?ruleset=ENGINEERING')).json()).rules as {
+    // engineering values are written by the QC manager, never by the admin
+    const qcm = await as(emailFor('qc_manager'));
+    const rules = (await (await qcm.get('/api/rules?ruleset=ENGINEERING')).json()).rules as {
       id: string;
       key: string;
       value: unknown;
@@ -39,7 +41,7 @@ export function seedLifecycleWorld() {
       const r = rules.find((x) => x.key === key);
       expect(r, key).toBeDefined();
       if (r!.value !== value) {
-        const res = await admin.patch(`/api/rules/${r!.id}/value`, {
+        const res = await qcm.patch(`/api/rules/${r!.id}/value`, {
           data: { value, reason: 'SYNTHETIC trial criterion' },
         });
         expect(res.ok(), await res.text()).toBe(true);
@@ -144,7 +146,7 @@ let moistureReady: Promise<void> | null = null;
 export function seedMoistureWorld() {
   return (moistureReady ??= (async () => {
     await seedLifecycleWorld();
-    const admin = await as(emailFor('admin'));
+    const admin = await as(emailFor('qc_manager')); // engineering values: the QC manager's, not the admin's
     const rules = (await (await admin.get('/api/rules?ruleset=ENGINEERING')).json()).rules as {
       id: string;
       key: string;

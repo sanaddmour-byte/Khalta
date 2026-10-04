@@ -53,6 +53,10 @@ const num = (s: string): number | null =>
 function GeneralTab() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const { data: me } = useMe();
+  // Administrative keys need org.manage; every other key shapes evidence and acceptance and needs engineering authority
+  const canAdmin = me?.capabilities.includes('org.manage') ?? false;
+  const canEng = me?.capabilities.includes('config.engineering') ?? false;
   const { data } = useQuery(settingsQuery);
   const [s, setS] = useState<TenantSettings | null>(null);
   const [text, setText] = useState<Record<string, string>>({});
@@ -124,7 +128,7 @@ function GeneralTab() {
         aggregate_absorption_pct: range('abs_min', 'abs_max'),
       },
     });
-  const field = (k: string, label: string, unit?: string) => (
+  const field = (k: string, label: string, unit?: string, eng = false) => (
     <div className="flex flex-col gap-1">
       <Label htmlFor={`s-${k}`}>{label}</Label>
       <div className="flex items-center gap-2">
@@ -133,6 +137,7 @@ function GeneralTab() {
           data-testid={`s-${k}`}
           dir="ltr"
           inputMode="decimal"
+          disabled={eng ? !canEng : !canAdmin}
           value={text[k] ?? ''}
           onChange={(e) => setText((x) => ({ ...x, [k]: e.target.value }))}
         />
@@ -148,12 +153,20 @@ function GeneralTab() {
         submit();
       }}
     >
+      {!(canAdmin && canEng) && (
+        <p
+          className="rounded-md bg-olive-tint p-3 text-sm text-olive-text"
+          data-testid="settings-authority-note"
+        >
+          {canAdmin ? t('settings.authority.adminOnly') : t('settings.authority.engineeringOnly')}
+        </p>
+      )}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-label={t('settings.general')}>
         {field('maxPlants', t('settings.maxPlants'))}
         {field('stalePriceDays', t('settings.stalePriceDays'), t('settings.days'))}
-        {field('nearLimitPct', t('settings.nearLimitPct'), t('settings.unit.pct'))}
-        {field('safetyMarginMpa', t('settings.safetyMarginMpa'), t('settings.unit.mpa'))}
-        {field('yieldTolerance', t('settings.yieldTolerance'), t('settings.unit.m3'))}
+        {field('nearLimitPct', t('settings.nearLimitPct'), t('settings.unit.pct'), true)}
+        {field('safetyMarginMpa', t('settings.safetyMarginMpa'), t('settings.unit.mpa'), true)}
+        {field('yieldTolerance', t('settings.yieldTolerance'), t('settings.unit.m3'), true)}
         {field('insightMinSavingJodPerM3', t('settings.insightMinSaving'), 'JOD/m³')}
         {field('insightMinAnnualJod', t('settings.insightMinAnnual'), 'JOD')}
         <div className="flex flex-col gap-1">
@@ -161,6 +174,7 @@ function GeneralTab() {
           <Select
             value={s.numberFormat}
             onValueChange={(v) => setS({ ...s, numberFormat: v as TenantSettings['numberFormat'] })}
+            disabled={!canAdmin}
           >
             <SelectTrigger id="s-numfmt" aria-label={t('settings.numberFormat')}>
               <SelectValue />
@@ -177,6 +191,7 @@ function GeneralTab() {
             checked={s.salesCanViewCost}
             onCheckedChange={(c) => setS({ ...s, salesCanViewCost: c })}
             aria-label={t('settings.salesCanViewCost')}
+            disabled={!canAdmin}
           />
           <Label htmlFor="s-sales">{t('settings.salesCanViewCost')}</Label>
         </div>
@@ -188,10 +203,10 @@ function GeneralTab() {
           <p className="text-xs text-muted">{t('settings.sanityHint')}</p>
         </div>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {field('sg_min', t('settings.sgMin'))}
-          {field('sg_max', t('settings.sgMax'))}
-          {field('abs_min', t('settings.absMin'), '%')}
-          {field('abs_max', t('settings.absMax'), '%')}
+          {field('sg_min', t('settings.sgMin'), undefined, true)}
+          {field('sg_max', t('settings.sgMax'), undefined, true)}
+          {field('abs_min', t('settings.absMin'), '%', true)}
+          {field('abs_max', t('settings.absMax'), '%', true)}
         </div>
         <div className="flex items-start gap-2">
           <Checkbox
@@ -199,6 +214,7 @@ function GeneralTab() {
             checked={s.approvalRequiresLabSource}
             onCheckedChange={(c) => setS({ ...s, approvalRequiresLabSource: c === true })}
             className="mt-0.5"
+            disabled={!canEng}
           />
           <div>
             <Label htmlFor="s-lab">{t('settings.requiresLab')}</Label>
@@ -219,6 +235,7 @@ function GeneralTab() {
             onCheckedChange={(c) => setS({ ...s, admixtureSolutionWater: c === true })}
             className="mt-0.5"
             data-testid="s-solution-water"
+            disabled={!canEng}
           />
           <div>
             <Label htmlFor="s-sol">{t('settings.solutionWater')}</Label>
@@ -238,6 +255,7 @@ function GeneralTab() {
                 data-testid={`s-lh_${k}`}
                 dir={k.endsWith('Ar') ? 'rtl' : 'ltr'}
                 value={text[`lh_${k}`] ?? ''}
+                disabled={!canAdmin}
                 onChange={(e) => setText((x) => ({ ...x, [`lh_${k}`]: e.target.value }))}
               />
             </div>
@@ -362,10 +380,12 @@ function UserDialog({ user, onClose }: { user: AdminUser; onClose: () => void })
   const [role, setRole] = useState<Role>(user.role);
   const [ids, setIds] = useState<string[]>(user.plantIds);
   const [pw, setPw] = useState('');
+  const [reason, setReason] = useState('');
   const refresh = () => qc.invalidateQueries({ queryKey: ['users'] });
   const save = useMutation({
     mutationFn: async () => {
-      if (role !== user.role) await updateUser(user.id, { role });
+      if (role !== user.role)
+        await updateUser(user.id, { role, ...(reason.trim() ? { reason: reason.trim() } : {}) });
       await setUserPlants(user.id, ids);
     },
     onSuccess: async () => {
@@ -393,6 +413,8 @@ function UserDialog({ user, onClose }: { user: AdminUser; onClose: () => void })
     (e): e is ApiError => e instanceof ApiError,
   )?.message;
   const self = me?.user.id === user.id;
+  const ENG = ['qc_manager', 'qc_engineer'];
+  const needsReason = role !== user.role && (ENG.includes(role) || ENG.includes(user.role));
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent closeLabel={t('ui.close')} className="max-w-lg" data-testid="user-edit-dialog">
@@ -403,7 +425,7 @@ function UserDialog({ user, onClose }: { user: AdminUser; onClose: () => void })
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <Label htmlFor="e-role">{t('users.col.role')}</Label>
-            <Select value={role} onValueChange={(r) => setRole(r as Role)}>
+            <Select value={role} onValueChange={(r) => setRole(r as Role)} disabled={self}>
               <SelectTrigger id="e-role" aria-label={t('users.col.role')}>
                 <SelectValue />
               </SelectTrigger>
@@ -416,6 +438,19 @@ function UserDialog({ user, onClose }: { user: AdminUser; onClose: () => void })
               </SelectContent>
             </Select>
           </div>
+          {self && <p className="text-xs text-muted">{t('users.ownRole')}</p>}
+          {needsReason && (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="e-reason">{t('users.roleReason')}</Label>
+              <Input
+                id="e-reason"
+                data-testid="role-reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+              <p className="text-xs text-muted">{t('users.roleReasonHint')}</p>
+            </div>
+          )}
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-medium text-heading">{t('users.plants')}</legend>
             <p className="text-xs text-muted">{t('users.plantsHint')}</p>
@@ -547,7 +582,8 @@ function UsersTab() {
 export function SettingsPage() {
   const { t } = useTranslation();
   const { data: me } = useMe();
-  if (me && !me.capabilities.includes('org.manage')) return <SectionPage id="settings" />;
+  if (me && !me.capabilities.includes('settings.edit')) return <SectionPage id="settings" />;
+  const canUsers = me?.capabilities.includes('org.manage') ?? false;
   return (
     <div className="flex flex-col gap-6">
       <header>
@@ -557,14 +593,16 @@ export function SettingsPage() {
       <Tabs defaultValue="general">
         <TabsList>
           <TabsTrigger value="general">{t('settings.general')}</TabsTrigger>
-          <TabsTrigger value="users">{t('users.title')}</TabsTrigger>
+          {canUsers && <TabsTrigger value="users">{t('users.title')}</TabsTrigger>}
         </TabsList>
         <TabsContent value="general" className="pt-6">
           <GeneralTab />
         </TabsContent>
-        <TabsContent value="users" className="pt-6">
-          <UsersTab />
-        </TabsContent>
+        {canUsers && (
+          <TabsContent value="users" className="pt-6">
+            <UsersTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -27,6 +27,7 @@ import { lifecycleRoutes } from './routes/lifecycle';
 import { evaluationRoutes } from './routes/evaluations';
 import { portfolioRoutes } from './routes/portfolio';
 import { baselineRoutes } from './routes/baselines';
+import { projectRequirementRoutes } from './routes/projectRequirements';
 import { designRequestRoutes } from './routes/designRequests';
 import { profileRoutes } from './routes/profiles';
 import { legacyRoutes } from './routes/legacy';
@@ -117,6 +118,7 @@ export function createApp({
   evaluationRoutes(api);
   portfolioRoutes(api);
   baselineRoutes(api);
+  projectRequirementRoutes(api);
   designRequestRoutes(api);
   profileRoutes(api);
   app.get('/api/openapi.json', authenticate(db, auth), (_req, res) => {

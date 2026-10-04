@@ -136,6 +136,9 @@ export interface Conflict {
   relaxBy: number | null;
   unit: string;
   detail: string;
+  /** Who owns the limit; only a user preference is adjustable. */
+  category?: string;
+  adjustable?: boolean;
 }
 export interface Outcome {
   blockers: Blocker[];

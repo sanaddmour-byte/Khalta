@@ -224,7 +224,7 @@ export function ruleRoutes(api: ApiRoutes) {
     '/api/rules/:id/value',
     {
       summary: 'Correct a rule value (creates a new, unverified version)',
-      capability: 'import.run',
+      capability: 'rules.edit',
       after: ({ auth }) =>
         api.jobs.enqueue(
           'rule-change',
@@ -288,7 +288,7 @@ export function ruleRoutes(api: ApiRoutes) {
     '/api/rules/import/preview',
     {
       summary: 'Validate a JS rule-values CSV (nothing is written to the rules)',
-      capability: 'import.run',
+      capability: 'rules.edit',
       body: importBody,
     },
     async ({ auth, body, db }) => {
@@ -331,7 +331,7 @@ export function ruleRoutes(api: ApiRoutes) {
     '/api/rules/import/commit',
     {
       summary: 'Apply a previewed CSV import (all or nothing; new versions are unverified)',
-      capability: 'import.run',
+      capability: 'rules.edit',
       after: ({ auth }) =>
         api.jobs.enqueue(
           'rule-change',

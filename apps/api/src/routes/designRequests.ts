@@ -22,6 +22,7 @@ import {
   type RequestBody,
 } from '../optimizer/service';
 import type { ApiRoutes } from '../route';
+import { freezeRevision, currentRevisionFor } from './projectRequirements';
 
 const idParam = z.object({ id: z.uuid() });
 const candParam = z.object({ id: z.uuid(), cid: z.uuid() });
@@ -107,6 +108,7 @@ export async function createRequest(
         materials: run.resolved.materials ?? {},
         profileIds: body.profileIds ?? [],
         cementColour: body.cementColour,
+        projectRequirementsId: body.projectRequirementsId ?? null,
       },
       profileVersions: run.resolved.profiles,
       profileOrigins: run.resolved.origins,
@@ -305,6 +307,14 @@ export async function requestTrialDesign(
     s3Option: reqInput.s3Option,
     airPct: snapshot.request.airPct,
   };
+  // the project requirements this request was made against, frozen into this design version (a new version
+  // of an existing design carries the project's CURRENT verified revision)
+  const requestedRevision = (req.inputs as { projectRequirementsId?: string | null })
+    .projectRequirementsId;
+  const revisionId =
+    requestedRevision ??
+    (lineage ? await currentRevisionFor(tx, auth.tenantId, lineage.parentDesignId) : null);
+  const frozen = revisionId ? await freezeRevision(tx, auth, revisionId) : null;
   const [design] = await tx
     .insert(schema.mixDesigns)
     .values({
@@ -315,6 +325,7 @@ export async function requestTrialDesign(
       version: lineage?.version ?? 1,
       status: 'draft',
       rulesetMode: req.mode,
+      ...(frozen ?? {}),
       requirements,
       inputsSnapshot: {
         source: 'optimizer',
@@ -615,6 +626,9 @@ export function designRequestRoutes(api: ApiRoutes) {
         );
       if (dupe) throw new ApiError(409, 'conflict', 'A design with this code already exists');
       const r = body.requirements;
+      const frozen = body.projectRequirementsId
+        ? await freezeRevision(tx, auth, body.projectRequirementsId)
+        : null;
       const [design] = await tx
         .insert(schema.mixDesigns)
         .values({
@@ -623,6 +637,7 @@ export function designRequestRoutes(api: ApiRoutes) {
           name: body.name,
           plantId: body.plantId,
           version: 1,
+          ...(frozen ?? {}),
           status: 'draft',
           rulesetMode: body.mode,
           requirements: r,
