@@ -5,7 +5,10 @@ import { start } from './support';
 const EXPECTED: Record<string, string[]> = {
   admin: [
     'dashboard',
+    'studio',
     'library',
+    'profiles',
+    'insights',
     'savings',
     'materials',
     'prices',

@@ -630,10 +630,10 @@ describe('attested designs', () => {
 });
 
 describe('access, scope and what each role sees', () => {
-  it('only QC roles evaluate; everyone with library.read can read evaluations', async () => {
+  it('only QC roles and the admin evaluate; everyone with library.read can read evaluations', async () => {
     const w = await world('EV-N');
     const id = await w.design();
-    for (const role of ['admin', 'procurement', 'sales', 'viewer', 'plant_manager'] as const) {
+    for (const role of ['procurement', 'sales', 'viewer', 'plant_manager'] as const) {
       const agent = await asRole(role, [w.plantId]);
       expect((await agent.post(`/api/designs/${id}/evaluate`).send({})).status, role).toBe(403);
       expect(

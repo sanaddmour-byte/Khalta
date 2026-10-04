@@ -149,6 +149,82 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       testedDaysAgo: 40,
     },
     {
+      key: 'cem4',
+      category: 'cement',
+      nameAr: 'إسمنت بورتلاندي عادي 52.5 (تجريبي)',
+      nameEn: `CEM I 52.5N (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: {
+        cement_type: 'CEM I 52.5N',
+        cement_kind: 'opc',
+        cement_strength_class: 52.5,
+        sg: 3.15,
+        mortar_strength_28d_mpa: 61,
+        c3a_pct: 9.2,
+        alkali_na2o_eq_pct: 0.62,
+      },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 40,
+    },
+    {
+      key: 'cem5',
+      category: 'cement',
+      nameAr: 'إسمنت قليل القلويات 42.5 (تجريبي)',
+      nameEn: `Low-alkali CEM I 42.5N (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: {
+        cement_type: 'CEM I 42.5N (low alkali)',
+        cement_kind: 'low_alkali',
+        cement_strength_class: 42.5,
+        sg: 3.15,
+        mortar_strength_28d_mpa: 51,
+        c3a_pct: 6.5,
+        alkali_na2o_eq_pct: 0.45,
+      },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 40,
+    },
+    {
+      key: 'cem6',
+      category: 'cement',
+      nameAr: 'إسمنت أبيض 52.5 (تجريبي)',
+      nameEn: `White cement 52.5 (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: {
+        cement_type: 'White CEM I 52.5N',
+        cement_kind: 'white',
+        cement_strength_class: 52.5,
+        sg: 3.1,
+        mortar_strength_28d_mpa: 60,
+        c3a_pct: 10.5,
+        alkali_na2o_eq_pct: 0.3,
+      },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 40,
+    },
+    {
+      key: 'cem7',
+      category: 'cement',
+      nameAr: 'إسمنت أبيض 42.5 (تجريبي)',
+      nameEn: `White cement 42.5 (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: {
+        cement_type: 'White CEM I 42.5N',
+        cement_kind: 'white',
+        cement_strength_class: 42.5,
+        sg: 3.1,
+        mortar_strength_28d_mpa: 50,
+        c3a_pct: 10.2,
+        alkali_na2o_eq_pct: 0.3,
+      },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 40,
+    },
+    {
       key: 'poz',
       category: 'scm',
       nameAr: 'بوزولان طبيعي (تجريبي)',
@@ -369,7 +445,9 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
     for (const plant of plants) {
       if (m.plant && m.plant !== plant.code) continue;
       if (m.key === 'hummusiyeh-AQB-01') continue; // deliberately unpriced at Aqaba
-      const [b, unit] = base[m.category]!;
+      const [b0, unit] = base[m.category]!;
+      // white cement is imported/specialty: about 2.7x the grey price
+      const b = m.properties['cement_kind'] === 'white' ? b0 * 2.7 : b0;
       const p1 = jitter(b * (plant.code === 'AQB-01' ? 1.06 : 1), 0.04);
       const raise = 1 + 0.03 + r() * 0.03;
       const stale = m.key === 'simsimiyeh-AMM-01'; // one stale cell: no second wave

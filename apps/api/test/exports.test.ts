@@ -226,10 +226,11 @@ describe('approved-design CSV (khalta.designs.v1)', () => {
     expect(s.status, JSON.stringify(s.body)).toBe(200);
   }, 120_000);
 
-  it('RBAC: QC roles and plant managers of the plant may export; everyone else is refused', async () => {
-    for (const role of ['admin', 'procurement', 'sales', 'viewer'] as const)
+  it('RBAC: QC roles, the admin and plant managers of the plant may export; everyone else is refused', async () => {
+    for (const role of ['procurement', 'sales', 'viewer'] as const)
       expect((await csvOf(await as(role, [plantA]), '/api/exports/designs.csv')).status).toBe(403);
     for (const c of [
+      await as('admin'),
       await as('qc_manager'),
       await as('qc_engineer', [plantA]),
       await as('plant_manager', [plantA]),

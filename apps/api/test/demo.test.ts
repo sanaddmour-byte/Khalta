@@ -29,7 +29,7 @@ describe('demo plan', () => {
   it('has the Appendix C shape', () => {
     const p = buildDemoPlan();
     expect(p.plants.map((x) => x.code)).toEqual(['AMM-01', 'AQB-01']);
-    expect(p.materials.filter((m) => m.category === 'cement')).toHaveLength(3);
+    expect(p.materials.filter((m) => m.category === 'cement')).toHaveLength(7);
     expect(
       p.materials.filter((m) => m.plant === 'AMM-01' && m.category.endsWith('agg')),
     ).toHaveLength(6);
@@ -109,7 +109,7 @@ describe('demo seed against a real database', () => {
       notes?: string;
     }[];
     expect(mats.filter((x) => x.freshness?.status === 'expired')).toHaveLength(1);
-    expect(mats.length).toBe(19);
+    expect(mats.length).toBe(23);
     const fine = mats.filter((x) => x.marketNameEn.startsWith('Raml'));
     expect(fine.every((x) => x.canDesign)).toBe(true);
 
