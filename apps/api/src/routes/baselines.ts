@@ -1,7 +1,16 @@
 import { schema, type AuditRecorder, type Tx } from '@khalta/db';
-import { multiply, parseDecimal, roundTo } from '@khalta/engine';
+import {
+  ADJUSTMENT_KINDS,
+  monthEnd,
+  multiply,
+  netSaving,
+  parseDecimal,
+  reconciliationOf,
+  roundTo,
+  type AdjustmentKind,
+} from '@khalta/engine';
 import { roleCan } from '@khalta/rbac';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError, forbidden, notFound } from '../errors';
 import type { ApiRoutes } from '../route';
@@ -327,7 +336,150 @@ export function baselineRoutes(api: ApiRoutes) {
         )
         .where(eq(schema.savingsEntries.tenantId, auth.tenantId))
         .orderBy(desc(schema.savingsEntries.createdAt));
-      return rows.filter((r) => auth.scope.all || auth.scope.plantIds.includes(r.plantId));
+      const mine = rows.filter((r) => auth.scope.all || auth.scope.plantIds.includes(r.plantId));
+      const adj = mine.length
+        ? await db
+            .select()
+            .from(schema.savingsAdjustments)
+            .where(
+              inArray(
+                schema.savingsAdjustments.entryId,
+                mine.map((r) => r.id),
+              ),
+            )
+        : [];
+      // the volume each realized month actually used: the latest recorded row for that design and month
+      const vols = await db
+        .select({
+          designId: schema.productionVolumes.designId,
+          month: schema.productionVolumes.month,
+          source: schema.productionVolumes.source,
+        })
+        .from(schema.productionVolumes)
+        .where(eq(schema.productionVolumes.tenantId, auth.tenantId))
+        .orderBy(asc(schema.productionVolumes.createdAt));
+      const sourceOf = new Map(vols.map((v) => [`${v.designId}|${v.month}`, v.source]));
+      return mine.map((r) => {
+        const mineAdj = adj.filter((a) => a.entryId === r.id);
+        const gross = r.totalJod ?? r.annualJod;
+        const volumeSource =
+          r.state === 'realized' && r.period
+            ? (sourceOf.get(`${r.variantDesignId}|${r.period}`) ?? null)
+            : null;
+        return {
+          ...r,
+          adjustments: mineAdj.map((a) => ({
+            id: a.id,
+            kind: a.kind,
+            amountJod: a.amountJod,
+            note: a.note,
+            createdAt: a.createdAt,
+          })),
+          // gross, costs and net are all shown; a reversal never hides the original figure
+          net:
+            gross && r.state !== 'theoretical'
+              ? netSaving(
+                  gross,
+                  mineAdj.map((a) => ({ kind: a.kind as AdjustmentKind, amountJod: a.amountJod })),
+                )
+              : null,
+          volumeSource,
+          attribution:
+            r.state === 'realized' && r.period ? { from: r.period, to: monthEnd(r.period) } : null,
+          reconciliation:
+            r.state === 'realized'
+              ? reconciliationOf({ volumeSource, provisional: r.provisional })
+              : null,
+        };
+      });
+    },
+  );
+
+  api.mutate(
+    'post',
+    '/api/savings/entries/:id/adjustments',
+    {
+      summary:
+        'Reverse an approved or realized entry, or attach a trial, implementation or extra cost to it. Entries are never edited: each is its own row, one reversal per entry, and the gross figure stays visible',
+      capability: 'insight.accept',
+      params: z.object({ id: z.uuid() }),
+      body: z.strictObject({
+        kind: z.enum(ADJUSTMENT_KINDS),
+        /** Costs only: a positive amount in JOD. A reversal takes its amount from the entry. */
+        amountJod: z
+          .string()
+          .regex(/^\d{1,12}(\.\d{1,3})?$/)
+          .optional(),
+        note: z.string().trim().min(10).max(500),
+      }),
+      status: 201,
+    },
+    async ({ auth, params, body, tx, audit }) => {
+      const [e] = await tx
+        .select({ e: schema.savingsEntries, plantId: schema.mixDesigns.plantId })
+        .from(schema.savingsEntries)
+        .innerJoin(
+          schema.mixDesigns,
+          eq(schema.mixDesigns.id, schema.savingsEntries.variantDesignId),
+        )
+        .where(
+          and(
+            eq(schema.savingsEntries.id, params.id),
+            eq(schema.savingsEntries.tenantId, auth.tenantId),
+          ),
+        )
+        .for('update', { of: schema.savingsEntries });
+      if (!e || !(auth.scope.all || auth.scope.plantIds.includes(e.plantId)))
+        throw notFound('Ledger entry not found');
+      if (e.e.state === 'theoretical')
+        throw new ApiError(
+          409,
+          'conflict',
+          'A theoretical figure is an opportunity, not a booked saving; there is nothing to reverse or charge',
+        );
+      let amount: string;
+      if (body.kind === 'reversal') {
+        const gross = e.e.totalJod ?? e.e.annualJod;
+        const g = gross === null ? null : parseDecimal(gross.replace(/^-/, ''));
+        if (!gross || g === null || g === 0n)
+          throw new ApiError(409, 'nothing_to_reverse', 'This entry has no figure to reverse');
+        amount = gross.replace(/^-/, '');
+      } else {
+        if (!body.amountJod || Number(body.amountJod) <= 0)
+          throw new ApiError(400, 'invalid_request', 'A cost needs a positive amount in JOD');
+        amount = body.amountJod;
+      }
+      const dup =
+        body.kind === 'reversal'
+          ? await tx
+              .select({ id: schema.savingsAdjustments.id })
+              .from(schema.savingsAdjustments)
+              .where(
+                and(
+                  eq(schema.savingsAdjustments.entryId, e.e.id),
+                  eq(schema.savingsAdjustments.kind, 'reversal'),
+                ),
+              )
+          : [];
+      if (dup.length > 0) throw new ApiError(409, 'conflict', 'This entry was already reversed');
+      const [row] = await tx
+        .insert(schema.savingsAdjustments)
+        .values({
+          tenantId: auth.tenantId,
+          entryId: e.e.id,
+          kind: body.kind,
+          amountJod: amount,
+          note: body.note,
+          createdBy: auth.user.id,
+        })
+        .returning({ id: schema.savingsAdjustments.id });
+      await audit.record({
+        action: `savings.${body.kind}`,
+        entityType: 'savings_entry',
+        entityId: e.e.id,
+        after: { adjustmentId: row!.id, kind: body.kind, amountJod: amount, note: body.note },
+      });
+      return { id: row!.id, kind: body.kind, amountJod: amount };
     },
   );
 

@@ -7,6 +7,7 @@ import {
   onStrengthResult,
 } from '../insights/triggers';
 import { assessChange, tokens } from '../impact/service';
+import { escalateOverdue } from '../insights/service';
 import { todayAmman } from '@khalta/engine';
 import type { ImpactTrigger } from '@khalta/engine';
 import { backupJob } from '../backup/job';
@@ -60,6 +61,10 @@ export function handlersFor(db: Db): Record<JobName, Handler> {
         subject: str(d['subject']),
         token: str(d['token']),
       });
+    },
+    escalation: async () => {
+      for (const t of await db.select({ id: schema.tenants.id }).from(schema.tenants))
+        await escalateOverdue(db, t.id);
     },
     backup: async () => {
       await backupJob(db);

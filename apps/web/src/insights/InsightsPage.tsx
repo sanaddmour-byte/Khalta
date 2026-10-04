@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
 import { ChangeImpactSection } from './ChangeImpactSection';
+import { OwnershipRow } from './OwnershipRow';
 import { useFormat } from '../lib/format';
 import { usePlant } from '../lib/plant';
 import { usePrefs } from '../lib/prefs';
@@ -219,6 +220,7 @@ function Card({ insight }: { insight: Insight }) {
         {plant ? (lang === 'ar' ? plant.nameAr : plant.nameEn) : t('insights.allPlants')} ·{' '}
         <Ltr>{f.dateTime(insight.lastSeenAt)}</Ltr>
       </p>
+      <OwnershipRow insight={insight} />
       {insight.type === 'opportunity' && insight.savingJodPerM3 !== null && (
         <div
           className="mt-3 rounded-md border border-dashed border-muted p-3"

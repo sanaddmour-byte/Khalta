@@ -236,7 +236,8 @@ export function withColour(
   if (colour === 'any') return m;
   const out = materials
     .filter(
-      (x) => x.category === 'cement' && !colourAllows(colour, cementLabel(x.test?.properties).kind),
+      (x) =>
+        x.category === 'cement' && !colourAllows(colour, cementLabel(x.test?.properties).colour),
     )
     .map((x) => x.id);
   if (out.length === 0) return m;
@@ -415,7 +416,12 @@ const REQUIREMENTS_SHOWN = new Set([
 
 function cementLabelOf(m: { test: { properties?: unknown } | null }) {
   const l = cementLabel((m.test?.properties ?? {}) as Record<string, unknown>);
-  return { cementKind: l.kind, cementClass: l.strengthClass };
+  return {
+    cementKind: l.kind,
+    cementClass: l.strengthClass,
+    cementColour: l.colour,
+    cementLegacyWhite: l.legacyWhite,
+  };
 }
 
 /**

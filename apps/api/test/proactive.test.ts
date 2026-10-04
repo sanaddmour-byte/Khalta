@@ -361,6 +361,90 @@ describe('the controlled pilot: baseline → price change → insight → accept
     expect(new Set(ledger.body.map((e: { state: string }) => e.state))).toEqual(
       new Set(['theoretical', 'approved', 'realized']),
     );
+    // ---- attribution: evidence per entry, costs, reversal, duplicates
+    const rows = ledger.body as {
+      id: string;
+      state: string;
+      net: { gross: string; net: string; costs: string; reversed: boolean } | null;
+      reconciliation: string | null;
+      attribution: { from: string; to: string } | null;
+      volumeSource: string | null;
+    }[];
+    const real = rows.filter((r) => r.state === 'realized');
+    for (const r of real) {
+      expect(r.attribution!.from).toMatch(/^2026-0[89]-01$/);
+      expect(r.attribution!.to > r.attribution!.from).toBe(true);
+      expect(r.volumeSource).not.toBeNull();
+      // rules are unverified in this world, so nothing may claim to be reconciled
+      expect(r.reconciliation).not.toBe('reconciled');
+    }
+    expect(rows.find((r) => r.state === 'theoretical')!.net).toBeNull();
+    const mgr2 = await as('qc_manager');
+    const target = real[0]!;
+    const adj = (id: string, body: object) =>
+      mgr2.post(`/api/savings/entries/${id}/adjustments`).send(body);
+    expect(
+      (
+        await adj(target.id, {
+          kind: 'trial_cost',
+          note: 'trial batches and lab tests',
+          amountJod: '40.000',
+        })
+      ).status,
+    ).toBe(201);
+    expect((await adj(target.id, { kind: 'trial_cost', note: 'too short' })).status).toBe(400);
+    expect(
+      (await adj(target.id, { kind: 'extra_cost', note: 'a note that is long enough' })).status,
+    ).toBe(400);
+    const rev = await adj(target.id, {
+      kind: 'reversal',
+      note: 'the volume was entered against the wrong design',
+    });
+    expect(rev.status, JSON.stringify(rev.body)).toBe(201);
+    expect(
+      (await adj(target.id, { kind: 'reversal', note: 'a second reversal attempt here' })).status,
+    ).toBe(409);
+    const after = (await mgr2.get('/api/savings')).body.find(
+      (r: { id: string }) => r.id === target.id,
+    );
+    expect(after.net).toMatchObject({ reversed: true, costs: '40.000', net: '-40.000' });
+    expect(after.net.gross).toBe(target.net!.gross); // the original figure is never hidden
+    // a theoretical figure cannot be reversed or charged; cost-blind and other roles are refused
+    const th = rows.find((r) => r.state === 'theoretical')!;
+    expect(
+      (await adj(th.id, { kind: 'trial_cost', note: 'a long enough note', amountJod: '1.000' }))
+        .status,
+    ).toBe(409);
+    expect(
+      (
+        await (
+          await as('qc_engineer', [plantA])
+        )
+          .post(`/api/savings/entries/${target.id}/adjustments`)
+          .send({ kind: 'reversal', note: 'a long enough note' })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await (
+          await as('plant_manager', [plantB])
+        )
+          .post(`/api/savings/entries/${target.id}/adjustments`)
+          .send({ kind: 'reversal', note: 'a long enough note' })
+      ).status,
+    ).toBe(403);
+    // the audit trail records both
+    const au = await env.db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.entityId, target.id));
+    expect(au.map((a) => a.action)).toEqual(
+      expect.arrayContaining(['savings.trial_cost', 'savings.reversal']),
+    );
+    // entries and adjustments are append-only
+    await expect(
+      env.db.update(schema.savingsAdjustments).set({ note: 'rewritten later on' }),
+    ).rejects.toThrow();
   }, 240_000);
 });
 
@@ -621,6 +705,7 @@ describe('the worker (pg-boss)', () => {
         'rule-change': stub,
         'strength-result': stub,
         'change-impact': stub,
+        escalation: stub,
         nightly: stub,
         backup: stub,
       },

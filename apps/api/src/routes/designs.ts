@@ -5,6 +5,7 @@ import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or } from 'drizz
 import { z } from 'zod';
 import { ApiError, notFound } from '../errors';
 import type { ApiRoutes } from '../route';
+import { versionHash } from '../lifecycle/service';
 
 const idParam = z.object({ id: z.uuid() });
 const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
@@ -153,7 +154,26 @@ export function designRoutes(api: ApiRoutes) {
               .where(eq(schema.legacyImportBatches.id, d.importBatchId))
           : Promise.resolve([]),
       ]);
-      return { design: d, lines, transitions, source: batch[0]?.filename ?? null };
+      // The identity a person must always be able to see: exactly which version, on which record, against which requirements.
+      const [full] = await db
+        .select()
+        .from(schema.mixDesigns)
+        .where(eq(schema.mixDesigns.id, d.id));
+      const frozen = full?.requirementsFrozen as { projectRef?: string; revision?: number } | null;
+      const [rev] = full?.requirementsRevisionId
+        ? await db
+            .select({ status: schema.projectRequirements.status })
+            .from(schema.projectRequirements)
+            .where(eq(schema.projectRequirements.id, full.requirementsRevisionId))
+        : [];
+      const identity = {
+        versionHash: full ? versionHash(full as never, lines as never).slice(0, 12) : null,
+        requirementsRef: frozen?.projectRef
+          ? `${frozen.projectRef} r${frozen.revision ?? '?'}`
+          : null,
+        requirementsStatus: rev?.status ?? null,
+      };
+      return { design: d, lines, transitions, source: batch[0]?.filename ?? null, identity };
     },
   );
 

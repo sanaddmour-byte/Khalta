@@ -90,7 +90,7 @@ export async function cementColourOf(tx: Executor, designId: string): Promise<'w
     .where(
       and(eq(schema.mixDesignLines.designId, designId), eq(schema.materials.category, 'cement')),
     );
-  return rows.some((r) => cementLabel(r.props as Record<string, unknown>).kind === 'white')
+  return rows.some((r) => cementLabel(r.props as Record<string, unknown>).colour === 'white')
     ? 'white'
     : 'grey';
 }

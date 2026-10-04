@@ -1,9 +1,15 @@
 // Insights inbox (F-027): list, triage (dismiss / snooze), accept (a trial-only draft, never above trial_candidate),
 // and the daily digest. Cost-blind roles receive no cost figures. Insights never change a design by themselves.
-import { schema } from '@khalta/db';
-import { savingPerM3, todayAmman } from '@khalta/engine';
-import { canAccessPlant, roleCan } from '@khalta/rbac';
-import { and, desc, eq, lte, or, sql } from 'drizzle-orm';
+import { schema, type Executor } from '@khalta/db';
+import {
+  dueAtFor,
+  ownershipOf,
+  savingPerM3,
+  todayAmman,
+  type OwnershipEvent,
+} from '@khalta/engine';
+import { canAccessPlant, isPlantScoped, roleCan, type Role } from '@khalta/rbac';
+import { and, desc, eq, inArray, isNull, lte, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { ApiError, notFound } from '../errors';
 import { loadDesign } from '../evaluation/run';
@@ -11,6 +17,7 @@ import { priceDesign } from '../insights/pricing';
 import { expireOne } from '../insights/service';
 import { baselineFor } from '../savings/service';
 import type { ApiRoutes } from '../route';
+import { loadSettings } from '../settings';
 import { createRequest, requestTrialDesign } from './designRequests';
 import { createSnapshot } from './prices';
 import { requestBody, type RequestBody } from '../optimizer/service';
@@ -27,7 +34,7 @@ const dismissBody = z.strictObject({ reason: z.string().trim().min(3).max(300) }
 const snoozeBody = z.strictObject({ days: z.union([z.literal(1), z.literal(7)]) });
 
 type Row = typeof schema.insights.$inferSelect;
-const shape = (auth: AuthContext, r: Row) => {
+const shape = (auth: AuthContext, r: Row, own?: ReturnType<typeof ownershipOf>) => {
   const cost = roleCan(auth.role, 'cost.view', auth.settings);
   return {
     id: r.id,
@@ -46,8 +53,53 @@ const shape = (auth: AuthContext, r: Row) => {
     draftDesignId: r.draftDesignId,
     firstSeenAt: r.firstSeenAt,
     lastSeenAt: r.lastSeenAt,
+    ownership: own ?? null,
   };
 };
+
+async function ownershipFor(db: Executor, ids: string[]) {
+  const out = new Map<string, OwnershipEvent[]>();
+  if (ids.length === 0) return out;
+  const rows = await db
+    .select()
+    .from(schema.insightEvents)
+    .where(
+      and(
+        inArray(schema.insightEvents.insightId, ids),
+        inArray(schema.insightEvents.kind, ['assigned', 'acknowledged', 'escalated']),
+      ),
+    );
+  for (const r of rows)
+    out.set(r.insightId, [
+      ...(out.get(r.insightId) ?? []),
+      { kind: r.kind, at: r.at.toISOString(), detail: r.detail as Record<string, unknown> },
+    ]);
+  return out;
+}
+const OWNER_ROLES = ['qc_manager', 'qc_engineer', 'plant_manager'];
+
+/** Active users who may own an alert at a plant: the right role, and an assignment to the plant when the role is plant-scoped. */
+async function assigneesFor(db: Executor, tenantId: string, plantId: string | null) {
+  const users = await db
+    .select({ id: schema.users.id, name: schema.users.name, role: schema.users.role })
+    .from(schema.users)
+    .where(
+      and(
+        eq(schema.users.tenantId, tenantId),
+        eq(schema.users.banned, false),
+        isNull(schema.users.deletedAt),
+        inArray(schema.users.role, OWNER_ROLES),
+      ),
+    );
+  if (!plantId) return users;
+  const links = await db
+    .select({ userId: schema.userPlants.userId })
+    .from(schema.userPlants)
+    .where(eq(schema.userPlants.plantId, plantId));
+  const linked = new Set(links.map((l) => l.userId));
+  return users.filter((u) => !isPlantScoped(u.role as Role) || linked.has(u.id));
+}
+
 const visible = (auth: AuthContext, r: Row) => !r.plantId || canAccessPlant(auth.scope, r.plantId);
 
 export function insightRoutes(api: ApiRoutes) {
@@ -83,7 +135,13 @@ export function insightRoutes(api: ApiRoutes) {
           desc(schema.insights.lastSeenAt),
         )
         .limit(200);
-      return rows.filter((r) => visible(auth, r)).map((r) => shape(auth, r));
+      const vis = rows.filter((r) => visible(auth, r));
+      const evs = await ownershipFor(
+        db,
+        vis.map((r) => r.id),
+      );
+      const now = new Date().toISOString();
+      return vis.map((r) => shape(auth, r, ownershipOf(evs.get(r.id) ?? [], now)));
     },
   );
 
@@ -172,6 +230,106 @@ export function insightRoutes(api: ApiRoutes) {
         after: { reason: body.reason },
       });
       return { id: r.id, status: 'dismissed' };
+    },
+  );
+
+  api.get(
+    '/api/insights/:id/assignees',
+    {
+      summary: 'Who can own this alert (active QC and plant staff with access to its plant)',
+      capability: 'insight.accept',
+      params: idParam,
+    },
+    async ({ auth, params, db }) => {
+      const r = await load(db, auth, params.id);
+      return assigneesFor(db, auth.tenantId, r.plantId);
+    },
+  );
+
+  api.mutate(
+    'post',
+    '/api/insights/:id/assign',
+    {
+      summary:
+        'Give an alert a named owner (QC manager). The deadline comes from the tenant setting for its severity; with none set there is no automatic escalation',
+      capability: 'insight.accept',
+      params: idParam,
+      body: z.strictObject({ ownerId: z.string().min(1).max(64) }),
+    },
+    async ({ auth, params, body, tx, audit }) => {
+      const r = await load(tx, auth, params.id);
+      const [owner] = await tx
+        .select({
+          id: schema.users.id,
+          name: schema.users.name,
+          banned: schema.users.banned,
+          deletedAt: schema.users.deletedAt,
+        })
+        .from(schema.users)
+        .where(and(eq(schema.users.id, body.ownerId), eq(schema.users.tenantId, auth.tenantId)));
+      const allowed = await assigneesFor(tx, auth.tenantId, r.plantId);
+      if (!owner || owner.banned || owner.deletedAt || !allowed.some((u) => u.id === owner.id))
+        throw new ApiError(400, 'invalid_request', 'That user cannot own this alert');
+      const settings = await loadSettings(tx, auth.tenantId);
+      const hours =
+        r.severity === 'critical'
+          ? settings.alertAckHoursCritical
+          : r.severity === 'high'
+            ? settings.alertAckHoursHigh
+            : null;
+      const at = new Date();
+      const dueAt = dueAtFor(at.toISOString(), hours);
+      await tx.insert(schema.insightEvents).values({
+        tenantId: auth.tenantId,
+        insightId: r.id,
+        kind: 'assigned',
+        actorId: auth.user.id,
+        at,
+        detail: { ownerId: owner.id, ownerName: owner.name, dueAt, hours },
+      });
+      await audit.record({
+        action: 'insight.assign',
+        entityType: 'insight',
+        entityId: r.id,
+        after: { ownerId: owner.id, dueAt },
+      });
+      return { id: r.id, ownerId: owner.id, dueAt };
+    },
+  );
+
+  api.mutate(
+    'post',
+    '/api/insights/:id/acknowledge',
+    {
+      summary: 'The owner (or a QC manager) acknowledges an alert; this stops its escalation clock',
+      capability: 'library.read',
+      params: idParam,
+      body: z.strictObject({ note: z.string().trim().max(300).optional() }),
+    },
+    async ({ auth, params, body, tx, audit }) => {
+      const r = await load(tx, auth, params.id);
+      const evs = await ownershipFor(tx, [r.id]);
+      const own = ownershipOf(evs.get(r.id) ?? [], new Date().toISOString());
+      if (own.state === 'unassigned')
+        throw new ApiError(409, 'conflict', 'This alert has no owner yet');
+      if (own.ownerId !== auth.user.id && !roleCan(auth.role, 'insight.accept', auth.settings))
+        throw new ApiError(403, 'forbidden', 'Only the owner or a QC manager can acknowledge it');
+      if (own.state === 'acknowledged')
+        throw new ApiError(409, 'conflict', 'This alert was already acknowledged');
+      await tx.insert(schema.insightEvents).values({
+        tenantId: auth.tenantId,
+        insightId: r.id,
+        kind: 'acknowledged',
+        actorId: auth.user.id,
+        detail: { note: body.note ?? null },
+      });
+      await audit.record({
+        action: 'insight.acknowledge',
+        entityType: 'insight',
+        entityId: r.id,
+        after: { by: auth.user.id },
+      });
+      return { id: r.id, acknowledged: true };
     },
   );
 

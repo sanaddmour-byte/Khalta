@@ -76,6 +76,57 @@ export function totalsByState(
   };
 }
 
+export const ADJUSTMENT_KINDS = [
+  'reversal',
+  'trial_cost',
+  'implementation_cost',
+  'extra_cost',
+] as const;
+export type AdjustmentKind = (typeof ADJUSTMENT_KINDS)[number];
+
+/**
+ * The net of one entry. A reversal withdraws the entry's gross saving (it is never edited or deleted: the correction is
+ * its own row); costs (trial, implementation, extra) are positive amounts that reduce the net, and stand even after a
+ * reversal because they were really spent. Exact decimals; gross, costs and net are all returned so none is hidden.
+ */
+export function netSaving(
+  gross: string,
+  adjustments: readonly { kind: AdjustmentKind; amountJod: string }[],
+): { gross: string; reversed: boolean; costs: string; net: string } {
+  const reversed = adjustments.some((a) => a.kind === 'reversal');
+  let costs = 0n;
+  for (const a of adjustments) {
+    if (a.kind === 'reversal') continue;
+    const v = signed(a.amountJod);
+    if (v <= 0n) throw new Error('a cost adjustment must be a positive amount');
+    costs += v;
+  }
+  const counted = reversed ? 0n : signed(gross);
+  return {
+    gross,
+    reversed,
+    costs: roundSigned(costs, 3),
+    net: roundSigned(counted - costs, 3),
+  };
+}
+
+export type Reconciliation =
+  'reconciled' | 'provisional_rules' | 'manual_volume' | 'demo_volume' | 'no_volume';
+
+/**
+ * Whether a realized figure rests on evidence a reviewer can reconcile: a volume from batch tickets or an import, and
+ * rules that QC has verified. Anything else is named, never rounded up to "reconciled".
+ */
+export function reconciliationOf(i: {
+  volumeSource: 'demo' | 'import' | 'batch_tickets' | 'manual' | null;
+  provisional: boolean;
+}): Reconciliation {
+  if (i.volumeSource === null) return 'no_volume';
+  if (i.volumeSource === 'demo') return 'demo_volume';
+  if (i.volumeSource === 'manual') return 'manual_volume';
+  return i.provisional ? 'provisional_rules' : 'reconciled';
+}
+
 /** `YYYY-MM-01` for a date string. */
 export const monthOf = (d: string) => `${d.slice(0, 7)}-01`;
 /** Last calendar day of the month that starts on `month` (`YYYY-MM-01`). */

@@ -60,6 +60,8 @@ export interface MaterialRow extends Material {
   /** Cement only: the recorded market label (absent for other categories). */
   cementKind?: string | null;
   cementClass?: number | null;
+  cementColour?: 'white' | 'grey' | null;
+  cementLegacyWhite?: boolean;
 }
 export interface AttachmentMeta {
   filename: string;
@@ -199,4 +201,15 @@ export const paramsQuery = queryOptions({
   queryKey: ['materials', 'params'],
   queryFn: () => api<MaterialParams>('/api/materials/params'),
   staleTime: 60_000,
+});
+
+export interface CementReview {
+  materialId: string;
+  nameEn: string;
+  nameAr: string | null;
+  issues: ('legacy_white' | 'type_missing' | 'colour_missing')[];
+}
+export const cementReviewQuery = queryOptions({
+  queryKey: ['materials', 'cement-label-review'],
+  queryFn: () => api<CementReview[]>('/api/materials/cement-label-review'),
 });

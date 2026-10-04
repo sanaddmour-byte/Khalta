@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
 import { useFormat } from '../lib/format';
+import { WhyDisabled } from '../lib/WhyDisabled';
 import { decide, impactsQuery, type ImpactDisposition, type ImpactItem } from './impactApi';
 
 const DISPOSITIONS: ImpactDisposition[] = [
@@ -75,6 +76,7 @@ function DecideDialog({ item, onClose }: { item: ImpactItem; onClose: () => void
           onChange={(e) => setReason(e.target.value)}
           data-testid="impact-reason"
         />
+        <WhyDisabled id="impact-why" reason={reason.trim().length < 10 ? t('impact.why') : null} />
         {m.error instanceof ApiError && (
           <p role="alert" className="mt-2 text-sm text-fail-text">
             {m.error.message}
@@ -86,6 +88,7 @@ function DecideDialog({ item, onClose }: { item: ImpactItem; onClose: () => void
           </Button>
           <Button
             disabled={reason.trim().length < 10 || m.isPending}
+            aria-describedby={reason.trim().length < 10 ? 'impact-why' : undefined}
             onClick={() => m.mutate()}
             data-testid="impact-save"
           >

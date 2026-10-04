@@ -209,3 +209,21 @@ test('cement colour: the choice is offered and can be set back to any', async ({
   await choose(page, 'req-colour', 'Any');
   await expectNoSeriousAxe(page, 'studio colour');
 });
+
+test('switching plant with generated, unsaved candidates asks first; staying keeps them', async ({
+  page,
+}) => {
+  await open(page);
+  await page.getByTestId('generate').click();
+  await expect(page.getByTestId('candidate-card').first()).toBeVisible();
+  await page.getByTestId('plant-switcher').click();
+  // pick a plant other than the current one (choosing the current one changes nothing)
+  await page.getByRole('option', { selected: false }).first().click();
+  const dialog = page.getByTestId('unsaved-dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText('unsaved work');
+  await expectNoSeriousAxe(page, 'unsaved dialog');
+  await page.getByTestId('unsaved-stay').click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByTestId('candidate-card').first()).toBeVisible();
+});

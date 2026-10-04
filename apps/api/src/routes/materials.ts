@@ -3,6 +3,7 @@ import {
   adHocMaterialSchema,
   CATEGORIES,
   cementLabel,
+  suggestCementLabel,
   SOURCES,
   type Category,
   type Properties,
@@ -279,10 +280,78 @@ async function addTest(
 function cementLabelFields(category: string, properties: unknown) {
   if (category !== 'cement') return {};
   const l = cementLabel((properties ?? {}) as Record<string, unknown>);
-  return { cementKind: l.kind, cementClass: l.strengthClass };
+  return {
+    cementKind: l.kind,
+    cementClass: l.strengthClass,
+    cementColour: l.colour,
+    cementLegacyWhite: l.legacyWhite,
+  };
 }
 
 export function materialRoutes(api: ApiRoutes) {
+  api.get(
+    '/api/materials/cement-label-review',
+    {
+      summary:
+        'Cements whose classification needs a person: still on the legacy type "white", or with the type or colour not recorded. Suggestions come from the market name and are never applied; a person records the type, class and colour as a new test version',
+      capability: 'materials.read',
+    },
+    async ({ auth, db }) => {
+      const mats = await db
+        .select()
+        .from(schema.materials)
+        .where(
+          and(
+            eq(schema.materials.tenantId, auth.tenantId),
+            eq(schema.materials.category, 'cement'),
+            isNull(schema.materials.deletedAt),
+            eq(schema.materials.isActive, true),
+          ),
+        )
+        .orderBy(asc(schema.materials.marketNameEn));
+      const seen = mats.filter(
+        (m) => !m.plantId || auth.scope.all || auth.scope.plantIds.includes(m.plantId),
+      );
+      if (seen.length === 0) return [];
+      const tests = await db
+        .select()
+        .from(schema.materialTests)
+        .where(
+          and(
+            eq(schema.materialTests.tenantId, auth.tenantId),
+            eq(schema.materialTests.isCurrent, true),
+            inArray(
+              schema.materialTests.materialId,
+              seen.map((m) => m.id),
+            ),
+          ),
+        );
+      const by = new Map(tests.map((t) => [t.materialId, t.properties as Record<string, unknown>]));
+      return seen.flatMap((m) => {
+        const props = by.get(m.id) ?? {};
+        const l = cementLabel(props);
+        const issues = [
+          ...(l.legacyWhite ? ['legacy_white'] : []),
+          ...(!l.kind ? ['type_missing'] : []),
+          ...(!l.colour ? ['colour_missing'] : []),
+        ];
+        if (issues.length === 0) return [];
+        const g = suggestCementLabel(`${m.marketNameEn} ${m.marketNameAr ?? ''}`);
+        return [
+          {
+            materialId: m.id,
+            nameEn: m.marketNameEn,
+            nameAr: m.marketNameAr,
+            plantId: m.plantId,
+            issues,
+            current: { kind: l.kind, strengthClass: l.strengthClass, colour: l.colour },
+            suggestion: { kind: g.kind, strengthClass: g.strengthClass, colour: g.colour },
+          },
+        ];
+      });
+    },
+  );
+
   api.get(
     '/api/materials/params',
     {

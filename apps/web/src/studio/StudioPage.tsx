@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { cementText } from '../materials/cementText';
 import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
+import { useUnsavedWork } from '../lib/unsaved';
 import { usePlant } from '../lib/plant';
 import { usePrefs } from '../lib/prefs';
 import { SectionPage } from '../pages/Section';
@@ -215,8 +216,8 @@ export function StudioPage() {
   }, [pre.data, adHoc]);
   const nameOfMat = (m: PoolMaterial) => {
     const n = lang === 'ar' ? (m.nameAr ?? m.nameEn) : m.nameEn;
-    return m.category === 'cement' && (m.cementKind || m.cementClass != null)
-      ? `${n} · ${cementText(t, m.cementKind, m.cementClass)}`
+    return m.category === 'cement' && (m.cementKind || m.cementClass != null || m.cementColour)
+      ? `${n} · ${cementText(t, m.cementKind, m.cementClass, m.cementColour, m.cementLegacyWhite)}`
       : n;
   };
   const nameOf = (id: string) => {
@@ -285,6 +286,7 @@ export function StudioPage() {
     },
     onSuccess: (r) => {
       setResult(r);
+      setHandedOff(false);
       setPinned([]);
       setOpenId(null);
       setStage('candidates');
@@ -302,6 +304,7 @@ export function StudioPage() {
     },
     onSuccess: (r) => {
       setMix(r);
+      setHandedOff(false);
       setStage('inspect');
     },
   });
@@ -353,6 +356,9 @@ export function StudioPage() {
   const [name, setName] = useState('');
   const [reason, setReason] = useState('');
   const canAuthorize = caps.includes('candidate.authorize');
+  const [handedOff, setHandedOff] = useState(false);
+  // generated candidates or a typed mix that was not saved or sent to trial exist only on this screen
+  useUnsavedWork('studio', (result !== null || mix !== null) && !handedOff, t('nav.studio'));
   const save = useMutation({
     mutationFn: () => {
       const { objective: _o, ...rest } = body!;
@@ -360,6 +366,7 @@ export function StudioPage() {
       return saveDraft({ ...rest, code, name, lines: l });
     },
     onSuccess: () => {
+      setHandedOff(true);
       toast.success(t('studio.save.savedDraft'));
       void qc.invalidateQueries({ queryKey: ['designs'] });
     },
@@ -372,6 +379,7 @@ export function StudioPage() {
         ...(reason.trim() && { authorizationReason: reason.trim() }),
       }),
     onSuccess: () => {
+      setHandedOff(true);
       toast.success(t('studio.save.trialRequested'));
       void qc.invalidateQueries({ queryKey: ['designs'] });
       void qc.invalidateQueries({ queryKey: ['design-request'] });

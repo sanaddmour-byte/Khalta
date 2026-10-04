@@ -81,6 +81,46 @@ export function DesignSheet({
               </Button>
             </DialogClose>
           </div>
+          {d && q.data?.identity && (
+            <div
+              className="sticky top-0 z-10 -mx-1 mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-1 py-2 text-xs"
+              data-testid="design-identity"
+            >
+              <span>{t('library.identity.version', { n: d.version })}</span>
+              {q.data.identity.versionHash && (
+                <span className="text-muted">
+                  {t('library.identity.hash')} <Ltr mono>{q.data.identity.versionHash}</Ltr>
+                </span>
+              )}
+              <span className="text-muted">
+                {plant
+                  ? lang === 'ar'
+                    ? plant.nameAr
+                    : plant.nameEn
+                  : t('library.identity.noPlant')}
+              </span>
+              <span
+                className={
+                  q.data.identity.requirementsStatus === 'superseded'
+                    ? 'text-warn-text'
+                    : 'text-muted'
+                }
+                data-testid="identity-requirements"
+              >
+                {q.data.identity.requirementsRef ? (
+                  <>
+                    {t('library.identity.requirements')}{' '}
+                    <Ltr>{q.data.identity.requirementsRef}</Ltr>
+                    {q.data.identity.requirementsStatus === 'superseded' && (
+                      <> · {t('library.identity.superseded')}</>
+                    )}
+                  </>
+                ) : (
+                  t('library.identity.noRequirements')
+                )}
+              </span>
+            </div>
+          )}
           {q.isLoading && <Skeleton className="h-32 w-full" />}
           {d && q.data && (
             <>

@@ -26,3 +26,4 @@ export * from './insights/rules';
 export * from './strength';
 export * from './exchange';
 export * from './impact/classify';
+export * from './insights/ownership';

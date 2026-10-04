@@ -305,11 +305,15 @@ export function EntryDialog({
         : target.material.marketNameEn
       : null;
   const cementSuggestion =
-    category === 'cement' && !values['cement_kind'] && !values['cement_strength_class']
+    category === 'cement' &&
+    !values['cement_kind'] &&
+    !values['cement_strength_class'] &&
+    !values['cement_colour']
       ? suggestCementLabel([nameEn, nameAr, matName ?? ''].join(' '))
       : null;
   const hasSuggestion =
-    !!cementSuggestion && (!!cementSuggestion.kind || !!cementSuggestion.strengthClass);
+    !!cementSuggestion &&
+    (!!cementSuggestion.kind || !!cementSuggestion.strengthClass || !!cementSuggestion.colour);
 
   const tiers: ['evaluate' | 'design' | 'optional', FieldDef[]][] = (
     ['evaluate', 'design', 'optional'] as const
@@ -520,7 +524,12 @@ export function EntryDialog({
           >
             <span>
               {t('materials.cement.suggest', {
-                label: cementText(t, cementSuggestion.kind, cementSuggestion.strengthClass),
+                label: cementText(
+                  t,
+                  cementSuggestion.kind,
+                  cementSuggestion.strengthClass,
+                  cementSuggestion.colour,
+                ),
               })}
             </span>
             <Button
@@ -528,6 +537,7 @@ export function EntryDialog({
               variant="secondary"
               onClick={() => {
                 if (cementSuggestion.kind) setVal('cement_kind', cementSuggestion.kind);
+                if (cementSuggestion.colour) setVal('cement_colour', cementSuggestion.colour);
                 if (cementSuggestion.strengthClass)
                   setVal('cement_strength_class', String(cementSuggestion.strengthClass));
               }}

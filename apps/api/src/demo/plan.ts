@@ -107,6 +107,7 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       properties: {
         cement_type: 'CEM I 42.5N',
         cement_kind: 'opc',
+        cement_colour: 'grey',
         cement_strength_class: 42.5,
         sg: 3.15,
         mortar_strength_28d_mpa: 52,
@@ -126,6 +127,7 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       properties: {
         cement_type: 'CEM I 42.5N-SR3',
         cement_kind: 'src',
+        cement_colour: 'grey',
         cement_strength_class: 42.5,
         sg: 3.15,
         mortar_strength_28d_mpa: 50,
@@ -145,6 +147,7 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       properties: {
         cement_type: 'CEM II/A-P 42.5N',
         cement_kind: 'ppc',
+        cement_colour: 'grey',
         cement_strength_class: 42.5,
         sg: 3.08,
         mortar_strength_28d_mpa: 48,
@@ -165,6 +168,7 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       properties: {
         cement_type: 'CEM I 52.5N',
         cement_kind: 'opc',
+        cement_colour: 'grey',
         cement_strength_class: 52.5,
         sg: 3.15,
         mortar_strength_28d_mpa: 61,
@@ -184,6 +188,7 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       properties: {
         cement_type: 'CEM I 42.5N (low alkali)',
         cement_kind: 'low_alkali',
+        cement_colour: 'grey',
         cement_strength_class: 42.5,
         sg: 3.15,
         mortar_strength_28d_mpa: 51,
@@ -202,7 +207,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       supplier: S(0),
       properties: {
         cement_type: 'White CEM I 52.5N',
-        cement_kind: 'white',
+        cement_kind: 'opc',
+        cement_colour: 'white',
         cement_strength_class: 52.5,
         sg: 3.1,
         mortar_strength_28d_mpa: 60,
@@ -221,7 +227,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       supplier: S(0),
       properties: {
         cement_type: 'White CEM I 42.5N',
-        cement_kind: 'white',
+        cement_kind: 'opc',
+        cement_colour: 'white',
         cement_strength_class: 42.5,
         sg: 3.1,
         mortar_strength_28d_mpa: 50,
@@ -460,7 +467,7 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       if (m.key === 'hummusiyeh-AQB-01') continue; // deliberately unpriced at Aqaba
       const [b0, unit] = base[m.category]!;
       // white cement is imported/specialty: about 2.7x the grey price
-      const b = m.properties['cement_kind'] === 'white' ? b0 * 2.7 : b0;
+      const b = m.properties['cement_colour'] === 'white' ? b0 * 2.7 : b0;
       const p1 = jitter(b * (plant.code === 'AQB-01' ? 1.06 : 1), 0.04);
       const raise = 1 + 0.03 + r() * 0.03;
       const stale = m.key === 'simsimiyeh-AMM-01'; // one stale cell: no second wave

@@ -94,7 +94,13 @@
     "account": "Account",
     "signOut": "Sign out",
     "toggleLanguage": "العربية",
-    "demoBanner": "SYNTHETIC demo data: nothing here is real"
+    "demoBanner": "SYNTHETIC demo data: nothing here is real",
+    "unsaved": {
+      "title": "Switch plant?",
+      "body": "You have unsaved work ({what}). Switching plant re-scopes prices, materials and designs, and that work will be lost.",
+      "stay": "Stay",
+      "switch": "Switch plant"
+    }
   },
   "auth": {
     "title": "Sign in",
@@ -483,7 +489,8 @@
       "chloride_mg_l": "Chloride",
       "fiber_type": "Fiber type",
       "cement_kind": "Cement type",
-      "cement_strength_class": "Strength class"
+      "cement_strength_class": "Strength class",
+      "cement_colour": "Cement colour"
     },
     "opt": {
       "shape": {
@@ -525,6 +532,10 @@
         "src": "SRC",
         "low_alkali": "Low alkali",
         "white": "White"
+      },
+      "cement_colour": {
+        "white": "White",
+        "grey": "Grey"
       }
     },
     "pricedAt": "Priced at {n} of {m} plants",
@@ -534,7 +545,15 @@
       "allKinds": "All cement types",
       "suggest": "Suggested from the name: {label}. Confirm it before using it.",
       "apply": "Apply suggestion",
-      "hint": "These are labels. Checks use the tested values (C3A, alkali, pozzolan, mortar strength), never the label."
+      "hint": "These are labels. Checks use the tested values (C3A, alkali, pozzolan, mortar strength), never the label.",
+      "legacyNote": "(type to be recorded)",
+      "review": {
+        "title": "Cement classification to review",
+        "intro": "These cements still use the old type \"white\", or have no type or colour recorded. Suggestions come from the market name and are never applied: open the cement and record its type, class and colour as a new test version.",
+        "legacy": "old type \"white\"",
+        "type_missing": "type not recorded",
+        "colour_missing": "colour not recorded"
+      }
     }
   },
   "plants": {
@@ -910,6 +929,14 @@
     "emptyAwaiting": {
       "title": "Nothing awaiting approval",
       "description": "Designs that passed their trial appear here."
+    },
+    "identity": {
+      "version": "Version {n}",
+      "hash": "Hash",
+      "noPlant": "No plant",
+      "requirements": "Requirements",
+      "superseded": "superseded: a newer revision exists",
+      "noRequirements": "No project requirements frozen"
     }
   },
   "imports": {
@@ -1416,6 +1443,43 @@
         "no_volume": "No volume recorded",
         "no_snapshot": "No price snapshot for the month",
         "cost_incomplete": "A material has no usable price"
+      }
+    },
+    "evidence": {
+      "adjust": "Add a cost or reverse",
+      "adjustHint": "Entries are never edited. A cost or a reversal is its own record with your reason, and the original figure stays visible.",
+      "kindLabel": "Type",
+      "amount": "Amount (JOD)",
+      "note": "Reason (at least 10 characters)",
+      "save": "Save",
+      "saved": "Recorded.",
+      "period": "Attributed to",
+      "volumeSource": "Volume source",
+      "net": "Gross {gross} − costs {costs} = net {net} JOD",
+      "reversed": "reversed",
+      "kind": {
+        "trial_cost": "Trial cost",
+        "implementation_cost": "Implementation cost",
+        "extra_cost": "Extra cost",
+        "reversal": "Reversal"
+      },
+      "source": {
+        "demo": "demo data",
+        "import": "imported file",
+        "batch_tickets": "batch tickets",
+        "manual": "entered by hand",
+        "none": "not recorded"
+      },
+      "reconciliation": {
+        "reconciled": "Reconciled: volume from a verifiable source, rules verified",
+        "provisional_rules": "Not reconciled: rules are not verified yet",
+        "manual_volume": "Not reconciled: volume entered by hand",
+        "demo_volume": "Not reconciled: demonstration volume",
+        "no_volume": "Not reconciled: no volume recorded"
+      },
+      "why": {
+        "note": "Write a reason of at least 10 characters.",
+        "amount": "Enter the amount in JOD, for example 120.500."
       }
     }
   },
@@ -2165,6 +2229,9 @@
         "no_water_line": "The design has no water line",
         "solids_missing": "Admixture solids are not on file",
         "other": "Blocked"
+      },
+      "why": {
+        "size": "Enter a batch size greater than zero to prepare a plan."
       }
     }
   },
@@ -2228,7 +2295,22 @@
       "line": "{open} open, {fresh} new in 24 hours, {critical} critical, {high} high."
     },
     "banner": "{n, plural, one {# critical alert needs} other {# critical alerts need}} a QC decision.",
-    "bannerLink": "Open the inbox"
+    "bannerLink": "Open the inbox",
+    "owner": {
+      "state": {
+        "unassigned": "No owner",
+        "assigned": "Assigned",
+        "acknowledged": "Acknowledged",
+        "overdue": "Overdue: not acknowledged in time",
+        "escalated": "Escalated to the QC manager"
+      },
+      "due": "Acknowledge by",
+      "noDeadline": "no deadline configured",
+      "acknowledge": "Acknowledge",
+      "assignTo": "Assign to",
+      "assign": "Assign",
+      "failed": "The action did not finish."
+    }
   },
   "volumes": {
     "title": "Production volume",
@@ -2397,6 +2479,57 @@
     "reason_new_check_failures": "new failing checks",
     "reason_drift_exceeded": "test drift beyond tolerance",
     "reason_requirements_superseded": "its project requirements were superseded",
-    "version": "v{n}"
+    "version": "v{n}",
+    "why": "Write a reason of at least 10 characters to record the decision."
+  },
+  "dashboard": {
+    "cards": "Overview",
+    "alerts": "Alerts that need attention",
+    "needsAction": "Needs action",
+    "needsAttention": "Needs attention",
+    "error": "The overview could not be loaded.",
+    "empty": {
+      "title": "Nothing to show for your role yet",
+      "description": "Open the sections in the menu to start."
+    },
+    "card": {
+      "awaitingApproval": "Awaiting approval",
+      "needsRevalidation": "Need revalidation",
+      "draftDesigns": "Draft designs",
+      "inTrial": "In trial",
+      "inProduction": "In production",
+      "approvedDesigns": "Approved designs",
+      "criticalAlerts": "Critical alerts",
+      "unownedAlerts": "Alerts without an owner",
+      "overdueAlerts": "Overdue or escalated",
+      "changeImpacts": "Changes awaiting a decision",
+      "priceAlerts": "Price alerts",
+      "failedJobs": "Failed background jobs",
+      "users": "Users"
+    },
+    "hint": {
+      "awaitingApproval": "Trials passed and waiting for a second QC manager",
+      "needsRevalidation": "Approved designs flagged after a failed re-check",
+      "draftDesigns": "Saved but not yet sent to trial",
+      "inTrial": "Trial candidates and designs in trial",
+      "inProduction": "Released designs at your plants",
+      "approvedDesigns": "Designs you can quote from",
+      "criticalAlerts": "Open alerts of the highest severity",
+      "unownedAlerts": "High or critical alerts nobody owns yet",
+      "overdueAlerts": "Not acknowledged before their deadline",
+      "changeImpacts": "Approved designs touched by a change",
+      "priceAlerts": "Stale or missing prices",
+      "failedJobs": "Assessments that will be retried",
+      "users": "Accounts in your organisation"
+    },
+    "intro": {
+      "qc_manager": "Your sign-offs and the alerts that need an owner or a decision.",
+      "qc_engineer": "Your drafts and trials, and the alerts at your plants.",
+      "procurement": "Prices that are stale or missing.",
+      "plant_manager": "Your plant: what is released, the alerts and the changes that touch it.",
+      "sales": "The approved designs you can quote from.",
+      "admin": "Users and the health of background work. You run the full design cycle but hold none of the sign-offs.",
+      "viewer": "The approved designs at your plants."
+    }
   }
 }

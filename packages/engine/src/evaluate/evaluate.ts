@@ -48,6 +48,14 @@ function cementLabelQuality(m: SnapshotMaterial, rules: RuleIndex): QualityItem[
   const name = m.nameEn;
   const warn = (code: string, detail: string) =>
     out.push({ code, severity: 'warning', materialId: m.id, detail, evidence: ['INPUT_MISSING'] });
+  if (l.legacyWhite)
+    out.push({
+      code: 'cement_label_review',
+      severity: 'info',
+      materialId: m.id,
+      detail: `${name} is recorded with the legacy type "white". White is a colour: record its type (OPC, SRC…) and its colour separately`,
+      evidence: [],
+    });
   if (l.kind === 'src') {
     const c3a = num('c3a_pct');
     const lim = rules.number('SHARED', 'cement.equivalence.high.max_c3a_pct');

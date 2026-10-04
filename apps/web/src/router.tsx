@@ -15,6 +15,7 @@ import { SettingsPage } from './admin/SettingsPage';
 import { ImportsPage } from './imports/ImportsPage';
 import { LibraryPage } from './library/LibraryPage';
 import { MaterialsPage } from './materials/MaterialsPage';
+import { DashboardPage } from './dashboard/DashboardPage';
 import { ProfilesPage } from './profiles/ProfilesPage';
 import { PricesPage } from './prices/PricesPage';
 import { LoginPage } from './pages/Login';
@@ -61,6 +62,7 @@ const appRoute = createRoute({
 
 // Sections that have a real screen; the rest still show their teaching placeholder.
 const SCREENS: Record<string, () => React.JSX.Element> = {
+  dashboard: DashboardPage,
   rules: RulesPage,
   materials: MaterialsPage,
   prices: PricesPage,

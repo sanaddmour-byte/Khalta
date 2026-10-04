@@ -30,9 +30,11 @@ test('a cement is classified by type and strength class; the market name suggest
     'Not set',
   );
   await suggestion.getByRole('button').click();
+  // white is a COLOUR: the type is not guessed from it and stays for a person to record
   await expect(page.getByRole('combobox', { name: 'Cement type', exact: true })).toContainText(
-    'White',
+    'Not set',
   );
+  await expect(page.getByRole('combobox', { name: 'Cement colour' })).toContainText('White');
   await expect(page.getByRole('combobox', { name: 'Strength class' })).toContainText('52.5');
   await expectNoSeriousAxe(page, 'cement entry');
 

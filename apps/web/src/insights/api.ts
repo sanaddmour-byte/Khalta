@@ -28,7 +28,32 @@ export interface Insight {
   draftDesignId: string | null;
   firstSeenAt: string;
   lastSeenAt: string;
+  ownership: {
+    state: 'unassigned' | 'assigned' | 'acknowledged' | 'overdue' | 'escalated';
+    ownerId: string | null;
+    ownerName: string | null;
+    dueAt: string | null;
+    acknowledgedAt: string | null;
+    escalatedAt: string | null;
+  } | null;
 }
+export interface Assignee {
+  id: string;
+  name: string;
+  role: string;
+}
+export const assigneesQuery = (id: string) =>
+  queryOptions({
+    queryKey: ['insights', 'assignees', id],
+    queryFn: () => api<Assignee[]>(`/api/insights/${id}/assignees`),
+  });
+export const assignInsight = (id: string, ownerId: string) =>
+  api<{ id: string }>(`/api/insights/${id}/assign`, {
+    method: 'POST',
+    body: JSON.stringify({ ownerId }),
+  });
+export const acknowledgeInsight = (id: string) =>
+  api<{ id: string }>(`/api/insights/${id}/acknowledge`, { method: 'POST', body: '{}' });
 export interface Digest {
   day: string;
   summary: {

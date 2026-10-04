@@ -13,7 +13,7 @@ import {
   Td,
   Th,
 } from '@khalta/ui';
-import { CATEGORIES, CEMENT_KINDS } from '@khalta/engine';
+import { CATEGORIES, CEMENT_KINDS_CURRENT } from '@khalta/engine';
 import { useQuery } from '@tanstack/react-query';
 import { Boxes, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -26,6 +26,7 @@ import { SectionPage } from '../pages/Section';
 import { coverageQuery } from '../prices/api';
 import { materialsQuery, type MaterialRow } from './api';
 import { FreshnessChip, ReadyChip, SourceChip } from './chips';
+import { CementReview } from './CementReview';
 import { cementText } from './cementText';
 import { EntryDialog } from './EntryDialog';
 import { MaterialSheet } from './MaterialSheet';
@@ -60,7 +61,11 @@ export function MaterialsPage() {
   const data =
     all && category === 'cement' && cementKind !== ALL
       ? all.filter((m) =>
-          cementKind === 'unrecorded' ? !m.cementKind : m.cementKind === cementKind,
+          cementKind === 'unrecorded'
+            ? !m.cementKind
+            : cementKind === 'white' || cementKind === 'grey'
+              ? m.cementColour === cementKind
+              : m.cementKind === cementKind,
         )
       : all;
 
@@ -125,9 +130,14 @@ export function MaterialsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ALL}>{t('materials.cement.allKinds')}</SelectItem>
-              {CEMENT_KINDS.map((k) => (
+              {CEMENT_KINDS_CURRENT.map((k) => (
                 <SelectItem key={k} value={k}>
                   {t(`materials.opt.cement_kind.${k}`)}
+                </SelectItem>
+              ))}
+              {(['white', 'grey'] as const).map((c) => (
+                <SelectItem key={c} value={c}>
+                  {t(`materials.opt.cement_colour.${c}`)}
                 </SelectItem>
               ))}
               <SelectItem value="unrecorded">{t('materials.cement.notRecorded')}</SelectItem>
@@ -135,6 +145,8 @@ export function MaterialsPage() {
           </Select>
         )}
       </div>
+
+      {canRead && <CementReview onOpen={setOpenId} />}
 
       {isLoading && (
         <div className="flex flex-col gap-2">
@@ -188,7 +200,13 @@ export function MaterialsPage() {
                     </button>
                     {m.category === 'cement' && (
                       <span className="block text-xs text-muted" data-testid="cement-label">
-                        {cementText(t, m.cementKind, m.cementClass)}
+                        {cementText(
+                          t,
+                          m.cementKind,
+                          m.cementClass,
+                          m.cementColour,
+                          m.cementLegacyWhite,
+                        )}
                       </span>
                     )}
                     <span className="block text-xs text-muted lg:hidden">

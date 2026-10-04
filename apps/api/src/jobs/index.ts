@@ -10,6 +10,7 @@ export const JOB_NAMES = [
   'rule-change',
   'strength-result',
   'change-impact',
+  'escalation',
   'nightly',
   'backup',
 ] as const;
@@ -89,6 +90,7 @@ export async function startWorker(
     });
   }
   await boss.schedule(queueNameOf('nightly'), '0 2 * * *', {}, { tz: 'Asia/Amman' });
+  await boss.schedule(queueNameOf('escalation'), '5 * * * *', {}, { tz: 'Asia/Amman' });
   await boss.schedule(queueNameOf('backup'), '30 1 * * *', {}, { tz: 'Asia/Amman' });
   return {
     boss,

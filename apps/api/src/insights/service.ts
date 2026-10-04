@@ -1,8 +1,14 @@
 // Insight storage (01-domain §8 noise control): one open row per dedupe key (a repeat updates it), expiry when the
 // inputs that produced it no longer do, and an append-only event history. No function here touches a design.
 import { createHash } from 'node:crypto';
-import { schema, type AuditRecorder, type Executor } from '@khalta/db';
-import { dedupeParts, type InsightType, type Severity } from '@khalta/engine';
+import { schema, withAudit, type AuditRecorder, type Db, type Executor } from '@khalta/db';
+import {
+  dedupeParts,
+  needsEscalation,
+  ownershipOf,
+  type InsightType,
+  type Severity,
+} from '@khalta/engine';
 import { and, eq, inArray, lt, sql } from 'drizzle-orm';
 
 export const hashKey = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -169,3 +175,72 @@ export async function expireOne(tx: Executor, tenantId: string, id: string, reas
 }
 
 export const openCount = sql<number>`count(*)::int`;
+
+/**
+ * Escalates every assigned, unacknowledged alert whose deadline has passed (once per assignment): an `escalated` event
+ * naming the QC manager role, an audit row, nothing else. It never closes, suspends or changes a design.
+ */
+export async function escalateOverdue(db: Db, tenantId: string, now = new Date()) {
+  return withAudit(
+    db,
+    { tenantId, actor: null, requestId: 'job:escalation' },
+    async (tx, audit) => {
+      const open = await tx
+        .select({ id: schema.insights.id })
+        .from(schema.insights)
+        .where(
+          and(
+            eq(schema.insights.tenantId, tenantId),
+            inArray(schema.insights.status, ['open', 'snoozed']),
+            inArray(schema.insights.severity, ['critical', 'high']),
+          ),
+        );
+      let escalated = 0;
+      if (open.length > 0) {
+        const rows = await tx
+          .select()
+          .from(schema.insightEvents)
+          .where(
+            and(
+              inArray(
+                schema.insightEvents.insightId,
+                open.map((o) => o.id),
+              ),
+              inArray(schema.insightEvents.kind, ['assigned', 'acknowledged', 'escalated']),
+            ),
+          );
+        for (const o of open) {
+          const evs = rows
+            .filter((r) => r.insightId === o.id)
+            .map((r) => ({
+              kind: r.kind,
+              at: r.at.toISOString(),
+              detail: r.detail as Record<string, unknown>,
+            }));
+          const own = ownershipOf(evs, now.toISOString());
+          if (!needsEscalation(own)) continue;
+          await tx.insert(schema.insightEvents).values({
+            tenantId,
+            insightId: o.id,
+            kind: 'escalated',
+            actorId: null,
+            at: now,
+            detail: {
+              to: 'qc_manager',
+              reason: 'not acknowledged before its deadline',
+              assignmentAt: own.assignedAt,
+            },
+          });
+          escalated++;
+        }
+      }
+      await audit.record({
+        action: 'job.run',
+        entityType: 'job',
+        entityId: 'escalation',
+        after: { escalated },
+      });
+      return { escalated };
+    },
+  );
+}

@@ -23,6 +23,9 @@ export const settingsSchema = z.strictObject({
   strengthOverMinSets: z.number().int().min(3).default(10),
   strengthSequenceSets: z.number().int().min(2).default(3),
   strengthBetaMinBatches: z.number().int().min(4).default(12),
+  // Alert ownership: hours an assigned high/critical alert may stay unacknowledged before it escalates. Null = no deadline, no automatic escalation.
+  alertAckHoursCritical: z.number().positive().max(720).nullable().default(null),
+  alertAckHoursHigh: z.number().positive().max(720).nullable().default(null),
   // Evaluation (M2.1). Null = not configured: no near-limit warnings / no safety margin, both stated in reports.
   nearLimitPct: z.number().positive().max(50).nullable().default(null),
   safetyMarginMpa: z.number().min(0).max(20).nullable().default(null),

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CEMENT_CLASSES,
   CEMENT_KINDS,
+  CEMENT_KINDS_CURRENT,
   cementGroupKind,
   cementLabel,
   cementLabelText,
@@ -50,17 +51,44 @@ describe('the two fields', () => {
     expect([...CEMENT_CLASSES]).toEqual([32.5, 42.5, 52.5]);
   });
   it('read back as a label, with text', () => {
+    // the legacy "white" type reads as a COLOUR with the type unstated, and is flagged for re-recording
     expect(cementLabel({ cement_kind: 'white', cement_strength_class: 52.5 })).toEqual({
-      kind: 'white',
+      kind: null,
       strengthClass: 52.5,
+      colour: 'white',
+      legacyWhite: true,
+    });
+    expect(
+      cementLabel({ cement_kind: 'opc', cement_colour: 'white', cement_strength_class: 52.5 }),
+    ).toEqual({
+      kind: 'opc',
+      strengthClass: 52.5,
+      colour: 'white',
+      legacyWhite: false,
     });
     expect(cementLabel({ cement_kind: 'x', cement_strength_class: 40 })).toEqual({
       kind: null,
       strengthClass: null,
+      colour: null,
+      legacyWhite: false,
     });
-    expect(cementLabelText({ kind: 'opc', strengthClass: 42.5 })).toBe('OPC 42.5');
-    expect(cementLabelText({ kind: 'low_alkali', strengthClass: null })).toBe('Low alkali');
-    expect(cementLabelText({ kind: null, strengthClass: null })).toBeNull();
+    const L = (
+      kind: CementKind | null,
+      strengthClass: 32.5 | 42.5 | 52.5 | null,
+      colour: 'white' | 'grey' | null = null,
+    ) => ({
+      kind,
+      strengthClass,
+      colour,
+      legacyWhite: false,
+    });
+    expect(cementLabelText(L('opc', 42.5))).toBe('OPC 42.5');
+    expect(cementLabelText(L('opc', 52.5, 'white'))).toBe('White OPC 52.5');
+    expect(cementLabelText(L('low_alkali', null))).toBe('Low alkali');
+    expect(cementLabelText(L(null, null))).toBeNull();
+    expect(CEMENT_KINDS_CURRENT).not.toContain('white');
+    expect(parseProperties('cement', { cement_colour: 'grey' }).ok).toBe(true);
+    expect(parseProperties('cement', { cement_colour: 'pink' }).ok).toBe(false);
   });
 });
 
@@ -76,8 +104,9 @@ describe('suggestions from a market name (never applied silently)', () => {
     ['Sulfate resisting cement 42.5', 'src', 42.5],
     ['CEM I 42.5N-SR3', 'src', 42.5],
     ['Low alkali cement 42.5', 'low_alkali', 42.5],
-    ['White cement 52.5', 'white', 52.5],
-    ['إسمنت أبيض 42.5', 'white', 42.5],
+    ['White cement 52.5', null, 52.5],
+    ['White OPC 52.5', 'opc', 52.5],
+    ['إسمنت أبيض 42.5', null, 42.5],
     ['إسمنت مقاوم للكبريتات', 'src', null],
     ['إسمنت بورتلاندي عادي 32.5', 'opc', 32.5],
     ['Some cement 40', null, null],
@@ -85,17 +114,26 @@ describe('suggestions from a market name (never applied silently)', () => {
   ];
   for (const [name, kind, cls] of cases)
     it(`${name} → ${kind ?? '–'} ${cls ?? '–'}`, () => {
-      expect(suggestCementLabel(name)).toEqual({ kind, strengthClass: cls });
+      const got = suggestCementLabel(name);
+      expect({ kind: got.kind, strengthClass: got.strengthClass }).toEqual({
+        kind,
+        strengthClass: cls,
+      });
+      // a colour is suggested as a colour, never as a type
+      expect(got.colour).toBe(/white|أبيض/i.test(name) ? 'white' : null);
     });
 });
 
 describe('colour requests', () => {
   it('white only needs a cement recorded as white; grey only excludes white; any allows all', () => {
-    for (const k of [...CEMENT_KINDS, null] as (CementKind | null)[]) {
-      expect(colourAllows('any', k)).toBe(true);
-      expect(colourAllows('white', k)).toBe(k === 'white');
-      expect(colourAllows('grey', k)).toBe(k !== 'white');
+    for (const c of ['white', 'grey', null] as const) {
+      expect(colourAllows('any', c)).toBe(true);
+      expect(colourAllows('white', c)).toBe(c === 'white');
+      expect(colourAllows('grey', c)).toBe(c !== 'white');
     }
+    // a legacy "white" record still counts as white for a colour request
+    expect(colourAllows('white', cementLabel({ cement_kind: 'white' }).colour)).toBe(true);
+    expect(colourAllows('grey', cementLabel({ cement_kind: 'white' }).colour)).toBe(false);
   });
 });
 
@@ -133,6 +171,14 @@ describe('the label defines the strength-model group, and only the group', () =>
         parts({ cement_kind: 'opc', cement_strength_class: 42.5, cement_type: 'CEM I 52.5N' }),
       ),
     ).not.toBe(a);
+    // reclassifying the vocabulary never regroups a legacy record: its string is exactly what it was
+    expect(cementGroupKind({ cement_kind: 'white', cement_strength_class: 42.5 })).toBe(
+      'white|42.5',
+    );
+    // once the colour is recorded on its own it is part of the group
+    expect(cementGroupKind({ cement_kind: 'opc', cement_colour: 'white' })).not.toBe(
+      cementGroupKind({ cement_kind: 'opc', cement_colour: 'grey' }),
+    );
     expect(cementGroupKind({})).toBeNull();
     expect(cementGroupKind({ cement_type: 'CEM I 42.5N' })).toBe('CEM I 42.5N');
   });

@@ -52,6 +52,8 @@ export interface PoolMaterial {
   source: string | null;
   cementKind?: string | null;
   cementClass?: number | null;
+  cementColour?: 'white' | 'grey' | null;
+  cementLegacyWhite?: boolean;
 }
 export interface Bound {
   requirement: string;

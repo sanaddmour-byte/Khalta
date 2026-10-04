@@ -36,6 +36,7 @@ import {
   savingsQuery,
 } from '../library/portfolioApi';
 import { snapshotsQuery } from '../prices/api';
+import { EntryEvidence } from './EntryEvidence';
 import { SectionPage } from '../pages/Section';
 
 /** Sum of 3-decimal JOD strings inside ONE state (never across states); integer thousandths avoid float drift. */
@@ -249,6 +250,7 @@ export function SavingsPage() {
                         {e.provisional && (
                           <p className="text-xs text-warn-text">{t('evaluation.provisional')}</p>
                         )}
+                        <EntryEvidence entry={e} />
                       </li>
                     ))}
                   </ul>

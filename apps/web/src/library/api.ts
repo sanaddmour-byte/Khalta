@@ -61,7 +61,13 @@ export interface DesignLine {
   sourceLine: number | null;
   matchMethod: 'exact' | 'confirmed' | 'created';
 }
+export interface DesignIdentity {
+  versionHash: string | null;
+  requirementsRef: string | null;
+  requirementsStatus: 'draft' | 'verified' | 'superseded' | null;
+}
 export interface DesignDetail {
+  identity?: DesignIdentity;
   design: DesignCard & { importBatchId: string | null };
   lines: DesignLine[];
   transitions: {

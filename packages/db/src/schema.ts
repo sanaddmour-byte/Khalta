@@ -1429,3 +1429,34 @@ export const changeImpactItems = pgTable(
     index('change_impact_items_open_idx').on(t.tenantId, t.klass),
   ],
 );
+
+/**
+ * A correction or cost attached to a ledger entry. Entries are append-only, so a reversal or a cost is its own row;
+ * the net is computed from both and the gross is always shown. One reversal per entry.
+ */
+export const savingsAdjustments = pgTable(
+  'savings_adjustments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    entryId: uuid('entry_id')
+      .notNull()
+      .references(() => savingsEntries.id),
+    kind: text('kind', {
+      enum: ['reversal', 'trial_cost', 'implementation_cost', 'extra_cost'],
+    }).notNull(),
+    /** Costs: positive JOD. A reversal records the gross it withdrew (informational; the net uses the entry). */
+    amountJod: numeric('amount_jod', { precision: 16, scale: 3 }).notNull(),
+    note: text('note').notNull(),
+    createdBy: text('created_by').references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('savings_adjustments_one_reversal_uq')
+      .on(t.entryId)
+      .where(sql`${t.kind} = 'reversal'`),
+    index('savings_adjustments_entry_idx').on(t.entryId),
+  ],
+);

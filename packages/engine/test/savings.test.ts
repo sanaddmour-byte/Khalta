@@ -127,3 +127,45 @@ describe('thresholds, periods, insight rules', () => {
     ).toBeNull();
   });
 });
+
+describe('attribution: reversals, costs and reconciliation', () => {
+  it('shows gross, costs and net; a reversal withdraws the gross but real costs stand', async () => {
+    const { netSaving } = await import('../src');
+    expect(netSaving('1000.000', [])).toEqual({
+      gross: '1000.000',
+      reversed: false,
+      costs: '0.000',
+      net: '1000.000',
+    });
+    expect(
+      netSaving('1000.000', [
+        { kind: 'trial_cost', amountJod: '120.500' },
+        { kind: 'implementation_cost', amountJod: '79.500' },
+      ]),
+    ).toEqual({ gross: '1000.000', reversed: false, costs: '200.000', net: '800.000' });
+    expect(
+      netSaving('1000.000', [
+        { kind: 'reversal', amountJod: '1000.000' },
+        { kind: 'extra_cost', amountJod: '10.000' },
+      ]),
+    ).toEqual({
+      gross: '1000.000',
+      reversed: true,
+      costs: '10.000',
+      net: '-10.000',
+    });
+    // a negative gross (the replacement cost more) nets correctly
+    expect(netSaving('-50.250', [{ kind: 'trial_cost', amountJod: '0.250' }]).net).toBe('-50.500');
+    expect(() => netSaving('1.000', [{ kind: 'trial_cost', amountJod: '-5.000' }])).toThrow();
+  });
+  it('reconciliation never rounds up: only a ticket or import volume under verified rules is reconciled', async () => {
+    const { reconciliationOf } = await import('../src');
+    expect(reconciliationOf({ volumeSource: null, provisional: false })).toBe('no_volume');
+    expect(reconciliationOf({ volumeSource: 'demo', provisional: false })).toBe('demo_volume');
+    expect(reconciliationOf({ volumeSource: 'manual', provisional: false })).toBe('manual_volume');
+    expect(reconciliationOf({ volumeSource: 'batch_tickets', provisional: true })).toBe(
+      'provisional_rules',
+    );
+    expect(reconciliationOf({ volumeSource: 'import', provisional: false })).toBe('reconciled');
+  });
+});

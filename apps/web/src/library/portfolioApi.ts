@@ -119,7 +119,28 @@ export interface SavingsEntry {
   code: string;
   variantVersion: number;
   createdAt: string;
+  adjustments: {
+    id: string;
+    kind: AdjustmentKind;
+    amountJod: string;
+    note: string;
+    createdAt: string;
+  }[];
+  net: { gross: string; reversed: boolean; costs: string; net: string } | null;
+  volumeSource: 'demo' | 'import' | 'batch_tickets' | 'manual' | null;
+  attribution: { from: string; to: string } | null;
+  reconciliation:
+    'reconciled' | 'provisional_rules' | 'manual_volume' | 'demo_volume' | 'no_volume' | null;
 }
+export type AdjustmentKind = 'reversal' | 'trial_cost' | 'implementation_cost' | 'extra_cost';
+export const adjustEntry = (
+  id: string,
+  body: { kind: AdjustmentKind; amountJod?: string; note: string },
+) =>
+  api<{ id: string }>(`/api/savings/entries/${id}/adjustments`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 export interface BlockedMonth {
   designId: string;
   code: string;

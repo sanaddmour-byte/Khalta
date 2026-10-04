@@ -58,6 +58,15 @@ const cementitious = {
 /** Market types of cement in Jordan (M7.1). A LABEL: no check ever reads it; checks read the certificate numbers. */
 export const CEMENT_KINDS = ['opc', 'ppc', 'src', 'low_alkali', 'white'] as const;
 export type CementKind = (typeof CEMENT_KINDS)[number];
+/**
+ * The designations to offer for NEW records. `white` was once recorded as a type, but a colour is not a designation (a
+ * white cement is still an OPC or another type), so it is accepted only as a LEGACY value, read as colour = white with
+ * the type unstated, and listed for a person to re-record (ADR 0024).
+ */
+export const CEMENT_KINDS_CURRENT = ['opc', 'ppc', 'src', 'low_alkali'] as const;
+/** The colour of a cement, recorded on its own (ADR 0024). */
+export const CEMENT_COLOURS = ['white', 'grey'] as const;
+export type CementColourValue = (typeof CEMENT_COLOURS)[number];
 /** Strength classes (EN 197-1): 32.5, 42.5, 52.5 MPa at 28 days. */
 export const CEMENT_CLASSES = [32.5, 42.5, 52.5] as const;
 export type CementClass = (typeof CEMENT_CLASSES)[number];
@@ -95,6 +104,7 @@ export const PROPERTY_SCHEMAS = {
   cement: z.strictObject({
     cement_type: z.string().min(1).max(60).optional(),
     cement_kind: z.enum(CEMENT_KINDS).optional(),
+    cement_colour: z.enum(CEMENT_COLOURS).optional(),
     cement_strength_class: z.union([z.literal(32.5), z.literal(42.5), z.literal(52.5)]).optional(),
     ...cementitious,
   }),

@@ -116,7 +116,7 @@ export function LibraryPage() {
         className="flex flex-col gap-6"
         onValueChange={(v) => setTab(v as typeof tab)}
       >
-        <TabsList>
+        <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="all">{t('library.tabs.all')}</TabsTrigger>
           <TabsTrigger value="portfolio" data-testid="portfolio-tab">
             {t('portfolio.title')}

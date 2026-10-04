@@ -1,4 +1,10 @@
-import { blockers, CEMENT_CLASSES, CEMENT_KINDS, type Category } from '@khalta/engine';
+import {
+  blockers,
+  CEMENT_CLASSES,
+  CEMENT_COLOURS,
+  CEMENT_KINDS_CURRENT,
+  type Category,
+} from '@khalta/engine';
 
 export type FieldType = 'number' | 'text' | 'select';
 export interface FieldDef {
@@ -54,7 +60,8 @@ const BASE: Record<Category, Omit<FieldDef, 'tier'>[]> = {
   coarse_agg: AGG,
   cement: [
     txt('cement_type'),
-    sel('cement_kind', CEMENT_KINDS),
+    sel('cement_kind', CEMENT_KINDS_CURRENT),
+    sel('cement_colour', CEMENT_COLOURS),
     { ...sel('cement_strength_class', CEMENT_CLASSES.map(String)), numeric: true },
     ...CEMENTITIOUS,
   ],

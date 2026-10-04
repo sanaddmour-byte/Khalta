@@ -6,6 +6,7 @@ import { ApiError } from '../lib/api';
 import { useMe } from '../lib/auth';
 import { useFormat } from '../lib/format';
 import { usePrefs } from '../lib/prefs';
+import { WhyDisabled } from '../lib/WhyDisabled';
 import { exportBatchPlan } from '../exports/api';
 import type { DesignCard, DesignLine } from './api';
 import { previewPlan, savePlan, type PlanPreview } from './labApi';
@@ -98,6 +99,7 @@ export function BatchPlanPanel({ design, lines }: { design: DesignCard; lines: D
           variant="secondary"
           onClick={() => prev.mutate()}
           disabled={!valid || prev.isPending}
+          aria-describedby={valid ? undefined : 'plan-why'}
           data-testid="plan-preview"
         >
           {t('lab.plan.prepare')}
@@ -123,6 +125,7 @@ export function BatchPlanPanel({ design, lines }: { design: DesignCard; lines: D
           </Button>
         )}
       </div>
+      <WhyDisabled id="plan-why" reason={valid ? null : t('lab.plan.why.size')} />
       {err && (
         <p role="alert" className="mt-2 text-sm text-fail-text">
           {err.message}

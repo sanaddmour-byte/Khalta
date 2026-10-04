@@ -548,3 +548,11 @@ Also verified by temporarily adding violating files: lint reported all three cus
 **Tests:** engine 470, api 337 (new: optimizer-transparency, change-impact, strength report and source change, optional observations), validator 177, web 38, rbac 210, rules 159; e2e main 103 + rules 15.
 
 **Not verified / open:** the statistical default `chronologicalMinTrain = 10` and the standardised forward-error limits need QC review; HTTP abort is not wired to `OptimizeCancelled`; an in-place supplier change cannot be traced back per result; no e2e yet for the Transparency, Sensitivity and Change-impact panels.
+
+## 2026-10-04 — Improvement set, phase 5: dashboards, savings attribution, alert ownership, cement classification
+
+**Changed** (ADR 0024): role dashboards (`/api/dashboard`, no cost figures) replacing the placeholder; a sticky design-identity strip; a plant-switch guard for unsaved Studio work; visible reasons on input-dependent disabled buttons; savings evidence (attribution period, volume source, reconciliation, gross/costs/net, reversal and cost adjustments, append-only); alert owner/acknowledge/escalate with tenant-set deadlines (unset by default) and an hourly escalation job; cement type, class and colour as separate values with a reviewed (never automatic) reclassification queue; Library tabs no longer force a sideways scroll on phones. Migration 0037.
+
+**Tests:** engine 476, api 344 (new: dashboard, alert-ownership, savings attribution, cement review), web 38; e2e main 112 + rules 15 (new: dashboard per role, Arabic dark axe, phone width on four screens, plant-switch guard).
+
+**Not verified / open:** reconciliation cannot read "reconciled" until QC verifies the rules; acknowledgement deadlines need QC values; escalation is in-app only; dashboards show counts, not trends; manual screen-reader and keyboard review is still outstanding (axe only).
