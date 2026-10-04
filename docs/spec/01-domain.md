@@ -264,9 +264,9 @@ All jobs run on **pg-boss** workers.
 | View supplier prices | ✓ | ✓ | ✓ | ✓ | own plants | | |
 | Edit prices | ✓ | | | ✓ | | | |
 | View cost/m³ | ✓ | ✓ | ✓ | ✓ | own plants | setting\* | |
-| Create / edit drafts, run evaluate and design | | ✓ | ✓ | | | | |
-| Request trial | | ✓ | ✓ | | | | |
-| Enter tests, trial batches, strength results | | ✓ | ✓ | | ✓ | | |
+| Create / edit drafts, run evaluate and design | ✓ | ✓ | ✓ | | | | |
+| Request trial | ✓ | ✓ | ✓ | | | | |
+| Enter tests, trial batches, strength results | ✓ | ✓ | ✓ | | ✓ | | |
 | Mark trial passed | | ✓ | | | | | |
 | Approve designs, verify rules | | ✓ (not own design) | | | | | |
 | Attest legacy designs | | ✓ | | | | | |

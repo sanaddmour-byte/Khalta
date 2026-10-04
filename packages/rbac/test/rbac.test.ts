@@ -13,21 +13,23 @@ import {
   type Role,
 } from '../src/index';
 
+const SIGN_OFF: Capability[] = [
+  'trial.pass',
+  'design.approve',
+  'rules.verify',
+  'design.attest',
+  'baseline.create',
+  'profile.approve',
+  'candidate.authorize',
+  'production.release',
+  'insight.accept',
+];
+
 // Independent transcription of 01-domain.md §10 (the spec table), role -> capabilities.
 // 'S' marks the sales cost capability that depends on the tenant setting.
 const SPEC: Record<Role, Capability[]> = {
-  admin: [
-    'org.manage',
-    'price.view',
-    'price.edit',
-    'cost.view',
-    'library.read',
-    'import.run',
-    'export.priceCost',
-    'audit.read',
-    'rules.read',
-    'materials.read',
-  ],
+  // ADR 0019: the admin works the whole design cycle but holds none of the sign-off capabilities
+  admin: CAPABILITIES.filter((c) => !SIGN_OFF.includes(c)),
   qc_manager: [
     'price.view',
     'cost.view',
