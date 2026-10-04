@@ -42,7 +42,7 @@ Desktop-first for the Design Studio and Price Matrix; usable on tablet; read-onl
 
 ### Dashboard
 
-KPI tiles: average material cost per m³ per plant with trend; savings by state; designs by lifecycle state; production volume covered by evaluated designs; stale prices and expired tests; unverified rules; low-strength alerts. Insight highlights and "continue where you left off".
+**Not built yet.** The route shows a teaching placeholder. The KPI tiles listed in `docs/spec/03-ui.md` §4.N are a specification, not a shipped screen. Role dashboards are scheduled in the improvement work (see `docs/audit/2026-10-gap-map.md`).
 
 ### Design Studio
 
@@ -117,7 +117,7 @@ Layout is mirrored with logical CSS properties, but charts, sieve axes, numbers 
 
 ## 8. Current state
 
-- **Built:** all milestones M0 to M7.1.
+- **Built:** milestones M0 to M7.1 as defined in `04-phases.md`, except that the Dashboard screen was never built (placeholder). See `docs/audit/2026-10-gap-map.md` and `docs/readiness-matrix.md`.
 - **Live on Railway** (`api-production-eee0.up.railway.app`): the API and web app are running; the worker was being fixed and redeployed at the time of writing.
 - **Not done:** the live backup and restore drill and smoke test; the Vercel front end (needs re-authentication and an `/api` rewrite); real data. The app is empty until you add plants, materials with tests, prices and verified rules.
 - **Needs your input:** the real engineering parameters, JS rule values, trial criteria, moisture limits, letterhead; the Arabic review; an on-call person; the ERP field mapping (ADR 0016 stays proposed).
