@@ -14,7 +14,7 @@ Both services use the **same image** (root `Dockerfile`). `JOBS_IN_PROCESS` must
 
 ## Environment variables
 
-Set per service; never commit them. `api` needs all of the first block; `worker` needs `DATABASE_URL`, `BACKUP_*`, `APP_VERSION`, `NODE_ENV`, `DEPLOY_ENV`.
+Set per service; never commit them. `api` needs all of the first block; `worker` needs `DATABASE_URL`, `BACKUP_*`, `APP_VERSION`, `NODE_ENV`, `DEPLOY_ENV` **and** the same `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `APP_BASE_URL` (the shared config loader requires them; on Railway reference the `api` service's values, e.g. `${{api.BETTER_AUTH_SECRET}}`). On Railway also set `RAILWAY_DOCKERFILE_PATH=Dockerfile` on both services, and `startCommand` `node dist/worker.js` on the worker (`railway.json` files are deprecated there).
 
 | Variable                                                                                                                                 | Production value                                                                          |
 | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
