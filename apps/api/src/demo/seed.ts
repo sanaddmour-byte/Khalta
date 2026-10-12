@@ -342,11 +342,17 @@ export async function upgradeDemoData(d: SeedDeps): Promise<number> {
     for (const m of plan.materials) {
       const id = idOf.get(m.nameEn);
       if (!id) continue;
-      const cur = await admin.get<{ current: { properties: Record<string, unknown> } | null }>(
-        `/api/materials/${id}`,
-      );
+      const cur = await admin.get<{
+        current: { properties: Record<string, unknown>; testedAt?: string } | null;
+      }>(`/api/materials/${id}`);
       const have = cur.current?.properties ?? {};
-      const stale = Object.entries(m.properties).some(([k, v]) => !same(v, have[k]));
+      // a test the plan no longer expires (an earlier plan expired Aqaba's second sand, which made every pumpable
+      // request there infeasible) gets a fresh version; one the plan still expires is left alone
+      const testedAt = (cur.current as { testedAt?: string } | null)?.testedAt;
+      const expiredButShouldNot =
+        !!testedAt && m.testedDaysAgo < 300 && testedAt < addDays(today, -300);
+      const stale =
+        expiredButShouldNot || Object.entries(m.properties).some(([k, v]) => !same(v, have[k]));
       if (!stale) continue;
       const att =
         m.source === 'lab_report'

@@ -145,6 +145,22 @@ describe('demo seed against a real database', () => {
     expect(await seedDemoRules(deps)).toBe(0);
     const mgr = await env.login('qc.manager@khalta.test', 'demo-password-change-me');
     const plants = (await mgr.get('/api/plants')).body as { id: string; code: string }[];
+    // a pumpable mix needs enough 0.3 mm material: it must be possible at BOTH plants (Aqaba once had its second sand expired, which made it infeasible)
+    for (const p of plants) {
+      const pump = await mgr.post('/api/design-requests').send({
+        plantId: p.id,
+        mode: 'ACI',
+        requirements: {
+          fcMpa: 30,
+          basis: 'cylinder',
+          exposure: ['F0', 'S0', 'W0', 'C1'],
+          slumpMm: 125,
+          nmasMm: 19,
+          pumpable: true,
+        },
+      });
+      expect(pump.body.status, `pumpable ${p.code}`).toBe('candidates');
+    }
     // a wider spread of strengths than the first demo: every one gets candidates at both plants
     for (const fc of [18, 20, 28])
       for (const p of plants) {

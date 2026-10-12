@@ -521,7 +521,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
     }
   }
   // the one expired test (older than the demo test-age limit of 365 days)
-  materials.find((m) => m.key === 'naeema-AQB-01')!.testedDaysAgo = 500;
+  // (a coarse size, not the second sand: with Aqaba's other sand expired, no pumpable mix reaches the 0.3 mm minimum)
+  materials.find((m) => m.key === 'adasiyeh-AQB-01')!.testedDaysAgo = 500;
   materials.find((m) => m.key === 'fuliyeh-AMM-01')!.source = 'lab_report';
 
   const base: Record<string, [number, DemoPrice['unit']]> = {
