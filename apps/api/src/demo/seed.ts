@@ -398,3 +398,130 @@ export async function upgradeDemoData(d: SeedDeps): Promise<number> {
     await new Promise((r) => server.close(r));
   }
 }
+
+/**
+ * Adds what the current demo plan has and an EXISTING demo database lacks: materials (by name) with their tests and
+ * prices, and legacy designs (by code), imported through the same wizard and attested like the first ones. Idempotent:
+ * a second run finds nothing missing. Returns how many materials and designs were added.
+ */
+export async function topUpDemoData(d: SeedDeps): Promise<{ materials: number; designs: number }> {
+  const log = d.log ?? (() => undefined);
+  const plan = buildDemoPlan();
+  const app = createApp({ config: d.config, db: d.db, auth: d.auth });
+  const server: Server = await new Promise((resolve) => {
+    const s = app.listen(0, '127.0.0.1', () => resolve(s));
+  });
+  try {
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const login = async (email: string) => {
+      const c = new Client(base, d.config.BETTER_AUTH_URL);
+      await c.post('/api/auth/sign-in/email', { email, password: d.password });
+      return c;
+    };
+    const admin = await login('admin@khalta.test');
+    const mgr = await login('qc.manager@khalta.test');
+    const today = todayAmman();
+
+    // ---- materials with tests, and their prices
+    const have = await admin.get<{ id: string; marketNameEn: string }[]>('/api/materials');
+    const idOf = new Map(have.map((m) => [m.marketNameEn, m.id]));
+    const missing = plan.materials.filter((m) => !idOf.has(m.nameEn));
+    const suppliers = await admin.get<{ id: string; nameEn: string }[]>('/api/suppliers');
+    const supplierIdOf = new Map(suppliers.map((x) => [x.nameEn, x.id]));
+    const plants = await admin.get<{ id: string; code: string }[]>('/api/plants');
+    const plantIdOf = new Map(plants.map((p) => [p.code, p.id]));
+    const newIds = new Map<string, string>();
+    for (const m of missing) {
+      const created = await mgr.post<{ id: string }>('/api/materials', {
+        category: m.category,
+        marketNameAr: m.nameAr,
+        marketNameEn: m.nameEn,
+        supplierId: supplierIdOf.get(m.supplier),
+        ...(m.plant && { plantId: plantIdOf.get(m.plant) }),
+        notes: `${SYNTHETIC}: demo data, not a real material`,
+      });
+      newIds.set(m.key, created.id);
+      await mgr.post(`/api/materials/${created.id}/tests`, {
+        properties: m.properties,
+        source: m.source,
+        testedAt: addDays(today, -m.testedDaysAgo),
+        labRef: `${SYNTHETIC}-${m.key}`,
+        ...(m.source === 'user_declared' && { declaredReason: `${SYNTHETIC} demo value` }),
+      });
+    }
+    const entries = plan.prices.flatMap((p) => {
+      const materialId = newIds.get(p.material);
+      const plantId = plantIdOf.get(p.plant);
+      const supplierId = supplierIdOf.get(p.supplier);
+      const price = p.wave2 ?? p.wave1;
+      return materialId && plantId && supplierId && price
+        ? [{ materialId, plantId, supplierId, price, unit: p.unit }]
+        : [];
+    });
+    if (entries.length > 0)
+      await admin.post('/api/prices', {
+        entries,
+        effectiveFrom: addDays(today, -10),
+        reason: `${SYNTHETIC} price list for the added materials`,
+      });
+    if (missing.length > 0) log(`${missing.length} materials added with tests and prices`);
+
+    // ---- designs
+    const existing = await mgr.get<{ code: string }[]>('/api/designs?q=DEMO-');
+    const haveCodes = new Set(existing.map((x) => x.code));
+    const addCodes = plan.designs.filter((x) => !haveCodes.has(x.code));
+    let designsAdded = 0;
+    if (addCodes.length > 0) {
+      const csv = [plan.legacyHeader, ...addCodes.flatMap((x) => plan.legacyRows[x.code]!)].join(
+        '\n',
+      );
+      const up = await mgr.upload<{ batchId: string }>(
+        `/api/imports/legacy/upload?filename=${encodeURIComponent('demo-legacy-designs-2.csv')}`,
+        Buffer.from(csv),
+      );
+      const done = await mgr.post<{ designs: number }>(
+        `/api/imports/legacy/${up.batchId}/commit`,
+        {},
+      );
+      designsAdded = done.designs;
+      const mgr2 = await login('qc.manager2@khalta.test');
+      const now = await mgr.get<{ id: string; code: string }[]>('/api/designs?q=DEMO-');
+      for (const spec of addCodes.filter((x) => x.attest)) {
+        const row = now.find((x) => x.code === spec.code);
+        if (!row) continue;
+        await mgr2.post(`/api/designs/${row.id}/attest`, {
+          approvalReference: `${SYNTHETIC} submittal ${spec.code}`,
+          inProduction: true,
+          note: `${SYNTHETIC} attestation for the demo`,
+        });
+      }
+      await d.db
+        .update(schema.mixDesigns)
+        .set({ synthetic: true })
+        .where(like(schema.mixDesigns.code, 'DEMO-%'));
+      const rnd = mulberry(plan.seed + 7);
+      const rows = now
+        .filter((row) => addCodes.some((x) => x.code === row.code))
+        .flatMap((row) => {
+          const spec = addCodes.find((x) => x.code === row.code)!;
+          return Array.from({ length: 6 }, (_, i) => {
+            const dt = new Date(`${today}T00:00:00Z`);
+            dt.setUTCMonth(dt.getUTCMonth() - (i + 1), 1);
+            return {
+              tenantId: d.tenantId,
+              designId: row.id,
+              plantId: plantIdOf.get(spec.plant)!,
+              month: dt.toISOString().slice(0, 10),
+              volumeM3: (spec.avgMonthly * (0.85 + rnd() * 0.3)).toFixed(2),
+              source: 'demo' as const,
+            };
+          });
+        });
+      if (rows.length) await d.db.insert(schema.productionVolumes).values(rows);
+      log(`${designsAdded} legacy designs added`);
+    }
+    return { materials: missing.length, designs: designsAdded };
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+}

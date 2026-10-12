@@ -34,6 +34,21 @@ export const DEMO_ENGINEERING: Record<string, unknown> = {
   'eng.trial.yield_band_m3': 0.02,
   'eng.trial.slump_tolerance_mm': 25,
   'eng.trial.temperature_max_c': 35,
+  // trial criteria beyond the five measured ones, and equipment parameters for batch preparation (all SYNTHETIC)
+  'eng.trial.retention_min_slump_mm': 70,
+  'eng.trial.retention_minutes': 60,
+  'eng.trial.stability_required': 1,
+  'eng.trial.placement_required': 1,
+  'eng.batch.max_size_m3': 6,
+  'eng.batch.max_rounding_deviation_pct': 1,
+  'eng.batch.resolution_kg.cement': 1,
+  'eng.batch.resolution_kg.scm': 1,
+  'eng.batch.resolution_kg.fine_agg': 5,
+  'eng.batch.resolution_kg.coarse_agg': 5,
+  'eng.batch.resolution_kg.admixture': 0.1,
+  'eng.batch.resolution_kg.water': 1,
+  'eng.batch.resolution_kg.fiber': 0.1,
+  'eng.batch.resolution_kg.pigment': 0.1,
 };
 
 /** Aggregate grading limits (percent passing per sieve, mm). Wide enough for the demo aggregates; NOT the ASTM C33 or JS limits. */

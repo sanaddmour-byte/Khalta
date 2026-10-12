@@ -53,6 +53,9 @@ export interface DemoPlan {
   prices: DemoPrice[];
   legacyCsv: string;
   designs: { code: string; plant: 'AMM-01' | 'AQB-01'; attest: boolean; avgMonthly: number }[];
+  /** The legacy-file rows of each design (without the header), so a database that already has some can add the rest. */
+  legacyHeader: string;
+  legacyRows: Record<string, string[]>;
   settings: { stalePriceDays: number; testAgeLimitDays: number };
 }
 
@@ -310,6 +313,75 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       source: 'supplier_datasheet',
       testedDaysAgo: 50,
     },
+    {
+      key: 'adm-a',
+      category: 'admixture',
+      nameAr: 'مخفّض ماء عادي (تجريبي)',
+      nameEn: `Water reducer type A (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(3),
+      properties: {
+        type: 'A',
+        water_convention: 'liquid_counts_as_water',
+        chloride_pct: 0.01,
+        sg: 1.1,
+        solids_pct: 33,
+        min_dosage_pct: 0.2,
+        max_dosage_pct: 1.2,
+        water_reduction_table: [
+          { dosage_pct: 0.2, water_reduction_pct: 4 },
+          { dosage_pct: 0.5, water_reduction_pct: 8 },
+          { dosage_pct: 0.9, water_reduction_pct: 11 },
+          { dosage_pct: 1.2, water_reduction_pct: 12 },
+        ],
+      },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 45,
+    },
+    {
+      key: 'flyash',
+      category: 'scm',
+      nameAr: 'رماد متطاير (تجريبي)',
+      nameEn: `Fly ash (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: { scm_type: 'fly_ash', sg: 2.25, alkali_na2o_eq_pct: 1.4 },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 55,
+    },
+    {
+      key: 'ggbs',
+      category: 'scm',
+      nameAr: 'خبث أفران عالية مطحون (تجريبي)',
+      nameEn: `Ground slag GGBS (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: { scm_type: 'ggbs', sg: 2.9, alkali_na2o_eq_pct: 0.8 },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 55,
+    },
+    {
+      key: 'sfume',
+      category: 'scm',
+      nameAr: 'غبار السيليكا (تجريبي)',
+      nameEn: `Silica fume (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: { scm_type: 'silica_fume', sg: 2.2, alkali_na2o_eq_pct: 0.5 },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 55,
+    },
+    {
+      key: 'filler',
+      category: 'scm',
+      nameAr: 'مالئ حجر جيري (تجريبي)',
+      nameEn: `Limestone filler (${SYNTHETIC})`,
+      plant: null,
+      supplier: S(0),
+      properties: { scm_type: 'limestone_filler', sg: 2.7, alkali_na2o_eq_pct: 0.2 },
+      source: 'supplier_datasheet',
+      testedDaysAgo: 55,
+    },
   ];
   // six aggregates per plant, Jordanian market names; Aqaba's carry a place suffix so names stay unique
   const aggs: {
@@ -467,7 +539,15 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       if (m.key === 'hummusiyeh-AQB-01') continue; // deliberately unpriced at Aqaba
       const [b0, unit] = base[m.category]!;
       // white cement is imported/specialty: about 2.7x the grey price
-      const b = m.properties['cement_colour'] === 'white' ? b0 * 2.7 : b0;
+      // relative to the category price: fly ash is cheap, silica fume is dear, an A-type reducer costs less than a superplasticizer
+      const rel: Record<string, number> = {
+        flyash: 0.55,
+        ggbs: 1.15,
+        sfume: 6,
+        filler: 0.5,
+        'adm-a': 0.6,
+      };
+      const b = (m.properties['cement_colour'] === 'white' ? b0 * 2.7 : b0) * (rel[m.key] ?? 1);
       const p1 = jitter(b * (plant.code === 'AQB-01' ? 1.06 : 1), 0.04);
       const raise = 1 + 0.03 + r() * 0.03;
       const stale = m.key === 'simsimiyeh-AMM-01'; // one stale cell: no second wave
@@ -482,11 +562,12 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       });
     }
   }
-  // legacy designs: 3 per plant
+  // legacy designs: 6 per plant
   const header =
     'design_code,plant_code,design_name,fc_mpa,strength_basis,test_age_days,exposure_classes,slump_mm,nmas_mm,pumpable,material_name,material_category,quantity,unit,approval_reference,currently_in_production,avg_monthly_volume_m3';
   const lines: string[] = [header];
   const designs: DemoPlan['designs'] = [];
+  const legacyRows: Record<string, string[]> = {};
   const specs = [
     {
       code: 'C25',
@@ -521,6 +602,40 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       pump: true,
       attest: false,
     },
+    // a wider spread below the ACI 211.1 table limit (f'cr 40 MPa, about C31): above it a design needs a plant strength model
+    {
+      code: 'C15',
+      fc: 15,
+      cem: 260,
+      w: 190,
+      slump: 100,
+      nmas: 25,
+      exp: 'F0;S0;W0;C0',
+      pump: false,
+      attest: true,
+    },
+    {
+      code: 'C20',
+      fc: 20,
+      cem: 300,
+      w: 185,
+      slump: 100,
+      nmas: 25,
+      exp: 'F0;S0;W0;C0',
+      pump: false,
+      attest: true,
+    },
+    {
+      code: 'C28',
+      fc: 28,
+      cem: 345,
+      w: 178,
+      slump: 125,
+      nmas: 19,
+      exp: 'F0;S0;W0;C1',
+      pump: true,
+      attest: false,
+    },
   ];
   for (const plant of plants) {
     const tag = plant.code.replace('-', '');
@@ -532,8 +647,12 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
       const head = `${code},${plant.code},${s.code} ${plant.code} (${SYNTHETIC}),${s.fc},cylinder,28,${s.exp},${s.slump},${s.nmas},${s.pump},`;
       const tail = (ref: boolean) =>
         `,${ref ? `SYNTHETIC submittal ${tag}-${s.code}` : ''},true,${avg}`;
-      const add = (name: string, cat: string, qty: number, unit = 'kg/m3') =>
-        lines.push(`${head}${name},${cat},${qty},${unit}${tail(true)}`);
+      legacyRows[code] = [];
+      const add = (name: string, cat: string, qty: number, unit = 'kg/m3') => {
+        const row = `${head}${name},${cat},${qty},${unit}${tail(true)}`;
+        lines.push(row);
+        legacyRows[code]!.push(row);
+      };
       const fine = Math.round(jitter(760, 0.04));
       const coarse = Math.round(2380 - s.cem - s.w - fine - 5);
       add('إسمنت عادي (تجريبي)', 'cement', s.cem);
@@ -557,6 +676,8 @@ export function buildDemoPlan(seed: number = DEMO_SEED): DemoPlan {
     materials,
     prices,
     legacyCsv: lines.join('\n'),
+    legacyHeader: header,
+    legacyRows,
     designs,
     settings: { stalePriceDays: 30, testAgeLimitDays: 365 },
   };

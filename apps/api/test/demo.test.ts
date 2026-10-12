@@ -1,7 +1,7 @@
 import { schema } from '@khalta/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildDemoPlan, DEMO_SEED, planHash, SYNTHETIC } from '../src/demo/plan';
-import { seedDemo, seedDemoRules, upgradeDemoData } from '../src/demo/seed';
+import { topUpDemoData, seedDemo, seedDemoRules, upgradeDemoData } from '../src/demo/seed';
 import { createTestEnv, type TestEnv } from './helpers';
 
 describe('demo plan', () => {
@@ -41,8 +41,19 @@ describe('demo plan', () => {
         .filter((m) => m.category === 'admixture')
         .every((m) => (m.properties['water_reduction_table'] as unknown[]).length === 4),
     ).toBe(true);
-    expect(p.designs.filter((d) => d.plant === 'AMM-01')).toHaveLength(3);
-    expect(p.designs.filter((d) => d.attest)).toHaveLength(4);
+    expect(p.designs.filter((d) => d.plant === 'AMM-01')).toHaveLength(6);
+    expect(p.designs.filter((d) => d.attest)).toHaveLength(8);
+    expect(
+      p.materials.filter((m) => m.category === 'scm').map((m) => m.properties['scm_type']),
+    ).toEqual(
+      expect.arrayContaining([
+        'natural_pozzolan',
+        'fly_ash',
+        'ggbs',
+        'silica_fume',
+        'limestone_filler',
+      ]),
+    );
   });
 });
 
@@ -63,9 +74,11 @@ describe('demo seed against a real database', () => {
     };
     const t0 = Date.now();
     const r = await seedDemo(deps);
-    expect(r).toEqual({ skipped: false, designs: 6 });
+    expect(r).toEqual({ skipped: false, designs: 12 });
     expect(Date.now() - t0).toBeLessThan(25_000);
     expect(await seedDemo(deps)).toEqual({ skipped: true, designs: 0 }); // idempotent
+    // the top-up for an older database finds nothing missing in a complete one
+    expect(await topUpDemoData(deps)).toEqual({ materials: 0, designs: 0 });
 
     const admin = await env.login('admin@khalta.test', 'demo-password-change-me');
     const designs = (await admin.get('/api/designs')).body as {
@@ -75,11 +88,11 @@ describe('demo seed against a real database', () => {
       synthetic: boolean;
       evaluationPending: boolean;
     }[];
-    expect(designs).toHaveLength(6);
+    expect(designs).toHaveLength(12);
     expect(
       designs.filter((d) => d.status === 'in_production' && d.approvalSource === 'legacy_attested'),
-    ).toHaveLength(4);
-    expect(designs.filter((d) => d.status === 'draft')).toHaveLength(2);
+    ).toHaveLength(8);
+    expect(designs.filter((d) => d.status === 'draft')).toHaveLength(4);
     expect(designs.every((d) => d.synthetic && d.evaluationPending)).toBe(true);
 
     const m = (await admin.get('/api/prices')).body;
@@ -109,15 +122,15 @@ describe('demo seed against a real database', () => {
       notes?: string;
     }[];
     expect(mats.filter((x) => x.freshness?.status === 'expired')).toHaveLength(1);
-    expect(mats.length).toBe(23);
+    expect(mats.length).toBe(28);
     const fine = mats.filter((x) => x.marketNameEn.startsWith('Raml'));
     expect(fine.every((x) => x.canDesign)).toBe(true);
 
     const vols = await env.db.select().from(schema.productionVolumes);
-    expect(vols).toHaveLength(36);
+    expect(vols).toHaveLength(72);
     expect(vols.every((v) => v.source === 'demo')).toBe(true);
     const mgr = await env.login('qc.manager@khalta.test', 'demo-password-change-me');
-    expect(((await mgr.get('/api/designs?queue=true')).body as unknown[]).length).toBe(2); // two still await attestation
+    expect(((await mgr.get('/api/designs?queue=true')).body as unknown[]).length).toBe(4); // four still await attestation (C35 and C28 at each plant)
   });
 
   it('the synthetic rule values let the optimizer run at both plants, in both modes; a second run changes nothing', async () => {
@@ -132,6 +145,25 @@ describe('demo seed against a real database', () => {
     expect(await seedDemoRules(deps)).toBe(0);
     const mgr = await env.login('qc.manager@khalta.test', 'demo-password-change-me');
     const plants = (await mgr.get('/api/plants')).body as { id: string; code: string }[];
+    // a wider spread of strengths than the first demo: every one gets candidates at both plants
+    for (const fc of [18, 20, 28])
+      for (const p of plants) {
+        const wide = await mgr.post('/api/design-requests').send({
+          plantId: p.id,
+          mode: 'ACI',
+          requirements: {
+            fcMpa: fc,
+            basis: 'cylinder',
+            exposure: ['F0', 'S0', 'W0', 'C1'],
+            slumpMm: 125,
+            nmasMm: 19,
+          },
+        });
+        expect(
+          wide.body.status,
+          `C${fc} ${p.code} ${JSON.stringify(wide.body.outcome?.blockers)}`,
+        ).toBe('candidates');
+      }
     for (const mode of ['ACI', 'BOTH'] as const)
       for (const p of plants) {
         const res = await mgr.post('/api/design-requests').send({
