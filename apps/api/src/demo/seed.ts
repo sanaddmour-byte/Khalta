@@ -354,20 +354,27 @@ export async function upgradeDemoData(d: SeedDeps): Promise<number> {
       const stale =
         expiredButShouldNot || Object.entries(m.properties).some(([k, v]) => !same(v, have[k]));
       if (!stale) continue;
-      const att =
-        m.source === 'lab_report'
-          ? await mgr.upload<{ id: string }>(
-              `/api/attachments?filename=${encodeURIComponent('synthetic-lab-report.pdf')}`,
-              SYNTHETIC_PDF,
-            )
-          : null;
+      // A re-test with the same values is refused ("nothing changed"), so a refresh is recorded as a lab report
+      // (its source differs from the data sheet), with a synthetic report attached.
+      const asLab = expiredButShouldNot || m.source === 'lab_report';
+      const att = asLab
+        ? await mgr.upload<{ id: string }>(
+            `/api/attachments?filename=${encodeURIComponent('synthetic-lab-report.pdf')}`,
+            SYNTHETIC_PDF,
+          )
+        : null;
       await mgr.post(`/api/materials/${id}/tests`, {
         properties: m.properties,
-        source: m.source,
+        source: asLab ? 'lab_report' : m.source,
         testedAt: addDays(today, -m.testedDaysAgo),
-        labRef: `${SYNTHETIC}-${m.key}`,
+        labRef: `${SYNTHETIC}-${m.key}${expiredButShouldNot ? '-retest' : ''}`,
         ...(att && { attachmentId: att.id }),
-        ...(m.source === 'user_declared' && { declaredReason: `${SYNTHETIC} demo value` }),
+        // re-sourcing every field is what makes an otherwise identical re-test a recorded change
+        ...(expiredButShouldNot && {
+          fieldSources: Object.fromEntries(Object.keys(m.properties).map((k) => [k, 'lab_report'])),
+        }),
+        ...(!asLab &&
+          m.source === 'user_declared' && { declaredReason: `${SYNTHETIC} demo value` }),
       });
       changed += 1;
     }

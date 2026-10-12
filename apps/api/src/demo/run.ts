@@ -33,23 +33,28 @@ const r = await seedDemo({
   password,
   log: (m) => console.log(`demo: ${m}`),
 });
+// The demo top-ups are conveniences: a failure here must never keep the server from starting.
 if (r.skipped) {
-  await topUpDemoData({
-    db: handle.db,
-    auth,
-    config,
-    tenantId,
-    password,
-    log: (m) => console.log(`demo: ${m}`),
-  });
-  await upgradeDemoData({
-    db: handle.db,
-    auth,
-    config,
-    tenantId,
-    password,
-    log: (m) => console.log(`demo: ${m}`),
-  });
+  try {
+    await topUpDemoData({
+      db: handle.db,
+      auth,
+      config,
+      tenantId,
+      password,
+      log: (m) => console.log(`demo: ${m}`),
+    });
+    await upgradeDemoData({
+      db: handle.db,
+      auth,
+      config,
+      tenantId,
+      password,
+      log: (m) => console.log(`demo: ${m}`),
+    });
+  } catch (e) {
+    console.error('demo top-up failed (continuing):', e instanceof Error ? e.message : e);
+  }
 }
 const filled = await seedDemoRules({
   db: handle.db,
