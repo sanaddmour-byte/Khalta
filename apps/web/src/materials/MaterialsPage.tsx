@@ -15,9 +15,10 @@ import {
 } from '@khalta/ui';
 import { CATEGORIES, CEMENT_KINDS_CURRENT } from '@khalta/engine';
 import { useQuery } from '@tanstack/react-query';
-import { Boxes, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Art } from '../lib/Art';
 import { useMe } from '../lib/auth';
 import { useFormat } from '../lib/format';
 import { usePlant } from '../lib/plant';
@@ -161,7 +162,7 @@ export function MaterialsPage() {
       )}
       {data && data.length === 0 && (
         <EmptyState
-          icon={<Boxes className="size-8" aria-hidden />}
+          icon={<Art name="materials" className="h-24 w-36" />}
           title={t('materials.empty.title')}
           description={t('materials.empty.description')}
         />

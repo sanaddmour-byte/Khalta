@@ -19,10 +19,11 @@ import {
   toast,
 } from '@khalta/ui';
 import { useQuery } from '@tanstack/react-query';
-import { Download, Library, Upload } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
+import { Art } from '../lib/Art';
 import { useMe } from '../lib/auth';
 import { useFormat } from '../lib/format';
 import { usePlant } from '../lib/plant';
@@ -202,7 +203,7 @@ export function LibraryPage() {
               )}
               {data && data.length === 0 && (
                 <EmptyState
-                  icon={<Library className="size-8" aria-hidden />}
+                  icon={<Art name="studio" className="size-28" />}
                   title={t(
                     tab === 'queue'
                       ? 'library.emptyQueue.title'

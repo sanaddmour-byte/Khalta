@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { OctagonAlert, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Art } from '../lib/Art';
 import { useMe } from '../lib/auth';
 import { dashboardQuery, type DashCard } from './api';
 
@@ -52,12 +53,16 @@ export function DashboardPage() {
   const d = q.data;
   return (
     <div className="flex flex-col gap-6" data-testid="dashboard">
-      <header>
-        <h1 className="text-2xl font-semibold text-heading">{t('nav.dashboard')}</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted">{t(`dashboard.intro.${d.role}`)}</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-heading">{t('nav.dashboard')}</h1>
+          <p className="mt-1 max-w-3xl text-sm text-muted">{t(`dashboard.intro.${d.role}`)}</p>
+        </div>
+        <Art name="pour" className="hidden h-24 w-36 shrink-0 sm:block" />
       </header>
       {d.cards.length === 0 ? (
         <EmptyState
+          icon={<Art name="studio" className="size-32" />}
           title={t('dashboard.empty.title')}
           description={t('dashboard.empty.description')}
         />

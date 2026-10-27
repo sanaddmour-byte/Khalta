@@ -5,6 +5,7 @@ import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError, signIn } from '../lib/api';
 import { LanguageToggle, ThemeToggle } from '../shell/Controls';
+import { Art } from '../lib/Art';
 import { Wordmark } from '../shell/Wordmark';
 
 export function LoginPage() {
@@ -38,47 +39,50 @@ export function LoginPage() {
         <ThemeToggle />
       </div>
       <main id="main" className="flex flex-1 items-center justify-center p-4">
-        <Card className="w-full max-w-sm p-6">
-          <Wordmark className="mb-1 text-2xl" />
-          <p className="mb-6 text-sm text-muted">{t('app.tagline')}</p>
-          <h1 className="mb-1 text-lg font-semibold text-heading">{t('auth.title')}</h1>
-          <p className="mb-4 text-sm text-muted">{t('auth.subtitle')}</p>
-          <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">{t('auth.email')}</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="username"
-                dir="ltr"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                aria-invalid={login.isError}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">{t('auth.password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                dir="ltr"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                aria-invalid={login.isError}
-              />
-            </div>
-            {login.isError && (
-              <p role="alert" className="text-sm text-fail-text" data-testid="login-error">
-                {message}
-              </p>
-            )}
-            <Button type="submit" disabled={login.isPending || !email || !password}>
-              {login.isPending ? t('auth.submitting') : t('auth.submit')}
-            </Button>
-          </form>
+        <Card className="w-full max-w-sm overflow-hidden p-0">
+          <Art name="plant" className="h-32 w-full rounded-none" />
+          <div className="p-6">
+            <Wordmark className="mb-1 text-2xl" />
+            <p className="mb-6 text-sm text-muted">{t('app.tagline')}</p>
+            <h1 className="mb-1 text-lg font-semibold text-heading">{t('auth.title')}</h1>
+            <p className="mb-4 text-sm text-muted">{t('auth.subtitle')}</p>
+            <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="email">{t('auth.email')}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="username"
+                  dir="ltr"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  aria-invalid={login.isError}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password">{t('auth.password')}</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  dir="ltr"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  aria-invalid={login.isError}
+                />
+              </div>
+              {login.isError && (
+                <p role="alert" className="text-sm text-fail-text" data-testid="login-error">
+                  {message}
+                </p>
+              )}
+              <Button type="submit" disabled={login.isPending || !email || !password}>
+                {login.isPending ? t('auth.submitting') : t('auth.submit')}
+              </Button>
+            </form>
+          </div>
         </Card>
       </main>
     </div>

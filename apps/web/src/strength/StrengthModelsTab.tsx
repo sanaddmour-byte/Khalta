@@ -19,6 +19,7 @@ import { BadgeCheck, CircleAlert, CircleHelp, ShieldOff } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../lib/api';
+import { Art } from '../lib/Art';
 import { useMe } from '../lib/auth';
 import { useFormat } from '../lib/format';
 import { usePlant } from '../lib/plant';
@@ -439,6 +440,7 @@ export function StrengthModelsTab() {
       {list.isLoading && <Skeleton className="h-24 w-full" />}
       {list.data && list.data.models.length === 0 && (
         <EmptyState
+          icon={<Art name="lab" className="size-28" />}
           title={t('strength.empty.title')}
           description={t('strength.empty.description')}
         />
